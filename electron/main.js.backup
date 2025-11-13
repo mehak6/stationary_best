@@ -1,0 +1,272 @@
+const { app, BrowserWindow, Menu, shell, protocol } = require('electron');
+const path = require('path');
+const fs = require('fs');
+const url = require('url');
+
+const isDev = process.env.NODE_ENV === 'development';
+let mainWindow;
+
+// Intercept requests to fix paths for static assets
+function setupProtocolInterceptor() {
+  protocol.interceptFileProtocol('file', (request, callback) => {
+    let url = request.url.substr(7); // Remove 'file://'
+
+    // Handle Windows paths
+    if (process.platform === 'win32') {
+      url = url.replace(/^\/([A-Za-z]):/, '$1:');
+    }
+
+    // If the request is for _next, icons, or manifest, serve from out directory
+    if (url.includes('_next') || url.includes('icons') || url.includes('manifest')) {
+      const fileName = url.split('/').pop().split('\\').pop();
+      const searchPaths = [
+        path.join(__dirname, '../out/_next'),
+        path.join(__dirname, '../out/icons'),
+        path.join(__dirname, '../out')
+      ];
+
+      // Search for the file
+      for (const searchPath of searchPaths) {
+        const findFile = (dir, filename) => {
+          if (!fs.existsSync(dir)) return null;
+
+          const files = fs.readdirSync(dir);
+          for (const file of files) {
+            const filePath = path.join(dir, file);
+            const stat = fs.statSync(filePath);
+
+            if (stat.isDirectory()) {
+              const found = findFile(filePath, filename);
+              if (found) return found;
+            } else if (file === filename || filePath.includes(filename)) {
+              return filePath;
+            }
+          }
+          return null;
+        };
+
+        const foundPath = findFile(searchPath, fileName);
+        if (foundPath) {
+          callback({ path: foundPath });
+          return;
+        }
+      }
+    }
+
+    callback({ path: url });
+  });
+}
+
+async function createWindow() {
+  // Create the browser window
+  mainWindow = new BrowserWindow({
+    width: 1400,
+    height: 900,
+    minWidth: 800,
+    minHeight: 600,
+    title: 'Inventory Pro - Stationery & Games Management',
+    icon: path.join(__dirname, '../public/icons/icon-512x512.png'),
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      enableRemoteModule: false,
+      webSecurity: false,
+      allowRunningInsecureContent: false,
+      devTools: true
+    },
+    backgroundColor: '#f9fafb',
+    show: false,
+    autoHideMenuBar: true,
+  });
+
+  // Load the app
+  if (isDev) {
+    await mainWindow.loadURL('http://localhost:3000');
+  } else {
+    // Use loadFile which properly handles file:// protocol
+    const indexPath = path.join(__dirname, '../out/index.html');
+    console.log('Loading file:', indexPath);
+    console.log('File exists:', fs.existsSync(indexPath));
+    await mainWindow.loadFile(indexPath);
+  }
+
+  // Show window when ready
+  mainWindow.once('ready-to-show', () => {
+    mainWindow.show();
+    mainWindow.focus();
+  });
+
+  // Open external links in browser
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    shell.openExternal(url);
+    return { action: 'deny' };
+  });
+
+  // Open external links in browser (already added above - remove duplicate)
+  // Open DevTools for debugging
+  mainWindow.webContents.openDevTools();
+
+  // Log console messages from renderer
+  mainWindow.webContents.on('console-message', (event, level, message, line, sourceId) => {
+    console.log(`Renderer console [${level}]:`, message);
+  });
+
+  // Create application menu
+  createMenu();
+
+  mainWindow.on('closed', () => {
+    mainWindow = null;
+  });
+
+  // Log when page finishes loading
+  mainWindow.webContents.on('did-finish-load', () => {
+    console.log('Page loaded successfully');
+  });
+
+  // Log load failures
+  mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
+    console.error('Failed to load:', errorCode, errorDescription);
+  });
+}
+
+function createMenu() {
+  const template = [
+    {
+      label: 'File',
+      submenu: [
+        {
+          label: 'Reload',
+          accelerator: 'CmdOrCtrl+R',
+          click: () => {
+            if (mainWindow) mainWindow.reload();
+          }
+        },
+        { type: 'separator' },
+        {
+          label: 'Exit',
+          accelerator: 'CmdOrCtrl+Q',
+          click: () => {
+            app.quit();
+          }
+        }
+      ]
+    },
+    {
+      label: 'Edit',
+      submenu: [
+        { role: 'undo' },
+        { role: 'redo' },
+        { type: 'separator' },
+        { role: 'cut' },
+        { role: 'copy' },
+        { role: 'paste' },
+        { role: 'delete' },
+        { type: 'separator' },
+        { role: 'selectAll' }
+      ]
+    },
+    {
+      label: 'View',
+      submenu: [
+        { role: 'reload' },
+        { role: 'forceReload' },
+        { type: 'separator' },
+        { role: 'resetZoom' },
+        { role: 'zoomIn' },
+        { role: 'zoomOut' },
+        { type: 'separator' },
+        { role: 'togglefullscreen' }
+      ]
+    },
+    {
+      label: 'Help',
+      submenu: [
+        {
+          label: 'About Inventory Pro',
+          click: () => {
+            const aboutWindow = new BrowserWindow({
+              width: 400,
+              height: 300,
+              title: 'About Inventory Pro',
+              resizable: false,
+              minimizable: false,
+              maximizable: false,
+              webPreferences: {
+                nodeIntegration: false
+              }
+            });
+            aboutWindow.loadURL(`data:text/html;charset=utf-8,
+              <html>
+                <head>
+                  <style>
+                    body {
+                      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                      padding: 40px;
+                      text-align: center;
+                      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+                      color: white;
+                      margin: 0;
+                    }
+                    h1 { margin: 0 0 10px 0; font-size: 24px; }
+                    p { margin: 5px 0; opacity: 0.9; }
+                    .version { font-size: 14px; margin-top: 20px; opacity: 0.7; }
+                  </style>
+                </head>
+                <body>
+                  <h1>📦 Inventory Pro</h1>
+                  <p>Stationery & Games Management System</p>
+                  <p>Offline-first PWA with sync capabilities</p>
+                  <div class="version">Version ${app.getVersion()}</div>
+                  <div class="version">Electron ${process.versions.electron}</div>
+                </body>
+              </html>
+            `);
+            aboutWindow.setMenu(null);
+          }
+        },
+        { type: 'separator' },
+        {
+          label: 'Toggle Developer Tools',
+          accelerator: 'F12',
+          click: () => {
+            if (mainWindow) {
+              mainWindow.webContents.toggleDevTools();
+            }
+          }
+        }
+      ]
+    }
+  ];
+
+  const menu = Menu.buildFromTemplate(template);
+  Menu.setApplicationMenu(menu);
+}
+
+// App lifecycle
+app.whenReady().then(() => {
+  if (!isDev) {
+    registerLocalResourceProtocol();
+  }
+  createWindow();
+
+  app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) {
+      createWindow();
+    }
+  });
+});
+
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') {
+    app.quit();
+  }
+});
+
+// Handle errors
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+});
+
+process.on('unhandledRejection', (error) => {
+  console.error('Unhandled Rejection:', error);
+});

@@ -31,25 +31,35 @@
 }
 
 @layer components {
-  /* Button Components */
+  /* Button Components with improved interactions and pointer events */
   .btn-primary {
-    @apply bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl active:scale-95 cursor-pointer;
+    pointer-events: auto !important;
+    user-select: none;
   }
 
   .btn-secondary {
-    @apply bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply bg-secondary-600 hover:bg-secondary-700 active:bg-secondary-800 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl active:scale-95 cursor-pointer;
+    pointer-events: auto !important;
+    user-select: none;
   }
 
   .btn-success {
-    @apply bg-secondary-600 hover:bg-secondary-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply bg-secondary-600 hover:bg-secondary-700 active:bg-secondary-800 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl active:scale-95 cursor-pointer;
+    pointer-events: auto !important;
+    user-select: none;
   }
 
   .btn-danger {
-    @apply bg-danger-600 hover:bg-danger-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-danger-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply bg-danger-600 hover:bg-danger-700 active:bg-danger-800 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-danger-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl active:scale-95 cursor-pointer;
+    pointer-events: auto !important;
+    user-select: none;
   }
 
   .btn-outline {
-    @apply border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply border-2 border-gray-300 hover:border-primary-600 hover:bg-primary-50 text-gray-700 hover:text-primary-700 font-semibold py-3 px-6 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md active:scale-95 cursor-pointer bg-white;
+    pointer-events: auto !important;
+    user-select: none;
   }
 
   /* Input Components */
@@ -61,13 +71,13 @@
     @apply border-danger-500 focus:ring-danger-500 focus:border-danger-500;
   }
 
-  /* Card Components */
+  /* Card Components with enhanced shadows and modern design */
   .card {
-    @apply bg-white rounded-xl shadow-sm border border-gray-200 p-6;
+    @apply bg-white rounded-2xl shadow-lg border border-gray-100 p-8 transition-all duration-300 hover:shadow-xl hover:-translate-y-1;
   }
 
   .card-header {
-    @apply border-b border-gray-200 pb-4 mb-6;
+    @apply border-b-2 border-gray-200 pb-5 mb-7 font-bold text-xl text-gray-900;
   }
 
   /* Mobile-first responsive utilities */
@@ -140,21 +150,21 @@
     @apply text-sm text-gray-500;
   }
 
-  /* Dashboard specific styles */
+  /* Dashboard specific styles with enhanced visuals */
   .stat-card {
-    @apply bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200;
+    @apply bg-gradient-to-br from-white via-primary-50/30 to-white rounded-2xl shadow-xl border-2 border-primary-100 p-7 hover:shadow-2xl transition-all duration-300 hover:scale-[1.03] hover:border-primary-200;
   }
 
   .stat-value {
-    @apply text-2xl sm:text-3xl font-bold text-gray-900;
+    @apply text-4xl sm:text-5xl font-extrabold bg-gradient-to-r from-primary-600 via-primary-700 to-primary-900 bg-clip-text text-transparent;
   }
 
   .stat-label {
-    @apply text-sm font-medium text-gray-500 uppercase tracking-wide;
+    @apply text-sm font-bold text-gray-700 uppercase tracking-widest;
   }
 
   .stat-change {
-    @apply text-sm font-medium;
+    @apply text-sm font-bold;
   }
 
   /* Mobile touch improvements */
@@ -291,5 +301,62 @@
   :root {
     --tw-prose-body: theme(colors.gray.300);
     --tw-prose-headings: theme(colors.gray.100);
+  }
+}
+
+/* PWA Install Prompt Animations */
+@keyframes slide-down {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+}
+
+.animate-slide-down {
+  animation: slide-down 0.3s ease-out forwards;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-in forwards;
+}
+
+/* PWA-specific styles */
+@media (display-mode: standalone) {
+  /* Styles when running as installed PWA */
+  body {
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  /* Allow text selection in input fields */
+  input, textarea {
+    user-select: text;
+    -webkit-user-select: text;
+  }
+}
+
+/* iOS PWA safe area support */
+@supports (padding: env(safe-area-inset-top)) {
+  body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
   }
 }

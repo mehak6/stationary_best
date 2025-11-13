@@ -1,0 +1,32 @@
+{
+  "appId": "com.inventorypro.stationery",
+  "productName": "Inventory Pro",
+  "copyright": "Copyright © 2025 Inventory Pro",
+  "directories": {
+    "output": "dist",
+    "buildResources": "build"
+  },
+  "files": [
+    "out/**/*",
+    "electron/**/*",
+    "public/icons/**/*",
+    "package.json"
+  ],
+  "extraMetadata": {
+    "main": "electron/main.js"
+  },
+  "win": {
+    "target": [
+      {
+        "target": "portable",
+        "arch": ["x64"]
+      }
+    ],
+    "icon": "public/icons/icon-512x512.png",
+    "artifactName": "${productName}-${version}-portable.${ext}"
+  },
+  "portable": {
+    "artifactName": "${productName}-${version}-portable.${ext}"
+  },
+  "publish": null
+}

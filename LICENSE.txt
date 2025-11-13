@@ -1,0 +1,8 @@
+Inventory Pro - Stationery & Games Management System
+
+Copyright (c) 2025 Inventory Pro
+
+This software is provided for use in managing inventory for stationery
+and games businesses.
+
+All rights reserved.

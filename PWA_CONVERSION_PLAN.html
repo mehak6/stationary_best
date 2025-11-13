@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PWA Conversion Plan - Inventory Management System</title>
+    <style>
+        @media print {
+            @page { margin: 2cm; }
+            body { font-size: 11pt; }
+            .page-break { page-break-before: always; }
+            .no-break { page-break-inside: avoid; }
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px;
+            color: #333;
+            background: #fff;
+        }
+
+        h1 {
+            color: #0ea5e9;
+            border-bottom: 3px solid #0ea5e9;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+
+        h2 {
+            color: #0369a1;
+            border-left: 4px solid #0ea5e9;
+            padding-left: 15px;
+            margin-top: 30px;
+        }
+
+        h3 {
+            color: #075985;
+            margin-top: 20px;
+        }
+
+        .overview {
+            background: #f0f9ff;
+            border-left: 4px solid #0ea5e9;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .phase {
+            background: #fafafa;
+            border: 1px solid #e5e5e5;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .phase-header {
+            background: #0ea5e9;
+            color: white;
+            padding: 10px 15px;
+            margin: -20px -20px 15px -20px;
+            border-radius: 7px 7px 0 0;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        ul, ol {
+            margin: 10px 0;
+            padding-left: 25px;
+        }
+
+        li {
+            margin: 8px 0;
+        }
+
+        code {
+            background: #f5f5f5;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #e11d48;
+        }
+
+        .file-path {
+            background: #1e293b;
+            color: #22d3ee;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        th {
+            background: #0ea5e9;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            border: 1px solid #e5e5e5;
+            padding: 10px;
+        }
+
+        tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+
+        .checklist {
+            background: #f0fdf4;
+            border-left: 4px solid #22c55e;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .warning {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .info {
+            background: #dbeafe;
+            border-left: 4px solid #3b82f6;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-right: 8px;
+        }
+
+        .badge-time {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .badge-difficulty {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-priority {
+            background: #fecaca;
+            color: #991b1b;
+        }
+
+        .architecture-box {
+            border: 2px solid #0ea5e9;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            background: #f8fafc;
+        }
+
+        .flow-diagram {
+            font-family: monospace;
+            background: #1e293b;
+            color: #22d3ee;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Progressive Web App (PWA) Conversion Plan</h1>
+<p style="color: #666; font-size: 14px; margin-top: -10px;">
+    Inventory Management System - Stationery & Games Business<br>
+    <strong>Date:</strong> November 2025 | <strong>Version:</strong> 1.0
+</p>
+
+<div class="overview">
+    <h3 style="margin-top: 0;">🎯 Project Overview</h3>
+    <p><strong>Objective:</strong> Transform the current Next.js + Supabase web application into an offline-first Progressive Web App that works seamlessly on both desktop and mobile devices.</p>
+
+    <p><strong>Key Benefits:</strong></p>
+    <ul>
+        <li>✅ Works offline with full CRUD functionality</li>
+        <li>✅ Installable on desktop and mobile (no app store needed)</li>
+        <li>✅ Automatic background synchronization</li>
+        <li>✅ Faster performance (local-first architecture)</li>
+        <li>✅ Reduced server costs (less API calls)</li>
+        <li>✅ Better reliability in poor network conditions</li>
+    </ul>
+</div>
+
+<div class="info">
+    <strong>📊 Project Metrics</strong><br>
+    <span class="badge badge-time">⏱ 40-50 hours</span>
+    <span class="badge badge-difficulty">🔨 Medium Complexity</span>
+    <span class="badge badge-priority">🎯 High Priority</span>
+    <br><br>
+    <strong>Technical Approach:</strong> PWA + PouchDB + Background Sync + Supabase (sync backend)
+</div>
+
+<div class="page-break"></div>
+
+<h2>📋 Table of Contents</h2>
+<ol>
+    <li><a href="#phase1">Phase 1: PWA Infrastructure Setup</a></li>
+    <li><a href="#phase2">Phase 2: Local Database Layer</a></li>
+    <li><a href="#phase3">Phase 3: Sync Manager Implementation</a></li>
+    <li><a href="#phase4">Phase 4: Application Integration</a></li>
+    <li><a href="#phase5">Phase 5: Service Worker & Caching</a></li>
+    <li><a href="#phase6">Phase 6: Testing & Optimization</a></li>
+    <li><a href="#architecture">Technical Architecture</a></li>
+    <li><a href="#timeline">Implementation Timeline</a></li>
+</ol>
+
+<div class="page-break"></div>
+
+<div id="phase1" class="phase no-break">
+    <div class="phase-header">Phase 1: PWA Infrastructure Setup</div>
+
+    <h3>🎯 Goal</h3>
+    <p>Make the application installable and establish foundation for offline capabilities.</p>
+
+    <h3>📦 Dependencies to Install</h3>
+    <pre style="background: #1e293b; color: #22d3ee; padding: 15px; border-radius: 5px; overflow-x: auto;">npm install --save pouchdb pouchdb-browser pouchdb-find idb
+npm install --save-dev next-pwa</pre>
+
+    <h3>📄 Files to Create</h3>
+    <ol>
+        <li><span class="file-path">public/manifest.json</span> - PWA manifest with app metadata
+            <ul>
+                <li>App name, description, theme colors</li>
+                <li>Icon paths (192x192, 512x512)</li>
+                <li>Display mode: standalone</li>
+                <li>Start URL and scope</li>
+            </ul>
+        </li>
+
+        <li><span class="file-path">public/icons/</span> - App icons directory
+            <ul>
+                <li>icon-192x192.png</li>
+                <li>icon-512x512.png</li>
+                <li>apple-touch-icon.png</li>
+                <li>favicon.ico</li>
+            </ul>
+        </li>
+
+        <li><span class="file-path">app/components/InstallPrompt.tsx</span> - Install button component
+            <ul>
+                <li>Detect if app is installable</li>
+                <li>Show install button/banner</li>
+                <li>Handle beforeinstallprompt event</li>
+                <li>Track installation analytics</li>
+            </ul>
+        </li>
+    </ol>
+
+    <h3>🔧 Files to Modify</h3>
+    <ol>
+        <li><span class="file-path">next.config.js</span>
+            <ul>
+                <li>Add next-pwa configuration</li>
+                <li>Configure service worker</li>
+                <li>Set cache strategies</li>
+            </ul>
+        </li>
+
+        <li><span class="file-path">app/layout.tsx</span>
+            <ul>
+                <li>Update metadata for PWA</li>
+                <li>Add manifest link</li>
+                <li>Add theme-color meta tags</li>
+            </ul>
+        </li>
+    </ol>
+
+    <h3>✅ Success Criteria</h3>
+    <div class="checklist">
+        <ul style="list-style-type: none; padding-left: 0;">
+            <li>☐ App shows "Install" prompt in Chrome/Edge</li>
+            <li>☐ App appears in Windows Start Menu after install</li>
+            <li>☐ App opens in standalone window (no browser UI)</li>
+            <li>☐ App icon and theme colors display correctly</li>
+            <li>☐ Lighthouse PWA score > 90</li>
+        </ul>
+    </div>
+</div>
+
+<div class="page-break"></div>
+
+<div id="phase2" class="phase no-break">
+    <div class="phase-header">Phase 2: Local Database Layer</div>
+
+    <h3>🎯 Goal</h3>
+    <p>Replace Supabase with local-first PouchDB database for offline functionality.</p>
+
+    <h3>📄 Files to Create</h3>
+
+    <h4>1. Database Infrastructure</h4>
+    <ol>
+        <li><span class="file-path">lib/pouchdb-client.ts</span>
+            <ul>
+                <li>Initialize PouchDB instances (products, sales, categories, party_purchases)</li>
+                <li>Configure IndexedDB adapter</li>
+                <li>Set up indexes for query performance</li>
+                <li>Add database versioning for migrations</li>
+            </ul>
+        </li>
+
+        <li><span class="file-path">lib/offline-db.ts</span>
+            <ul>
+                <li><code>getProducts()</code> - Query all products with filters</li>
+                <li><code>createProduct(data)</code> - Add new product</li>
+                <li><code>updateProduct(id, data)</code> - Update existing product</li>
+                <li><code>deleteProduct(id)</code> - Delete product</li>
+                <li>Similar functions for sales, categories, party_purchases</li>
+                <li>Automatic stock management triggers</li>
+            </ul>
+        </li>
+
+        <li><span class="file-path">lib/analytics-local.ts</span>
+            <ul>
+                <li><code>calculateAnalytics()</code> - Compute stats from local data</li>
+                <li>Total products, sales, profit calculations</li>
+                <li>Daily/weekly/monthly aggregations</li>
+                <li>Low stock product detection</li>
+            </ul>
+        </li>
+    </ol>
+
+    <h4>2. React Hooks for Data Access</h4>
+    <ol>
+        <li><span class="file-path">hooks/useProducts.ts</span>
+            <pre style="background: #1e293b; color: #22d3ee; padding: 15px; border-radius: 5px; overflow-x: auto; font-size: 12px;">const { products, loading, error,
+        createProduct, updateProduct, deleteProduct,
+        syncStatus } = useProducts();</pre>
+        </li>
+
+        <li><span class="file-path">hooks/useSales.ts</span></li>
+        <li><span class="file-path">hooks/useCategories.ts</span></li>
+        <li><span class="file-path">hooks/usePartyPurchases.ts</span></li>
+        <li><span class="file-path">hooks/useAnalytics.ts</span></li>
+        <li><span class="file-path">hooks/useOfflineStatus.ts</span> - Monitor online/offline state</li>
+    </ol>
+
+    <h3>🗄️ Database Schema (PouchDB Documents)</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Collection</th>
+                <th>_id Format</th>
+                <th>Key Fields</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>products</strong></td>
+                <td>product_[uuid]</td>
+                <td>name, barcode, purchase_price, selling_price, stock_quantity</td>
+            </tr>
+            <tr>
+                <td><strong>sales</strong></td>
+                <td>sale_[uuid]</td>
+                <td>product_id, quantity, total_amount, profit, sale_date</td>
+            </tr>
+            <tr>
+                <td><strong>categories</strong></td>
+                <td>category_[uuid]</td>
+                <td>name, description</td>
+            </tr>
+            <tr>
+                <td><strong>party_purchases</strong></td>
+                <td>party_[uuid]</td>
+                <td>party_name, item_name, purchase_price, quantity</td>
+            </tr>
+            <tr>
+                <td><strong>_sync_meta</strong></td>
+                <td>sync_[timestamp]</td>
+                <td>last_sync, pending_changes, conflicts</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="warning">
+        <strong>⚠️ Important Considerations:</strong>
+        <ul>
+            <li>PouchDB document IDs must be strings (convert UUIDs)</li>
+            <li>All documents need _rev field for conflict detection</li>
+            <li>Indexes required for performance on large datasets</li>
+            <li>Storage limit: ~50MB on mobile, ~1GB on desktop</li>
+        </ul>
+    </div>
+</div>
+
+<div class="page-break"></div>
+
+<div id="phase3" class="phase no-break">
+    <div class="phase-header">Phase 3: Sync Manager Implementation</div>
+
+    <h3>🎯 Goal</h3>
+    <p>Synchronize local changes with Supabase backend when online, handling conflicts gracefully.</p>
+
+    <h3>📄 Files to Create</h3>
+
+    <ol>
+        <li><span class="file-path">lib/sync-manager.ts</span> - Main sync orchestrator
+            <ul>
+                <li><code>startSync()</code> - Begin bidirectional sync</li>
+                <li><code>syncProducts()</code> - Sync products collection</li>
+                <li><code>syncSales()</code> - Sync sales collection</li>
+                <li><code>handleConflict(local, remote)</code> - Conflict resolution logic</li>
+                <li>Retry logic with exponential backoff</li>
+            </ul>
+        </li>
+
+        <li><span class="file-path">lib/sync-queue.ts</span> - Offline operation queue
+            <ul>
+                <li>Queue CRUD operations when offline</li>
+                <li>Persist queue in IndexedDB</li>
+                <li>Process queue when back online</li>
+                <li>Handle failed operations</li>
+            </ul>
+        </li>
+
+        <li><span class="file-path">lib/conflict-resolver.ts</span> - Conflict detection & resolution
+            <ul>
+                <li>Compare timestamps and _rev values</li>
+                <li>Detect concurrent modifications</li>
+                <li>Provide merge strategies (server-wins, client-wins, manual)</li>
+            </ul>
+        </li>
+
+        <li><span class="file-path">lib/background-sync.ts</span> - Background Sync API wrapper
+            <ul>
+                <li>Register sync events</li>
+                <li>Handle sync in service worker</li>
+                <li>Notify app when sync completes</li>
+            </ul>
+        </li>
+    </ol>
+
+    <h3>🔄 Sync Flow Diagram</h3>
+    <div class="flow-diagram">
+User makes change offline
+    ↓
+Save to PouchDB (local)
+    ↓
+Add to sync queue
+    ↓
+[Wait for online connection]
+    ↓
+Trigger background sync
+    ↓
+Fetch remote changes from Supabase
+    ↓
+Detect conflicts?
+    ├── YES → Show conflict UI to user
+    │         ↓
+    │   User chooses resolution
+    │         ↓
+    │   Apply choice & sync
+    │
+    └── NO → Auto-merge changes
+              ↓
+          Update Supabase
+              ↓
+          Update local PouchDB
+              ↓
+          Mark as synced ✓
+    </div>
+
+    <h3>⚙️ Sync Configuration</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Setting</th>
+                <th>Value</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Sync Interval</td>
+                <td>30 seconds</td>
+                <td>Check for changes every 30s when online</td>
+            </tr>
+            <tr>
+                <td>Batch Size</td>
+                <td>50 records</td>
+                <td>Sync in batches to avoid timeout</td>
+            </tr>
+            <tr>
+                <td>Retry Attempts</td>
+                <td>3 times</td>
+                <td>Retry failed syncs before showing error</td>
+            </tr>
+            <tr>
+                <td>Retry Delay</td>
+                <td>2^n seconds</td>
+                <td>Exponential backoff (2s, 4s, 8s)</td>
+            </tr>
+            <tr>
+                <td>Conflict Strategy</td>
+                <td>Manual</td>
+                <td>Show UI for user to resolve conflicts</td>
+            </tr>
+            <tr>
+                <td>Data Retention</td>
+                <td>90 days</td>
+                <td>Only sync sales from last 90 days</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="info">
+        <strong>💡 Selective Sync Strategy:</strong>
+        <p>To handle large datasets efficiently:</p>
+        <ul>
+            <li><strong>Products:</strong> Sync all (assumed < 5,000 items)</li>
+            <li><strong>Categories:</strong> Sync all (small dataset)</li>
+            <li><strong>Sales:</strong> Last 90 days by default, on-demand for older</li>
+            <li><strong>Party Purchases:</strong> Last 180 days</li>
+        </ul>
+    </div>
+</div>
+
+<div class="page-break"></div>
+
+<div id="phase4" class="phase no-break">
+    <div class="phase-header">Phase 4: Application Integration</div>
+
+    <h3>🎯 Goal</h3>
+    <p>Update existing components to use offline-first data access patterns.</p>
+
+    <h3>📄 Files to Create</h3>
+
+    <ol>
+        <li><span class="file-path">app/components/OfflineIndicator.tsx</span>
+            <ul>
+                <li>Display online/offline status badge</li>
+                <li>Show sync progress indicator</li>
+                <li>Display last sync time</li>
+            </ul>
+        </li>
+
+        <li><span class="file-path">app/components/SyncStatus.tsx</span>
+            <ul>
+                <li>Show pending changes count</li>
+                <li>Manual sync trigger button</li>
+                <li>Sync error notifications</li>
+            </ul>
+        </li>
+
+        <li><span class="file-path">app/components/ConflictResolver.tsx</span>
+            <ul>
+                <li>Display conflicting data side-by-side</li>
+                <li>Options: Keep Local / Use Server / Merge</li>
+                <li>Preview merge result</li>
+            </ul>
+        </li>
+
+        <li><span class="file-path">lib/offline-supabase-client.ts</span>
+            <ul>
+                <li>Drop-in replacement for supabase_client.ts</li>
+                <li>Same API, different implementation</li>
+                <li>Routes to PouchDB instead of Supabase</li>
+            </ul>
+        </li>
+    </ol>
+
+    <h3>🔧 Files to Modify</h3>
+
+    <ol>
+        <li><span class="file-path">app/components/InventoryApp.tsx</span>
+            <ul>
+                <li>Replace Supabase imports with offline hooks</li>
+                <li>Add OfflineIndicator to navigation</li>
+                <li>Add SyncStatus to header</li>
+                <li>Handle offline-specific error states</li>
+            </ul>
+        </li>
+
+        <li><span class="file-path">app/components/Dashboard.tsx</span>
+            <ul>
+                <li>Use <code>useAnalytics()</code> hook instead of direct Supabase calls</li>
+                <li>Show sync status for analytics</li>
+            </ul>
+        </li>
+
+        <li><span class="file-path">app/components/ProductManagement.tsx</span>
+            <ul>
+                <li>Use <code>useProducts()</code> hook</li>
+                <li>Show "Saving offline..." indicator when offline</li>
+            </ul>
+        </li>
+
+        <li><span class="file-path">app/components/QuickSale.tsx</span>
+            <ul>
+                <li>Use <code>useSales()</code> hook</li>
+                <li>Queue sales when offline</li>
+            </ul>
+        </li>
+
+        <li><span class="file-path">app/components/PartyManagement.tsx</span>
+            <ul>
+                <li>Use <code>usePartyPurchases()</code> hook</li>
+                <li>Handle file uploads offline (save locally, upload on sync)</li>
+            </ul>
+        </li>
+    </ol>
+
+    <h3>🎨 UI Changes</h3>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Component</th>
+                <th>New UI Element</th>
+                <th>Purpose</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Navigation Bar</td>
+                <td>🟢 Online / 🔴 Offline badge</td>
+                <td>Show connection status</td>
+            </tr>
+            <tr>
+                <td>Header</td>
+                <td>Sync button with spinner</td>
+                <td>Manual sync trigger</td>
+            </tr>
+            <tr>
+                <td>Forms (Product, Sale)</td>
+                <td>"Saved offline" toast</td>
+                <td>Confirm offline save</td>
+            </tr>
+            <tr>
+                <td>Dashboard</td>
+                <td>Pending changes count badge</td>
+                <td>Show unsynced items</td>
+            </tr>
+            <tr>
+                <td>Modal</td>
+                <td>Conflict resolution dialog</td>
+                <td>Resolve sync conflicts</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="page-break"></div>
+
+<div id="phase5" class="phase no-break">
+    <div class="phase-header">Phase 5: Service Worker & Caching</div>
+
+    <h3>🎯 Goal</h3>
+    <p>Cache static assets and implement intelligent caching strategies for optimal offline experience.</p>
+
+    <h3>📄 Files Configuration</h3>
+
+    <p>With <code>next-pwa</code>, service worker is auto-generated. Configure caching in:</p>
+
+    <ol>
+        <li><span class="file-path">next.config.js</span> - PWA configuration
+            <pre style="background: #1e293b; color: #22d3ee; padding: 15px; border-radius: 5px; overflow-x: auto; font-size: 11px;">const withPWA = require('next-pwa')({
+  dest: 'public',
+  register: true,
+  skipWaiting: true,
+  disable: process.env.NODE_ENV === 'development',
+  runtimeCaching: [
+    // Custom caching strategies
+  ]
+});</pre>
+        </li>
+    </ol>
+
+    <h3>📦 Caching Strategies</h3>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Resource Type</th>
+                <th>Strategy</th>
+                <th>Cache Duration</th>
+                <th>Max Entries</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>HTML Pages</td>
+                <td>Network-first</td>
+                <td>1 day</td>
+                <td>50</td>
+            </tr>
+            <tr>
+                <td>JavaScript/CSS</td>
+                <td>Cache-first</td>
+                <td>30 days</td>
+                <td>100</td>
+            </tr>
+            <tr>
+                <td>Product Images</td>
+                <td>Cache-first</td>
+                <td>30 days</td>
+                <td>500</td>
+            </tr>
+            <tr>
+                <td>Icons/Fonts</td>
+                <td>Cache-first</td>
+                <td>365 days</td>
+                <td>50</td>
+            </tr>
+            <tr>
+                <td>PDF Files</td>
+                <td>Network-first</td>
+                <td>7 days</td>
+                <td>20</td>
+            </tr>
+            <tr>
+                <td>Supabase API</td>
+                <td>Skip (use PouchDB)</td>
+                <td>N/A</td>
+                <td>N/A</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>🚀 Precaching Strategy</h3>
+
+    <div class="info">
+        <strong>App Shell Precaching:</strong>
+        <ul>
+            <li>✅ index.html</li>
+            <li>✅ Main JavaScript bundle</li>
+            <li>✅ CSS stylesheets</li>
+            <li>✅ App icons and logo</li>
+            <li>✅ Critical fonts</li>
+        </ul>
+    </div>
+
+    <h3>💾 Storage Quota Management</h3>
+
+    <ol>
+        <li><span class="file-path">lib/storage-manager.ts</span>
+            <ul>
+                <li>Check available storage quota</li>
+                <li>Monitor storage usage</li>
+                <li>Show warnings at 80% capacity</li>
+                <li>Auto-cleanup old cached images</li>
+            </ul>
+        </li>
+    </ol>
+
+    <div class="warning">
+        <strong>⚠️ Storage Limits:</strong>
+        <ul>
+            <li><strong>Desktop Chrome:</strong> ~60% of free disk space (up to ~1GB typically)</li>
+            <li><strong>Mobile Chrome:</strong> ~50MB - 200MB depending on device</li>
+            <li><strong>Safari:</strong> More restrictive (~50MB)</li>
+        </ul>
+        <p>Implement data cleanup for sales older than 90 days if approaching limits.</p>
+    </div>
+</div>
+
+<div class="page-break"></div>
+
+<div id="phase6" class="phase no-break">
+    <div class="phase-header">Phase 6: Testing & Optimization</div>
+
+    <h3>🎯 Goal</h3>
+    <p>Ensure robust offline functionality and optimal performance across scenarios.</p>
+
+    <h3>✅ Testing Checklist</h3>
+
+    <div class="checklist">
+        <h4>Offline Functionality Tests</h4>
+        <ul style="list-style-type: none; padding-left: 0;">
+            <li>☐ Create product while offline → syncs when online</li>
+            <li>☐ Edit product while offline → syncs changes correctly</li>
+            <li>☐ Delete product while offline → delete syncs to server</li>
+            <li>☐ Record sale while offline → stock updates locally and syncs</li>
+            <li>☐ View analytics while offline → shows cached data</li>
+            <li>☐ Upload CSV/PDF while offline → queues for upload</li>
+        </ul>
+
+        <h4>Sync Tests</h4>
+        <ul style="list-style-type: none; padding-left: 0;">
+            <li>☐ Initial sync downloads all products and recent sales</li>
+            <li>☐ Incremental sync only fetches changed records</li>
+            <li>☐ Conflict detection works for concurrent edits</li>
+            <li>☐ Manual sync button triggers immediate sync</li>
+            <li>☐ Background sync works after closing app</li>
+            <li>☐ Sync retries on failure with backoff</li>
+        </ul>
+
+        <h4>Performance Tests</h4>
+        <ul style="list-style-type: none; padding-left: 0;">
+            <li>☐ App loads in < 2 seconds on 3G</li>
+            <li>☐ Offline operations feel instant</li>
+            <li>☐ Large dataset (5000+ products) performs well</li>
+            <li>☐ Search/filter remains fast with local data</li>
+            <li>☐ Storage usage stays under 100MB</li>
+        </ul>
+
+        <h4>Installation Tests</h4>
+        <ul style="list-style-type: none; padding-left: 0;">
+            <li>☐ Install prompt appears on first visit</li>
+            <li>☐ App installs successfully on Windows</li>
+            <li>☐ App installs successfully on Android</li>
+            <li>☐ App installs successfully on iOS (Safari)</li>
+            <li>☐ Installed app opens in standalone mode</li>
+            <li>☐ App icon appears correctly in OS</li>
+        </ul>
+
+        <h4>Edge Cases</h4>
+        <ul style="list-style-type: none; padding-left: 0;">
+            <li>☐ Offline for extended period (24+ hours)</li>
+            <li>☐ Multiple tabs open simultaneously</li>
+            <li>☐ Clear cache doesn't break app</li>
+            <li>☐ Low storage warning appears correctly</li>
+            <li>☐ Conflict UI handles all merge scenarios</li>
+        </ul>
+    </div>
+
+    <h3>🔧 Optimization Tasks</h3>
+
+    <ol>
+        <li><strong>Database Performance</strong>
+            <ul>
+                <li>Add PouchDB indexes for frequently queried fields</li>
+                <li>Implement pagination for large result sets</li>
+                <li>Use database.allDocs() for bulk operations</li>
+            </ul>
+        </li>
+
+        <li><strong>Image Optimization</strong>
+            <ul>
+                <li>Lazy load product images</li>
+                <li>Compress images before caching</li>
+                <li>Use WebP format when supported</li>
+            </ul>
+        </li>
+
+        <li><strong>Bundle Size</strong>
+            <ul>
+                <li>Code splitting for routes</li>
+                <li>Tree shake unused PouchDB plugins</li>
+                <li>Dynamic imports for heavy components</li>
+            </ul>
+        </li>
+
+        <li><strong>Data Cleanup</strong>
+            <ul>
+                <li>Auto-delete old sales (> 180 days)</li>
+                <li>Compress old cached images</li>
+                <li>Clear unused service worker caches</li>
+            </ul>
+        </li>
+    </ol>
+</div>
+
+<div class="page-break"></div>
+
+<div id="architecture" class="architecture-box">
+    <h2 style="margin-top: 0;">🏗️ Technical Architecture</h2>
+
+    <h3>System Diagram</h3>
+    <div class="flow-diagram">
+┌─────────────────────────────────────────────────────────────────┐
+│                        USER INTERFACE                            │
+│  (React Components: Dashboard, Products, Sales, Party)          │
+└──────────────────────┬──────────────────────────────────────────┘
+                       │
+                       ↓
+┌─────────────────────────────────────────────────────────────────┐
+│                    CUSTOM REACT HOOKS                            │
+│  useProducts() | useSales() | useAnalytics() | useOfflineStatus │
+└──────────────────────┬──────────────────────────────────────────┘
+                       │
+         ┌─────────────┴─────────────┐
+         ↓                           ↓
+┌──────────────────┐       ┌──────────────────┐
+│   POUCHDB        │       │  SYNC MANAGER     │
+│   (IndexedDB)    │←──────│  + Sync Queue     │
+│   Local Storage  │       │  + Conflict Res   │
+└──────────────────┘       └─────────┬─────────┘
+         ↑                           ↓
+         │                  ┌──────────────────┐
+         │                  │   BACKGROUND      │
+         │                  │   SYNC (SW)       │
+         │                  └─────────┬─────────┘
+         │                           ↓
+         └────────────────┬─────────────────────┐
+                          ↓                     ↓
+                 ┌──────────────────┐  ┌──────────────────┐
+                 │   SUPABASE API   │  │  SERVICE WORKER  │
+                 │   (Cloud Sync)   │  │  (Asset Cache)   │
+                 └──────────────────┘  └──────────────────┘
+    </div>
+
+    <h3>Data Flow</h3>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Scenario</th>
+                <th>Flow</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Create Product (Online)</strong></td>
+                <td>
+                    1. User submits form<br>
+                    2. Save to PouchDB (instant feedback)<br>
+                    3. Add to sync queue<br>
+                    4. Sync to Supabase in background<br>
+                    5. Update local doc with server _rev
+                </td>
+            </tr>
+            <tr>
+                <td><strong>Create Product (Offline)</strong></td>
+                <td>
+                    1. User submits form<br>
+                    2. Save to PouchDB with temp ID<br>
+                    3. Add to sync queue (marked pending)<br>
+                    4. Show "Saved offline" toast<br>
+                    5. When online: sync to server<br>
+                    6. Update local doc with server ID
+                </td>
+            </tr>
+            <tr>
+                <td><strong>View Products</strong></td>
+                <td>
+                    1. Query PouchDB (instant)<br>
+                    2. Display to user<br>
+                    3. Background sync checks for updates<br>
+                    4. If changes found, update UI reactively
+                </td>
+            </tr>
+            <tr>
+                <td><strong>Sync Conflict</strong></td>
+                <td>
+                    1. Detect _rev mismatch<br>
+                    2. Fetch both versions (local & server)<br>
+                    3. Show ConflictResolver UI<br>
+                    4. User chooses resolution<br>
+                    5. Apply choice to both DBs
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="page-break"></div>
+
+<div id="timeline">
+    <h2>📅 Implementation Timeline</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Week</th>
+                <th>Phase</th>
+                <th>Tasks</th>
+                <th>Hours</th>
+                <th>Deliverables</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Week 1</strong></td>
+                <td>Phase 1</td>
+                <td>
+                    • Install PWA packages<br>
+                    • Create manifest.json<br>
+                    • Generate app icons<br>
+                    • Configure next-pwa<br>
+                    • Test installation
+                </td>
+                <td>8h</td>
+                <td>✅ Installable PWA</td>
+            </tr>
+            <tr>
+                <td><strong>Week 2</strong></td>
+                <td>Phase 2</td>
+                <td>
+                    • Set up PouchDB<br>
+                    • Create offline-db.ts<br>
+                    • Build custom hooks<br>
+                    • Implement local analytics<br>
+                    • Test CRUD operations
+                </td>
+                <td>12h</td>
+                <td>✅ Local database working</td>
+            </tr>
+            <tr>
+                <td><strong>Week 3</strong></td>
+                <td>Phase 3</td>
+                <td>
+                    • Build sync manager<br>
+                    • Implement sync queue<br>
+                    • Create conflict resolver<br>
+                    • Set up background sync<br>
+                    • Test sync scenarios
+                </td>
+                <td>12h</td>
+                <td>✅ Bidirectional sync</td>
+            </tr>
+            <tr>
+                <td><strong>Week 4</strong></td>
+                <td>Phase 4</td>
+                <td>
+                    • Update InventoryApp.tsx<br>
+                    • Create UI components<br>
+                    • Replace Supabase calls<br>
+                    • Add offline indicators<br>
+                    • Handle edge cases
+                </td>
+                <td>10h</td>
+                <td>✅ Integrated offline UI</td>
+            </tr>
+            <tr>
+                <td><strong>Week 5</strong></td>
+                <td>Phase 5</td>
+                <td>
+                    • Configure caching<br>
+                    • Set up precaching<br>
+                    • Implement storage mgmt<br>
+                    • Optimize bundle size<br>
+                    • Test offline loading
+                </td>
+                <td>8h</td>
+                <td>✅ Full offline capability</td>
+            </tr>
+            <tr>
+                <td><strong>Week 6</strong></td>
+                <td>Phase 6</td>
+                <td>
+                    • Comprehensive testing<br>
+                    • Performance optimization<br>
+                    • Fix bugs<br>
+                    • Documentation<br>
+                    • User acceptance testing
+                </td>
+                <td>10h</td>
+                <td>✅ Production-ready PWA</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="info">
+        <strong>Total Estimated Time:</strong> 60 hours (can vary ±10 hours based on complexity and unforeseen issues)
+    </div>
+</div>
+
+<div class="page-break"></div>
+
+<h2>📊 Key Metrics & Success Criteria</h2>
+
+<table>
+    <thead>
+        <tr>
+            <th>Metric</th>
+            <th>Target</th>
+            <th>Measurement Method</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Lighthouse PWA Score</td>
+            <td>&gt; 90</td>
+            <td>Chrome DevTools Lighthouse</td>
+        </tr>
+        <tr>
+            <td>Initial Load Time</td>
+            <td>&lt; 2 seconds</td>
+            <td>Chrome Network tab (3G throttle)</td>
+        </tr>
+        <tr>
+            <td>Offline Operation Speed</td>
+            <td>&lt; 100ms</td>
+            <td>Performance.now() measurements</td>
+        </tr>
+        <tr>
+            <td>Storage Usage</td>
+            <td>&lt; 100MB</td>
+            <td>navigator.storage.estimate()</td>
+        </tr>
+        <tr>
+            <td>Sync Success Rate</td>
+            <td>&gt; 95%</td>
+            <td>Analytics tracking</td>
+        </tr>
+        <tr>
+            <td>Bundle Size</td>
+            <td>&lt; 500KB (gzipped)</td>
+            <td>npm run build output</td>
+        </tr>
+        <tr>
+            <td>Install Rate</td>
+            <td>&gt; 60%</td>
+            <td>beforeinstallprompt analytics</td>
+        </tr>
+    </tbody>
+</table>
+
+<h2>⚠️ Known Limitations & Trade-offs</h2>
+
+<div class="warning">
+    <h4>Technical Limitations</h4>
+    <ol>
+        <li><strong>Real-time Updates:</strong> Will use polling (every 30s) instead of true real-time WebSocket subscriptions</li>
+        <li><strong>Storage Constraints:</strong> Mobile devices have limited storage (~50-200MB)</li>
+        <li><strong>Initial Sync Time:</strong> First sync may take 1-2 minutes for large datasets</li>
+        <li><strong>Authentication:</strong> Requires online connection for initial login (offline session valid for 7 days)</li>
+        <li><strong>File Uploads:</strong> PDF/CSV files uploaded while offline won't process until online</li>
+    </ol>
+
+    <h4>Browser Support</h4>
+    <ul>
+        <li>✅ Chrome/Edge (Full support)</li>
+        <li>✅ Firefox (Full support)</li>
+        <li>⚠️ Safari (Limited - install prompt differs, storage limits stricter)</li>
+        <li>✅ Mobile Chrome (Full support)</li>
+        <li>⚠️ iOS Safari (Works but install experience differs)</li>
+    </ul>
+</div>
+
+<h2>🚀 Deployment Checklist</h2>
+
+<div class="checklist">
+    <h4>Pre-Deployment</h4>
+    <ul style="list-style-type: none; padding-left: 0;">
+        <li>☐ All tests passing</li>
+        <li>☐ Lighthouse PWA score &gt; 90</li>
+        <li>☐ Service worker registered successfully</li>
+        <li>☐ App installable on all target platforms</li>
+        <li>☐ Offline functionality tested extensively</li>
+        <li>☐ Sync conflicts tested and resolved</li>
+        <li>☐ Performance benchmarks met</li>
+        <li>☐ Documentation updated</li>
+    </ul>
+
+    <h4>Deployment</h4>
+    <ul style="list-style-type: none; padding-left: 0;">
+        <li>☐ Deploy to production (Vercel)</li>
+        <li>☐ Verify HTTPS enabled</li>
+        <li>☐ Test on production URL</li>
+        <li>☐ Monitor error logs</li>
+        <li>☐ Check analytics tracking</li>
+    </ul>
+
+    <h4>Post-Deployment</h4>
+    <ul style="list-style-type: none; padding-left: 0;">
+        <li>☐ User acceptance testing</li>
+        <li>☐ Monitor sync success rates</li>
+        <li>☐ Collect user feedback</li>
+        <li>☐ Plan iterative improvements</li>
+    </ul>
+</div>
+
+<div class="page-break"></div>
+
+<h2>📚 Additional Resources</h2>
+
+<div class="info">
+    <h4>Documentation References</h4>
+    <ul>
+        <li><strong>PouchDB:</strong> https://pouchdb.com/guides/</li>
+        <li><strong>next-pwa:</strong> https://github.com/shadowwalker/next-pwa</li>
+        <li><strong>Service Workers:</strong> https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API</li>
+        <li><strong>Background Sync:</strong> https://developer.chrome.com/blog/background-sync/</li>
+        <li><strong>IndexedDB:</strong> https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API</li>
+    </ul>
+
+    <h4>Tools for Testing</h4>
+    <ul>
+        <li><strong>Chrome DevTools:</strong> Application tab → Service Workers, Storage</li>
+        <li><strong>Lighthouse:</strong> PWA audit and performance testing</li>
+        <li><strong>Network Throttling:</strong> Simulate offline/slow connections</li>
+        <li><strong>Storage Inspector:</strong> View IndexedDB contents</li>
+    </ul>
+</div>
+
+<h2>💡 Recommendations</h2>
+
+<ol>
+    <li><strong>Start Small:</strong> Begin with Phase 1-2 to get basic offline functionality, then iterate</li>
+    <li><strong>Test Early:</strong> Test on real devices (mobile + desktop) throughout development</li>
+    <li><strong>Monitor Storage:</strong> Implement storage quota warnings early to avoid user issues</li>
+    <li><strong>User Education:</strong> Add onboarding to explain offline features and sync behavior</li>
+    <li><strong>Analytics:</strong> Track offline usage, sync success rates, and install rates</li>
+    <li><strong>Gradual Rollout:</strong> Consider beta testing with a subset of users first</li>
+</ol>
+
+<hr style="margin: 40px 0; border: none; border-top: 2px solid #0ea5e9;">
+
+<div style="text-align: center; color: #666; font-size: 14px;">
+    <p><strong>Document Version:</strong> 1.0</p>
+    <p><strong>Last Updated:</strong> November 2025</p>
+    <p><strong>Status:</strong> Ready for Implementation</p>
+</div>
+
+</body>
+</html>

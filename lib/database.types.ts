@@ -143,12 +143,156 @@ export interface Database {
           created_at?: string
         }
       }
+      party_purchases: {
+        Row: {
+          id: string
+          party_name: string
+          item_name: string
+          barcode: string | null
+          purchase_price: number
+          selling_price: number
+          purchased_quantity: number
+          remaining_quantity: number
+          purchase_date: string
+          notes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          party_name: string
+          item_name: string
+          barcode?: string | null
+          purchase_price: number
+          selling_price: number
+          purchased_quantity: number
+          remaining_quantity: number
+          purchase_date: string
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          party_name?: string
+          item_name?: string
+          barcode?: string | null
+          purchase_price?: number
+          selling_price?: number
+          purchased_quantity?: number
+          remaining_quantity?: number
+          purchase_date?: string
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
     Views: {
-      [_ in never]: never
+      product_analytics: {
+        Row: {
+          id: string
+          name: string
+          category_id: string | null
+          category_name: string | null
+          barcode: string | null
+          stock_quantity: number
+          min_stock_level: number
+          purchase_price: number
+          selling_price: number
+          profit_per_unit: number
+          profit_margin_percent: number | null
+          total_sold: number
+          total_revenue: number
+          total_profit: number
+          stock_status: string
+          created_at: string
+          updated_at: string
+        }
+      }
+      daily_sales_summary: {
+        Row: {
+          sale_date: string
+          transaction_count: number
+          total_items_sold: number
+          total_revenue: number
+          total_profit: number
+          average_transaction: number
+          min_transaction: number
+          max_transaction: number
+        }
+      }
+      category_performance: {
+        Row: {
+          id: string
+          category_name: string
+          description: string | null
+          total_products: number
+          total_stock: number
+          inventory_value: number
+          total_sold: number
+          total_revenue: number
+          total_profit: number
+          avg_profit_margin: number
+          created_at: string
+        }
+      }
+      low_stock_products: {
+        Row: {
+          id: string
+          name: string
+          category_name: string | null
+          barcode: string | null
+          stock_quantity: number
+          min_stock_level: number
+          purchase_price: number
+          selling_price: number
+          stock_deficit: number
+          last_updated: string
+        }
+      }
+      monthly_sales_trends: {
+        Row: {
+          month: string
+          transaction_count: number
+          total_items_sold: number
+          total_revenue: number
+          total_profit: number
+          avg_transaction_value: number
+          unique_products_sold: number
+        }
+      }
+      party_purchases_summary: {
+        Row: {
+          party_name: string
+          total_purchases: number
+          total_items_purchased: number
+          total_items_remaining: number
+          total_items_transferred: number
+          total_purchase_value: number
+          remaining_inventory_value: number
+          first_purchase_date: string
+          last_purchase_date: string
+        }
+      }
     }
     Functions: {
-      [_ in never]: never
+      get_dashboard_stats: {
+        Args: Record<string, never>
+        Returns: {
+          total_products: number
+          total_sales: number
+          today_sales: number
+          low_stock_count: number
+        }[]
+      }
+      check_product_availability: {
+        Args: {
+          p_product_id: string
+          p_quantity: number
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

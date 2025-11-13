@@ -138,6 +138,25 @@ export const createSale = async (sale: SaleInsert) => {
   return data
 }
 
+export const updateSale = async (saleId: string, updates: Partial<SaleInsert>) => {
+  const { data, error } = await supabase
+    .from('sales')
+    .update(updates)
+    .eq('id', saleId)
+    .select(`
+      *,
+      products (
+        id,
+        name,
+        purchase_price
+      )
+    `)
+    .single()
+
+  if (error) throw error
+  return data
+}
+
 export const deleteSale = async (saleId: string) => {
   const { data, error } = await supabase
     .from('sales')

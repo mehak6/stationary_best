@@ -1,0 +1,600 @@
+'use client';
+
+import {
+  getProductsDB,
+  getSalesDB,
+  getCategoriesDB,
+  getPartyPurchasesDB,
+  generateUUID,
+  toPouchID,
+  fromPouchID,
+  getCurrentTimestamp
+} from './pouchdb-client';
+
+// Type definitions matching Supabase schema
+export interface Product {
+  id: string;
+  name: string;
+  category_id: string | null;
+  barcode: string | null;
+  purchase_price: number;
+  selling_price: number;
+  stock_quantity: number;
+  min_stock_level: number;
+  supplier_info: any | null;
+  image_url: string | null;
+  description: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Sale {
+  id: string;
+  product_id: string;
+  quantity: number;
+  unit_price: number;
+  total_amount: number;
+  profit: number;
+  customer_info: any | null;
+  sale_date: string;
+  notes: string | null;
+  created_at: string;
+}
+
+export interface Category {
+  id: string;
+  name: string;
+  description: string | null;
+  created_at: string;
+}
+
+export interface PartyPurchase {
+  id: string;
+  party_name: string;
+  item_name: string;
+  barcode: string | null;
+  purchase_price: number;
+  selling_price: number;
+  purchased_quantity: number;
+  remaining_quantity: number;
+  purchase_date: string;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// ==================== PRODUCTS ====================
+
+export const getAllProducts = async (): Promise<Product[]> => {
+  try {
+    const db = getProductsDB();
+    const result = await db.allDocs({
+      include_docs: true,
+      startkey: 'product_',
+      endkey: 'product_\ufff0'
+    });
+
+    return result.rows.map(row => {
+      const doc: any = row.doc;
+      return {
+        id: fromPouchID(doc._id),
+        name: doc.name,
+        category_id: doc.category_id,
+        barcode: doc.barcode,
+        purchase_price: doc.purchase_price,
+        selling_price: doc.selling_price,
+        stock_quantity: doc.stock_quantity,
+        min_stock_level: doc.min_stock_level,
+        supplier_info: doc.supplier_info,
+        image_url: doc.image_url,
+        description: doc.description,
+        created_at: doc.created_at,
+        updated_at: doc.updated_at
+      };
+    });
+  } catch (error) {
+    console.error('Error getting products:', error);
+    return [];
+  }
+};
+
+export const getProductById = async (id: string): Promise<Product | null> => {
+  try {
+    const db = getProductsDB();
+    const doc: any = await db.get(toPouchID('product', id));
+
+    return {
+      id: fromPouchID(doc._id),
+      name: doc.name,
+      category_id: doc.category_id,
+      barcode: doc.barcode,
+      purchase_price: doc.purchase_price,
+      selling_price: doc.selling_price,
+      stock_quantity: doc.stock_quantity,
+      min_stock_level: doc.min_stock_level,
+      supplier_info: doc.supplier_info,
+      image_url: doc.image_url,
+      description: doc.description,
+      created_at: doc.created_at,
+      updated_at: doc.updated_at
+    };
+  } catch (error) {
+    console.error('Error getting product by ID:', error);
+    return null;
+  }
+};
+
+export const saveProduct = async (product: Product): Promise<Product> => {
+  try {
+    const db = getProductsDB();
+    const docId = toPouchID('product', product.id);
+
+    let doc: any;
+    try {
+      doc = await db.get(docId);
+      // Update existing
+      const updatedDoc = { ...doc, ...product };
+      await db.put(updatedDoc);
+    } catch {
+      // Create new
+      doc = {
+        _id: docId,
+        ...product
+      };
+      await db.put(doc);
+    }
+
+    return product;
+  } catch (error) {
+    console.error('Error saving product:', error);
+    throw error;
+  }
+};
+
+export const createProduct = async (product: Omit<Product, 'id' | 'created_at' | 'updated_at'>): Promise<Product> => {
+  const db = getProductsDB();
+  const id = generateUUID();
+  const now = getCurrentTimestamp();
+
+  const doc = {
+    _id: toPouchID('product', id),
+    ...product,
+    created_at: now,
+    updated_at: now
+  };
+
+  await db.put(doc);
+
+  return {
+    id,
+    ...product,
+    created_at: now,
+    updated_at: now
+  };
+};
+
+export const updateProduct = async (id: string, updates: Partial<Product>): Promise<Product | null> => {
+  try {
+    const db = getProductsDB();
+    const docId = toPouchID('product', id);
+    const doc: any = await db.get(docId);
+
+    const updatedDoc = {
+      ...doc,
+      ...updates,
+      _id: docId,
+      _rev: doc._rev,
+      updated_at: getCurrentTimestamp()
+    };
+
+    await db.put(updatedDoc);
+
+    return {
+      id: fromPouchID(updatedDoc._id),
+      name: updatedDoc.name,
+      category_id: updatedDoc.category_id,
+      barcode: updatedDoc.barcode,
+      purchase_price: updatedDoc.purchase_price,
+      selling_price: updatedDoc.selling_price,
+      stock_quantity: updatedDoc.stock_quantity,
+      min_stock_level: updatedDoc.min_stock_level,
+      supplier_info: updatedDoc.supplier_info,
+      image_url: updatedDoc.image_url,
+      description: updatedDoc.description,
+      created_at: updatedDoc.created_at,
+      updated_at: updatedDoc.updated_at
+    };
+  } catch (error) {
+    console.error('Error updating product:', error);
+    return null;
+  }
+};
+
+export const deleteProduct = async (id: string): Promise<boolean> => {
+  try {
+    const db = getProductsDB();
+    const docId = toPouchID('product', id);
+    const doc = await db.get(docId);
+    await db.remove(doc);
+    return true;
+  } catch (error) {
+    console.error('Error deleting product:', error);
+    return false;
+  }
+};
+
+// ==================== SALES ====================
+
+export const getAllSales = async (limit?: number): Promise<Sale[]> => {
+  try {
+    const db = getSalesDB();
+    const result = await db.allDocs({
+      include_docs: true,
+      startkey: 'sale_',
+      endkey: 'sale_\ufff0',
+      limit: limit,
+      descending: true
+    });
+
+    return result.rows.map(row => {
+      const doc: any = row.doc;
+      return {
+        id: fromPouchID(doc._id),
+        product_id: doc.product_id,
+        quantity: doc.quantity,
+        unit_price: doc.unit_price,
+        total_amount: doc.total_amount,
+        profit: doc.profit,
+        customer_info: doc.customer_info,
+        sale_date: doc.sale_date,
+        notes: doc.notes,
+        created_at: doc.created_at
+      };
+    });
+  } catch (error) {
+    console.error('Error getting sales:', error);
+    return [];
+  }
+};
+
+export const saveSale = async (sale: Sale): Promise<Sale> => {
+  try {
+    const db = getSalesDB();
+    const docId = toPouchID('sale', sale.id);
+
+    let doc: any;
+    try {
+      doc = await db.get(docId);
+      // Update existing
+      const updatedDoc = { ...doc, ...sale };
+      await db.put(updatedDoc);
+    } catch {
+      // Create new
+      doc = {
+        _id: docId,
+        ...sale
+      };
+      await db.put(doc);
+    }
+
+    return sale;
+  } catch (error) {
+    console.error('Error saving sale:', error);
+    throw error;
+  }
+};
+
+export const createSale = async (sale: Omit<Sale, 'id' | 'created_at'>): Promise<Sale> => {
+  const db = getSalesDB();
+  const id = generateUUID();
+  const now = getCurrentTimestamp();
+
+  const doc = {
+    _id: toPouchID('sale', id),
+    ...sale,
+    created_at: now
+  };
+
+  await db.put(doc);
+
+  // Update product stock
+  await updateProductStock(sale.product_id, -sale.quantity);
+
+  return {
+    id,
+    ...sale,
+    created_at: now
+  };
+};
+
+export const updateSale = async (id: string, updates: Partial<Sale>): Promise<Sale> => {
+  try {
+    const db = getSalesDB();
+    const docId = toPouchID('sale', id);
+    const doc: any = await db.get(docId);
+
+    const updatedDoc = { ...doc, ...updates };
+    await db.put(updatedDoc);
+
+    return {
+      id: fromPouchID(updatedDoc._id),
+      product_id: updatedDoc.product_id,
+      quantity: updatedDoc.quantity,
+      unit_price: updatedDoc.unit_price,
+      total_amount: updatedDoc.total_amount,
+      profit: updatedDoc.profit,
+      customer_info: updatedDoc.customer_info,
+      sale_date: updatedDoc.sale_date,
+      notes: updatedDoc.notes,
+      created_at: updatedDoc.created_at
+    };
+  } catch (error) {
+    console.error('Error updating sale:', error);
+    throw error;
+  }
+};
+
+export const deleteSale = async (id: string): Promise<boolean> => {
+  try {
+    const db = getSalesDB();
+    const docId = toPouchID('sale', id);
+    const doc: any = await db.get(docId);
+
+    // Restore product stock before deleting
+    await updateProductStock(doc.product_id, doc.quantity);
+
+    await db.remove(doc);
+    return true;
+  } catch (error) {
+    console.error('Error deleting sale:', error);
+    return false;
+  }
+};
+
+export const getSalesByDate = async (date: string): Promise<Sale[]> => {
+  try {
+    const db = getSalesDB();
+    const result = await db.find({
+      selector: {
+        _id: { $gte: 'sale_', $lt: 'sale_\ufff0' },
+        sale_date: date
+      }
+    });
+
+    return result.docs.map((doc: any) => ({
+      id: fromPouchID(doc._id),
+      product_id: doc.product_id,
+      quantity: doc.quantity,
+      unit_price: doc.unit_price,
+      total_amount: doc.total_amount,
+      profit: doc.profit,
+      customer_info: doc.customer_info,
+      sale_date: doc.sale_date,
+      notes: doc.notes,
+      created_at: doc.created_at
+    }));
+  } catch (error) {
+    console.error('Error getting sales by date:', error);
+    return [];
+  }
+};
+
+export const getSalesByDateRange = async (startDate: string, endDate: string): Promise<Sale[]> => {
+  try {
+    const db = getSalesDB();
+    const result = await db.find({
+      selector: {
+        _id: { $gte: 'sale_', $lt: 'sale_\ufff0' },
+        sale_date: { $gte: startDate, $lte: endDate }
+      }
+    });
+
+    return result.docs.map((doc: any) => ({
+      id: fromPouchID(doc._id),
+      product_id: doc.product_id,
+      quantity: doc.quantity,
+      unit_price: doc.unit_price,
+      total_amount: doc.total_amount,
+      profit: doc.profit,
+      customer_info: doc.customer_info,
+      sale_date: doc.sale_date,
+      notes: doc.notes,
+      created_at: doc.created_at
+    }));
+  } catch (error) {
+    console.error('Error getting sales by date range:', error);
+    return [];
+  }
+};
+
+// Helper: Update product stock
+const updateProductStock = async (productId: string, quantityChange: number) => {
+  try {
+    const product = await getProductById(productId);
+    if (product) {
+      await updateProduct(productId, {
+        stock_quantity: product.stock_quantity + quantityChange
+      });
+    }
+  } catch (error) {
+    console.error('Error updating product stock:', error);
+  }
+};
+
+// ==================== CATEGORIES ====================
+
+export const getAllCategories = async (): Promise<Category[]> => {
+  try {
+    const db = getCategoriesDB();
+    const result = await db.allDocs({
+      include_docs: true,
+      startkey: 'category_',
+      endkey: 'category_\ufff0'
+    });
+
+    return result.rows.map(row => {
+      const doc: any = row.doc;
+      return {
+        id: fromPouchID(doc._id),
+        name: doc.name,
+        description: doc.description,
+        created_at: doc.created_at
+      };
+    });
+  } catch (error) {
+    console.error('Error getting categories:', error);
+    return [];
+  }
+};
+
+export const createCategory = async (category: Omit<Category, 'id' | 'created_at'>): Promise<Category> => {
+  const db = getCategoriesDB();
+  const id = generateUUID();
+  const now = getCurrentTimestamp();
+
+  const doc = {
+    _id: toPouchID('category', id),
+    ...category,
+    created_at: now
+  };
+
+  await db.put(doc);
+
+  return {
+    id,
+    ...category,
+    created_at: now
+  };
+};
+
+// ==================== PARTY PURCHASES ====================
+
+export const getAllPartyPurchases = async (): Promise<PartyPurchase[]> => {
+  try {
+    const db = getPartyPurchasesDB();
+    const result = await db.allDocs({
+      include_docs: true,
+      startkey: 'party_',
+      endkey: 'party_\ufff0'
+    });
+
+    return result.rows.map(row => {
+      const doc: any = row.doc;
+      return {
+        id: fromPouchID(doc._id),
+        party_name: doc.party_name,
+        item_name: doc.item_name,
+        barcode: doc.barcode,
+        purchase_price: doc.purchase_price,
+        selling_price: doc.selling_price,
+        purchased_quantity: doc.purchased_quantity,
+        remaining_quantity: doc.remaining_quantity,
+        purchase_date: doc.purchase_date,
+        notes: doc.notes,
+        created_at: doc.created_at,
+        updated_at: doc.updated_at
+      };
+    });
+  } catch (error) {
+    console.error('Error getting party purchases:', error);
+    return [];
+  }
+};
+
+export const savePartyPurchase = async (purchase: PartyPurchase): Promise<PartyPurchase> => {
+  try {
+    const db = getPartyPurchasesDB();
+    const docId = toPouchID('party', purchase.id);
+
+    let doc: any;
+    try {
+      doc = await db.get(docId);
+      // Update existing
+      const updatedDoc = { ...doc, ...purchase };
+      await db.put(updatedDoc);
+    } catch {
+      // Create new
+      doc = {
+        _id: docId,
+        ...purchase
+      };
+      await db.put(doc);
+    }
+
+    return purchase;
+  } catch (error) {
+    console.error('Error saving party purchase:', error);
+    throw error;
+  }
+};
+
+export const createPartyPurchase = async (purchase: Omit<PartyPurchase, 'id' | 'created_at' | 'updated_at'>): Promise<PartyPurchase> => {
+  const db = getPartyPurchasesDB();
+  const id = generateUUID();
+  const now = getCurrentTimestamp();
+
+  const doc = {
+    _id: toPouchID('party', id),
+    ...purchase,
+    created_at: now,
+    updated_at: now
+  };
+
+  await db.put(doc);
+
+  return {
+    id,
+    ...purchase,
+    created_at: now,
+    updated_at: now
+  };
+};
+
+export const updatePartyPurchase = async (id: string, updates: Partial<PartyPurchase>): Promise<PartyPurchase | null> => {
+  try {
+    const db = getPartyPurchasesDB();
+    const docId = toPouchID('party', id);
+    const doc: any = await db.get(docId);
+
+    const updatedDoc = {
+      ...doc,
+      ...updates,
+      _id: docId,
+      _rev: doc._rev,
+      updated_at: getCurrentTimestamp()
+    };
+
+    await db.put(updatedDoc);
+
+    return {
+      id: fromPouchID(updatedDoc._id),
+      party_name: updatedDoc.party_name,
+      item_name: updatedDoc.item_name,
+      barcode: updatedDoc.barcode,
+      purchase_price: updatedDoc.purchase_price,
+      selling_price: updatedDoc.selling_price,
+      purchased_quantity: updatedDoc.purchased_quantity,
+      remaining_quantity: updatedDoc.remaining_quantity,
+      purchase_date: updatedDoc.purchase_date,
+      notes: updatedDoc.notes,
+      created_at: updatedDoc.created_at,
+      updated_at: updatedDoc.updated_at
+    };
+  } catch (error) {
+    console.error('Error updating party purchase:', error);
+    return null;
+  }
+};
+
+export const deletePartyPurchase = async (id: string): Promise<boolean> => {
+  try {
+    const db = getPartyPurchasesDB();
+    const docId = toPouchID('party', id);
+    const doc = await db.get(docId);
+    await db.remove(doc);
+    return true;
+  } catch (error) {
+    console.error('Error deleting party purchase:', error);
+    return false;
+  }
+};

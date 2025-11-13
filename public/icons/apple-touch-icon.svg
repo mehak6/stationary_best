@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="180" height="180" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0ea5e9;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0284c7;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="180" height="180" fill="url(#grad)"/>
+
+  <!-- Package Box -->
+  <g transform="translate(45, 45)">
+    <!-- Box shadow -->
+    <rect x="10" y="10" width="90" height="90" fill="rgba(0,0,0,0.2)" rx="8"/>
+
+    <!-- Main box -->
+    <rect x="0" y="0" width="90" height="90" fill="#ffffff" rx="8"/>
+
+    <!-- Box details -->
+    <line x1="45" y1="0" x2="45" y2="90" stroke="#94a3b8" stroke-width="3.6" stroke-linecap="round"/>
+    <line x1="0" y1="30.6" x2="90" y2="30.6" stroke="#94a3b8" stroke-width="3.6" stroke-linecap="round"/>
+
+    <!-- Checkmark -->
+    <polyline points="27,54 40.5,67.5 67.5,40.5"
+              fill="none" stroke="#10b981" stroke-width="5.3999999999999995" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- Text -->
+  <text x="90" y="153" font-family="Arial, sans-serif" font-size="14.4" font-weight="bold" fill="white" text-anchor="middle">INVENTORY</text>
+</svg>

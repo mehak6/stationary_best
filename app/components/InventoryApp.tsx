@@ -19,27 +19,37 @@ import {
   Home
 } from 'lucide-react';
 
-// Import Supabase functions
+// Import offline-aware database functions
 import {
   getProducts,
   getSales,
   createProduct,
   createSale,
   updateProduct,
+  updateSale,
   deleteProduct,
   deleteSale,
-  getSalesByDate,
   getSalesByDateRange,
   getAnalytics,
   getPartyPurchases,
   createPartyPurchase,
   updatePartyPurchase,
-  deletePartyPurchase,
-  type Product,
-  type Sale,
-  type PartyPurchase,
-  type PartyPurchaseInsert
+  deletePartyPurchase
+} from '../../lib/offline-adapter';
+
+// Import types from Supabase
+import type {
+  Product,
+  Sale,
+  PartyPurchase,
+  PartyPurchaseInsert
 } from '../../supabase_client';
+
+// Import PWA components
+import InstallPrompt from './InstallPrompt';
+import SyncIndicator from './SyncIndicator';
+import SyncSettingsModal from './SyncSettingsModal';
+import OfflineIndicator from './OfflineIndicator';
 
 // No more mock data - using real Supabase data throughout the application
 
@@ -63,6 +73,12 @@ function Dashboard({ onNavigate }) {
   const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
   const [allSalesPage, setAllSalesPage] = useState(1);
   const SALES_PER_PAGE = 20;
+  const [editingSale, setEditingSale] = useState(null);
+  const [editSaleData, setEditSaleData] = useState({
+    quantity: 0,
+    unit_price: 0,
+    sale_date: ''
+  });
 
   // Fetch dashboard data on component mount
   useEffect(() => {
@@ -99,6 +115,62 @@ function Dashboard({ onNavigate }) {
 
     fetchDashboardData();
   }, []);
+
+  const handleEditSale = (sale: Sale) => {
+    setEditingSale(sale);
+    setEditSaleData({
+      quantity: sale.quantity,
+      unit_price: sale.unit_price,
+      sale_date: sale.sale_date.split('T')[0] // Format date for input field
+    });
+  };
+
+  const handleUpdateSale = async () => {
+    if (!editingSale) return;
+
+    try {
+      // Calculate new total and profit
+      const totalAmount = editSaleData.quantity * editSaleData.unit_price;
+      const purchasePrice = editingSale.products?.purchase_price || 0;
+      const profit = totalAmount - (editSaleData.quantity * purchasePrice);
+
+      const updates = {
+        quantity: editSaleData.quantity,
+        unit_price: editSaleData.unit_price,
+        total_amount: totalAmount,
+        profit: profit,
+        sale_date: editSaleData.sale_date
+      };
+
+      await updateSale(editingSale.id, updates);
+
+      // Refresh dashboard data to update analytics
+      const [analyticsData] = await Promise.all([
+        getAnalytics()
+      ]);
+
+      setAnalytics(analyticsData || {
+        totalProducts: 0,
+        totalSales: 0,
+        totalProfit: 0,
+        todaySales: 0,
+        todayProfit: 0,
+        lowStockProducts: 0
+      });
+
+      // Refresh All Sales if open
+      if (showAllSales) {
+        await fetchAllSales(allSalesPage);
+      }
+
+      // Close edit modal
+      setEditingSale(null);
+      alert('Sale updated successfully!');
+    } catch (error) {
+      console.error('Error updating sale:', error);
+      alert('Error updating sale: ' + error.message);
+    }
+  };
 
   const handleDeleteSale = async (saleId: string, saleData: any) => {
     if (!confirm(`Are you sure you want to delete this sale of ${saleData.products?.name || 'Unknown Product'}? This action cannot be undone.`)) {
@@ -351,13 +423,22 @@ function Dashboard({ onNavigate }) {
                             <p className="font-medium text-gray-900">₹{sale.total_amount}</p>
                             <p className="text-sm text-secondary-600">Profit: ₹{sale.profit}</p>
                           </div>
-                          <button
-                            onClick={() => handleDeleteSale(sale.id, sale)}
-                            className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
-                            title="Delete Sale"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleEditSale(sale)}
+                              className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+                              title="Edit Sale"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteSale(sale.id, sale)}
+                              className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                              title="Delete Sale"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -390,23 +471,122 @@ function Dashboard({ onNavigate }) {
         </div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="fixed bottom-6 right-6 flex flex-col gap-3">
+      {/* Quick Actions - Improved with better visibility */}
+      <div className="fixed bottom-8 right-8 flex flex-col gap-4 z-50">
         <button
           onClick={() => onNavigate('quick-sale')}
-          className="btn-primary rounded-full p-4 shadow-lg hover:shadow-xl transition-shadow"
+          className="group bg-primary-600 hover:bg-primary-700 text-white rounded-full p-5 shadow-2xl hover:shadow-primary-500/50 transition-all duration-300 hover:scale-110 active:scale-95"
           title="Quick Sale"
+          style={{ pointerEvents: 'auto' }}
         >
-          <ShoppingCart className="h-6 w-6" />
+          <ShoppingCart className="h-7 w-7 group-hover:scale-110 transition-transform" />
         </button>
         <button
           onClick={() => onNavigate('products')}
-          className="btn-secondary rounded-full p-4 shadow-lg hover:shadow-xl transition-shadow"
+          className="group bg-secondary-600 hover:bg-secondary-700 text-white rounded-full p-5 shadow-2xl hover:shadow-secondary-500/50 transition-all duration-300 hover:scale-110 active:scale-95"
           title="Go to Products"
+          style={{ pointerEvents: 'auto' }}
         >
-          <Plus className="h-6 w-6" />
+          <Plus className="h-7 w-7 group-hover:rotate-90 transition-transform duration-300" />
         </button>
       </div>
+
+      {/* Edit Sale Modal */}
+      {editingSale && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Edit Sale</h3>
+              <button
+                onClick={() => setEditingSale(null)}
+                className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="h-5 w-5 text-gray-500" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Product
+                </label>
+                <p className="text-base font-semibold text-gray-900">
+                  {editingSale.products?.name || 'Unknown Product'}
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Quantity
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  value={editSaleData.quantity}
+                  onChange={(e) => setEditSaleData({ ...editSaleData, quantity: parseInt(e.target.value) || 0 })}
+                  className="input-field w-full"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Unit Price (₹)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={editSaleData.unit_price}
+                  onChange={(e) => setEditSaleData({ ...editSaleData, unit_price: parseFloat(e.target.value) || 0 })}
+                  className="input-field w-full"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Sale Date
+                </label>
+                <input
+                  type="date"
+                  value={editSaleData.sale_date}
+                  onChange={(e) => setEditSaleData({ ...editSaleData, sale_date: e.target.value })}
+                  className="input-field w-full"
+                />
+              </div>
+
+              <div className="bg-primary-50 p-3 rounded-lg">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">New Total:</span>
+                  <span className="font-semibold text-gray-900">
+                    ₹{(editSaleData.quantity * editSaleData.unit_price).toFixed(2)}
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm mt-1">
+                  <span className="text-gray-600">Estimated Profit:</span>
+                  <span className="font-semibold text-secondary-600">
+                    ₹{((editSaleData.quantity * editSaleData.unit_price) - (editSaleData.quantity * (editingSale.products?.purchase_price || 0))).toFixed(2)}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={() => setEditingSale(null)}
+                  className="btn-outline flex-1"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleUpdateSale}
+                  className="btn-primary flex-1"
+                >
+                  Update Sale
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
@@ -441,11 +621,13 @@ function ProductManagement({ onNavigate }) {
     fetchData();
   }, []);
 
-  const filteredProducts = products.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         product.barcode?.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesSearch;
-  });
+  const filteredProducts = products
+    .filter(product => {
+      const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           product.barcode?.toLowerCase().includes(searchTerm.toLowerCase());
+      return matchesSearch;
+    })
+    .sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
 
   const handleDeleteProduct = async (productId: string) => {
     if (!confirm('Are you sure you want to delete this product? This action cannot be undone.')) {
@@ -501,6 +683,14 @@ function ProductManagement({ onNavigate }) {
           setSaving(false);
           return;
         }
+      } else if (fieldName === 'name') {
+        // Keep as string but trim whitespace and convert to uppercase
+        processedValue = newValue.trim().toUpperCase();
+        if (processedValue.length < 2) {
+          alert('Product name must be at least 2 characters');
+          setSaving(false);
+          return;
+        }
       }
 
       // Update the product
@@ -510,15 +700,15 @@ function ProductManagement({ onNavigate }) {
       };
 
       await updateProduct(productId, updatedProduct);
-      
+
       // Update local state
-      setProducts(products.map(p => 
+      setProducts(products.map(p =>
         p.id === productId ? { ...p, [fieldName]: processedValue } : p
       ));
 
       // Clear editing state
       cancelEditing();
-      
+
     } catch (error) {
       console.error('Error updating product:', error);
       alert('Error updating product: ' + error.message);
@@ -622,7 +812,27 @@ function ProductManagement({ onNavigate }) {
             </div>
 
             <div className="mb-4">
-              <h3 className="font-semibold text-gray-900">{product.name}</h3>
+              {editingProduct === product.id && editingField === 'name' ? (
+                <div className="flex items-center gap-2 mb-2">
+                  <input
+                    type="text"
+                    value={tempValue}
+                    onChange={(e) => setTempValue(e.target.value.toUpperCase())}
+                    onKeyDown={(e) => handleKeyPress(e, product.id, 'name')}
+                    className="flex-1 px-2 py-1 border border-blue-300 rounded font-semibold uppercase focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    autoFocus
+                    placeholder="PRODUCT NAME"
+                  />
+                </div>
+              ) : (
+                <h3
+                  className="font-semibold text-gray-900 cursor-pointer hover:bg-blue-50 px-2 py-1 rounded inline-block hover:text-blue-700 transition-colors"
+                  onClick={() => startEditing(product.id, 'name', product.name)}
+                  title="Click to edit product name"
+                >
+                  {product.name}
+                </h3>
+              )}
               <p className="text-sm text-gray-500">Code: {product.barcode}</p>
             </div>
 
@@ -836,8 +1046,8 @@ function AddProductModal({ onClose, onProductAdded }) {
                 type="text"
                 required
                 value={formData.name}
-                onChange={(e) => setFormData({...formData, name: e.target.value})}
-                className="input-field"
+                onChange={(e) => setFormData({...formData, name: e.target.value.toUpperCase()})}
+                className="input-field uppercase"
                 placeholder="Enter product name"
               />
             </div>
@@ -1774,9 +1984,9 @@ function AddPurchaseModal({ onClose, onPurchaseAdded }) {
                 type="text"
                 required
                 value={formData.item_name}
-                onChange={(e) => setFormData({...formData, item_name: e.target.value})}
-                className="input-field"
-                placeholder="Product name"
+                onChange={(e) => setFormData({...formData, item_name: e.target.value.toUpperCase()})}
+                className="input-field uppercase"
+                placeholder="PRODUCT NAME"
               />
             </div>
 
@@ -3260,6 +3470,21 @@ function InventoryApp() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [viewHistory, setViewHistory] = useState(['dashboard']);
 
+  // Initialize offline database on mount
+  useEffect(() => {
+    const initOfflineDB = async () => {
+      try {
+        const { initializeDatabases } = await import('../../lib/pouchdb-client');
+        await initializeDatabases();
+        console.log('Offline database initialized');
+      } catch (error) {
+        console.error('Error initializing offline database:', error);
+      }
+    };
+
+    initOfflineDB();
+  }, []);
+
   const handleNavigate = (view) => {
     // Prevent duplicate entries in history
     if (view !== currentView) {
@@ -3329,7 +3554,13 @@ function InventoryApp() {
   };
 
   return (
-    <div className="min-h-screen bg-primary-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-primary-50/30 to-gray-50">
+      {/* PWA Install Prompt */}
+      <InstallPrompt />
+
+      {/* Offline Status Indicator */}
+      <OfflineIndicator />
+
       {/* Navigation */}
       <nav className="bg-white shadow-sm border-b sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -3451,6 +3682,9 @@ function InventoryApp() {
       <main>
         {renderCurrentView()}
       </main>
+
+      {/* Sync Indicator */}
+      <SyncIndicator />
     </div>
   );
 }

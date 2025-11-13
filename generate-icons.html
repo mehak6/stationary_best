@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Icon Generator for Inventory Pro</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #0ea5e9;
+            margin-bottom: 10px;
+        }
+        .icon-preview {
+            display: flex;
+            gap: 20px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+        .icon-item {
+            text-align: center;
+        }
+        canvas {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #0ea5e9;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #0284c7;
+        }
+        .instructions {
+            background: #e0f2fe;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 20px;
+        }
+        .instructions h3 {
+            margin-top: 0;
+            color: #0369a1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📦 Inventory Pro - Icon Generator</h1>
+        <p>Generate all required icons for your PWA and Electron app</p>
+
+        <div class="icon-preview">
+            <div class="icon-item">
+                <canvas id="icon512" width="512" height="512"></canvas>
+                <p>512x512</p>
+                <button onclick="downloadIcon('icon512', 'icon-512x512.png')">Download</button>
+            </div>
+            <div class="icon-item">
+                <canvas id="icon384" width="384" height="384"></canvas>
+                <p>384x384</p>
+                <button onclick="downloadIcon('icon384', 'icon-384x384.png')">Download</button>
+            </div>
+            <div class="icon-item">
+                <canvas id="icon192" width="192" height="192"></canvas>
+                <p>192x192</p>
+                <button onclick="downloadIcon('icon192', 'icon-192x192.png')">Download</button>
+            </div>
+            <div class="icon-item">
+                <canvas id="icon152" width="152" height="152"></canvas>
+                <p>152x152</p>
+                <button onclick="downloadIcon('icon152', 'icon-152x152.png')">Download</button>
+            </div>
+            <div class="icon-item">
+                <canvas id="icon144" width="144" height="144"></canvas>
+                <p>144x144</p>
+                <button onclick="downloadIcon('icon144', 'icon-144x144.png')">Download</button>
+            </div>
+            <div class="icon-item">
+                <canvas id="icon128" width="128" height="128"></canvas>
+                <p>128x128</p>
+                <button onclick="downloadIcon('icon128', 'icon-128x128.png')">Download</button>
+            </div>
+            <div class="icon-item">
+                <canvas id="icon96" width="96" height="96"></canvas>
+                <p>96x96</p>
+                <button onclick="downloadIcon('icon96', 'icon-96x96.png')">Download</button>
+            </div>
+            <div class="icon-item">
+                <canvas id="icon72" width="72" height="72"></canvas>
+                <p>72x72</p>
+                <button onclick="downloadIcon('icon72', 'icon-72x72.png')">Download</button>
+            </div>
+            <div class="icon-item">
+                <canvas id="icon180" width="180" height="180"></canvas>
+                <p>180x180 (Apple)</p>
+                <button onclick="downloadIcon('icon180', 'apple-touch-icon.png')">Download</button>
+            </div>
+        </div>
+
+        <button onclick="downloadAll()" style="background: #2563eb;">📥 Download All Icons (9 files)</button>
+
+        <div class="instructions">
+            <h3>📝 Instructions:</h3>
+            <ol>
+                <li>Click "Download All Icons" to save all icons</li>
+                <li>Save them to: <code>public/icons/</code> folder</li>
+                <li>The app will automatically use these icons</li>
+                <li>Icons include: Package box with blue gradient background</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        function drawIcon(canvas, size) {
+            const ctx = canvas.getContext('2d');
+
+            // Gradient background
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#0ea5e9');
+            gradient.addColorStop(1, '#0284c7');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, size, size);
+
+            // Draw package box icon
+            const boxSize = size * 0.5;
+            const x = (size - boxSize) / 2;
+            const y = (size - boxSize) / 2;
+
+            // Box shadow
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+            ctx.fillRect(x + 10, y + 10, boxSize, boxSize);
+
+            // Main box
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(x, y, boxSize, boxSize);
+
+            // Box top flap
+            ctx.fillStyle = '#f1f5f9';
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x + boxSize/2, y - boxSize/6);
+            ctx.lineTo(x + boxSize, y);
+            ctx.closePath();
+            ctx.fill();
+
+            // Box side
+            ctx.fillStyle = '#e2e8f0';
+            ctx.beginPath();
+            ctx.moveTo(x + boxSize, y);
+            ctx.lineTo(x + boxSize, y + boxSize);
+            ctx.lineTo(x + boxSize + boxSize/6, y + boxSize - boxSize/6);
+            ctx.lineTo(x + boxSize + boxSize/6, y - boxSize/6);
+            ctx.closePath();
+            ctx.fill();
+
+            // Tape on box
+            ctx.strokeStyle = '#94a3b8';
+            ctx.lineWidth = size * 0.03;
+            ctx.beginPath();
+            ctx.moveTo(x + boxSize/2, y);
+            ctx.lineTo(x + boxSize/2, y + boxSize);
+            ctx.stroke();
+
+            // Horizontal tape
+            ctx.beginPath();
+            ctx.moveTo(x, y + boxSize/3);
+            ctx.lineTo(x + boxSize, y + boxSize/3);
+            ctx.stroke();
+
+            // Checkmark
+            ctx.strokeStyle = '#10b981';
+            ctx.lineWidth = size * 0.04;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.beginPath();
+            ctx.moveTo(x + boxSize * 0.3, y + boxSize * 0.6);
+            ctx.lineTo(x + boxSize * 0.45, y + boxSize * 0.75);
+            ctx.lineTo(x + boxSize * 0.75, y + boxSize * 0.45);
+            ctx.stroke();
+        }
+
+        // Draw all icons
+        drawIcon(document.getElementById('icon512'), 512);
+        drawIcon(document.getElementById('icon384'), 384);
+        drawIcon(document.getElementById('icon192'), 192);
+        drawIcon(document.getElementById('icon152'), 152);
+        drawIcon(document.getElementById('icon144'), 144);
+        drawIcon(document.getElementById('icon128'), 128);
+        drawIcon(document.getElementById('icon96'), 96);
+        drawIcon(document.getElementById('icon72'), 72);
+        drawIcon(document.getElementById('icon180'), 180);
+
+        function downloadIcon(canvasId, filename) {
+            const canvas = document.getElementById(canvasId);
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        function downloadAll() {
+            const icons = [
+                { id: 'icon512', name: 'icon-512x512.png', delay: 100 },
+                { id: 'icon384', name: 'icon-384x384.png', delay: 200 },
+                { id: 'icon192', name: 'icon-192x192.png', delay: 300 },
+                { id: 'icon152', name: 'icon-152x152.png', delay: 400 },
+                { id: 'icon144', name: 'icon-144x144.png', delay: 500 },
+                { id: 'icon128', name: 'icon-128x128.png', delay: 600 },
+                { id: 'icon96', name: 'icon-96x96.png', delay: 700 },
+                { id: 'icon72', name: 'icon-72x72.png', delay: 800 },
+                { id: 'icon180', name: 'apple-touch-icon.png', delay: 900 }
+            ];
+
+            icons.forEach(icon => {
+                setTimeout(() => downloadIcon(icon.id, icon.name), icon.delay);
+            });
+
+            alert('Downloading all 9 icons! Save them to the public/icons/ folder.');
+        }
+    </script>
+</body>
+</html>
