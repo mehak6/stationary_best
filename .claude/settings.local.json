@@ -69,7 +69,10 @@
       "Bash(where:*)",
       "Bash(npx @tauri-apps/cli icon:*)",
       "Bash(start \"\" \"d:\\Projects\\stationery_business\\src-tauri\\target\\release\\bundle\\nsis\\Inventory Pro_1.0.0_x64-setup.exe\")",
-      "Bash(git remote set-url:*)"
+      "Bash(git remote set-url:*)",
+      "Bash(npx vercel --prod)",
+      "Bash(npx vercel login)",
+      "Bash(npx vercel:*)"
     ],
     "deny": [],
     "ask": []
