@@ -1985,6 +1985,9 @@ function PartyManagement({ onNavigate }) {
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const [editingNotes, setEditingNotes] = useState(null); // ID of purchase being edited
   const [editNotesValue, setEditNotesValue] = useState('');
+  const [editingPurchase, setEditingPurchase] = useState(null); // ID of purchase being edited
+  const [editingField, setEditingField] = useState(null); // Field being edited
+  const [editValue, setEditValue] = useState('');
 
   // Fetch party purchases on component mount
   useEffect(() => {
@@ -2101,6 +2104,67 @@ function PartyManagement({ onNavigate }) {
   const handleCancelEditNotes = () => {
     setEditingNotes(null);
     setEditNotesValue('');
+  };
+
+  // Handle inline editing
+  const startEditing = (purchaseId, field, value) => {
+    setEditingPurchase(purchaseId);
+    setEditingField(field);
+    setEditValue(value);
+  };
+
+  const cancelEditing = () => {
+    setEditingPurchase(null);
+    setEditingField(null);
+    setEditValue('');
+  };
+
+  const saveEdit = async (purchaseId, field, value) => {
+    try {
+      let processedValue = value;
+
+      if (field === 'item_name') {
+        processedValue = value.trim().toUpperCase();
+        if (processedValue.length < 2) {
+          return;
+        }
+      } else if (field === 'purchased_quantity') {
+        processedValue = parseInt(value);
+        if (isNaN(processedValue) || processedValue < 0) {
+          return;
+        }
+        // Also update remaining_quantity proportionally
+        const purchase = partyPurchases.find(p => p.id === purchaseId);
+        const difference = processedValue - purchase.purchased_quantity;
+        const newRemaining = Math.max(0, purchase.remaining_quantity + difference);
+
+        await updatePartyPurchase(purchaseId, {
+          purchased_quantity: processedValue,
+          remaining_quantity: newRemaining
+        });
+        setPartyPurchases(partyPurchases.map(p =>
+          p.id === purchaseId ? { ...p, purchased_quantity: processedValue, remaining_quantity: newRemaining } : p
+        ));
+        cancelEditing();
+        return;
+      }
+
+      await updatePartyPurchase(purchaseId, { [field]: processedValue });
+      setPartyPurchases(partyPurchases.map(p =>
+        p.id === purchaseId ? { ...p, [field]: processedValue } : p
+      ));
+      cancelEditing();
+    } catch (error) {
+      console.error('Error updating purchase:', error);
+    }
+  };
+
+  const handleKeyPress = (e, purchaseId, field) => {
+    if (e.key === 'Enter') {
+      saveEdit(purchaseId, field, editValue);
+    } else if (e.key === 'Escape') {
+      cancelEditing();
+    }
   };
 
   return (
@@ -2225,7 +2289,39 @@ function PartyManagement({ onNavigate }) {
               </div>
 
               <div className="mb-4">
-                <h3 className="font-semibold text-gray-900">{purchase.item_name}</h3>
+                {editingPurchase === purchase.id && editingField === 'item_name' ? (
+                  <div className="flex items-center gap-2 mb-2">
+                    <input
+                      type="text"
+                      value={editValue}
+                      onChange={(e) => setEditValue(e.target.value.toUpperCase())}
+                      onKeyDown={(e) => handleKeyPress(e, purchase.id, 'item_name')}
+                      className="flex-1 px-2 py-1 border border-blue-300 rounded font-semibold uppercase text-sm focus:ring-2 focus:ring-blue-500"
+                      autoFocus
+                      placeholder="ITEM NAME"
+                    />
+                    <button
+                      onClick={() => saveEdit(purchase.id, 'item_name', editValue)}
+                      className="p-1 text-green-600 hover:text-green-800"
+                    >
+                      <Check className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={cancelEditing}
+                      className="p-1 text-gray-400 hover:text-gray-600"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <h3
+                    className="font-semibold text-gray-900 cursor-pointer hover:bg-blue-50 px-2 py-1 rounded inline-block hover:text-blue-700 transition-colors"
+                    onClick={() => startEditing(purchase.id, 'item_name', purchase.item_name)}
+                    title="Click to edit item name"
+                  >
+                    {purchase.item_name}
+                  </h3>
+                )}
                 <p className="text-sm text-gray-500">
                   {purchase.barcode && `Code: ${purchase.barcode}`}
                 </p>
@@ -2245,7 +2341,38 @@ function PartyManagement({ onNavigate }) {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm text-gray-500">Purchased:</span>
-                  <span className="font-medium text-gray-900">{purchase.purchased_quantity} units</span>
+                  {editingPurchase === purchase.id && editingField === 'purchased_quantity' ? (
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        onKeyDown={(e) => handleKeyPress(e, purchase.id, 'purchased_quantity')}
+                        className="w-20 px-2 py-1 border border-primary-300 rounded text-sm focus:ring-1 focus:ring-primary-500"
+                        autoFocus
+                      />
+                      <button
+                        onClick={() => saveEdit(purchase.id, 'purchased_quantity', editValue)}
+                        className="p-1 text-green-600 hover:text-green-800"
+                      >
+                        <Check className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={cancelEditing}
+                        className="p-1 text-gray-400 hover:text-gray-600"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <span
+                      className="font-medium text-gray-900 cursor-pointer hover:bg-primary-50 px-2 py-1 rounded hover:text-primary-700 transition-colors"
+                      onClick={() => startEditing(purchase.id, 'purchased_quantity', purchase.purchased_quantity)}
+                      title="Click to edit purchased quantity"
+                    >
+                      {purchase.purchased_quantity} units
+                    </span>
+                  )}
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm text-gray-500">Remaining:</span>
