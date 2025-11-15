@@ -149,6 +149,8 @@ const nextConfig = {
     domains: ['ccpvnpidhxkcbxeeyqeq.supabase.co'],
     formats: ['image/webp', 'image/avif'],
   },
+  // Disable output file tracing to prevent stack overflow during build
+  outputFileTracing: false,
   // Temporarily disable TypeScript and ESLint checks during build
   typescript: {
     ignoreBuildErrors: true,

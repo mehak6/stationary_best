@@ -1,0 +1,40 @@
+# Electron build directories
+electron/
+dist/
+release/
+out/
+build/
+
+# Desktop app build artifacts
+src-tauri/
+*.exe
+*.dmg
+*.AppImage
+*.deb
+
+# Development files
+.vscode/
+.idea/
+*.log
+*.lock
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test files
+__tests__/
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+
+# Documentation
+*.md
+!README.md
+
+# Build tools
+electron-builder.yml
+tauri.conf.json
+rustup-init.exe
+vs_BuildTools.exe
