@@ -145,9 +145,7 @@ const withPWA = require('next-pwa')({
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
-  output: 'export',
   images: {
-    unoptimized: true,
     domains: ['ccpvnpidhxkcbxeeyqeq.supabase.co'],
     formats: ['image/webp', 'image/avif'],
   },
