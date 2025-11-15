@@ -30,6 +30,7 @@ import {
   deleteProduct,
   deleteSale,
   getSalesByDateRange,
+  getSalesByDate,
   getAnalytics,
   getPartyPurchases,
   createPartyPurchase,
@@ -979,7 +980,9 @@ function AddProductModal({ onClose, onProductAdded }) {
     min_stock_level: '5',
     description: ''
   });
-  
+
+  const productNameRef = useRef(null);
+
   // Handle ESC key to close modal
   useEffect(() => {
     const handleEscapeKey = (event) => {
@@ -987,14 +990,20 @@ function AddProductModal({ onClose, onProductAdded }) {
         onClose();
       }
     };
-    
+
     document.addEventListener('keydown', handleEscapeKey);
     return () => document.removeEventListener('keydown', handleEscapeKey);
   }, [onClose]);
-  
-  // Prevent body scroll
+
+  // Prevent body scroll and autofocus product name
   useEffect(() => {
     document.body.style.overflow = 'hidden';
+    // Autofocus the product name field
+    setTimeout(() => {
+      if (productNameRef.current) {
+        productNameRef.current.focus();
+      }
+    }, 100);
     return () => { document.body.style.overflow = 'unset'; };
   }, []);
 
@@ -1043,6 +1052,7 @@ function AddProductModal({ onClose, onProductAdded }) {
             <div className="form-group">
               <label className="form-label">Product Name *</label>
               <input
+                ref={productNameRef}
                 type="text"
                 required
                 value={formData.name}
@@ -1163,6 +1173,30 @@ function QuickSale({ onNavigate }) {
     const year = String(date.getFullYear()).slice(-2);
     return `${day}/${month}/${year}`;
   };
+
+  // Helper function to format date as dd/mm/yyyy for display
+  const formatDateFull = (dateString) => {
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = String(date.getFullYear());
+    return `${day}/${month}/${year}`;
+  };
+
+  // Helper function to convert dd/mm/yyyy to yyyy-mm-dd
+  const parseDisplayDate = (displayDate) => {
+    const parts = displayDate.split('/');
+    if (parts.length === 3) {
+      const day = parts[0].padStart(2, '0');
+      const month = parts[1].padStart(2, '0');
+      const year = parts[2];
+      return `${year}-${month}-${day}`;
+    }
+    return new Date().toISOString().split('T')[0];
+  };
+
+  // State for display date in dd/mm/yyyy format
+  const [displayDate, setDisplayDate] = useState(formatDateFull(new Date().toISOString().split('T')[0]));
 
   // Fetch products on component mount
   useEffect(() => {
@@ -1417,13 +1451,28 @@ function QuickSale({ onNavigate }) {
 
               {/* Sale Date */}
               <div className="form-group">
-                <label className="form-label">Sale Date</label>
+                <label className="form-label">Sale Date (dd/mm/yyyy)</label>
                 <input
-                  type="date"
-                  value={saleDate}
-                  onChange={(e) => setSaleDate(e.target.value)}
+                  type="text"
+                  value={displayDate}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setDisplayDate(value);
+                    // Try to parse and update the actual date if valid
+                    if (/^\d{2}\/\d{2}\/\d{4}$/.test(value)) {
+                      const parsed = parseDisplayDate(value);
+                      setSaleDate(parsed);
+                    }
+                  }}
+                  onBlur={() => {
+                    // Validate and fix format on blur
+                    if (!/^\d{2}\/\d{2}\/\d{4}$/.test(displayDate)) {
+                      setDisplayDate(formatDateFull(saleDate));
+                    }
+                  }}
                   className="input-field"
-                  max={new Date().toISOString().split('T')[0]}
+                  placeholder="dd/mm/yyyy"
+                  maxLength={10}
                 />
               </div>
 
@@ -1455,7 +1504,9 @@ function QuickSale({ onNavigate }) {
                   onClick={() => {
                     setSelectedProduct(null);
                     setQuantity(1);
-                    setSaleDate(new Date().toISOString().split('T')[0]);
+                    const today = new Date().toISOString().split('T')[0];
+                    setSaleDate(today);
+                    setDisplayDate(formatDateFull(today));
                   }}
                   className="btn-outline flex-1"
                 >
@@ -1541,6 +1592,8 @@ function PartyManagement({ onNavigate }) {
   const [selectedItems, setSelectedItems] = useState(new Set());
   const [selectAll, setSelectAll] = useState(false);
   const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [editingNotes, setEditingNotes] = useState(null); // ID of purchase being edited
+  const [editNotesValue, setEditNotesValue] = useState('');
   const fileInputRef = useRef(null);
 
   // Fetch party purchases on component mount
@@ -1628,7 +1681,7 @@ function PartyManagement({ onNavigate }) {
     try {
       const deletePromises = Array.from(selectedItems).map(id => deletePartyPurchase(id));
       await Promise.all(deletePromises);
-      
+
       setPartyPurchases(partyPurchases.filter(p => !selectedItems.has(p.id)));
       setSelectedItems(new Set());
       setSelectAll(false);
@@ -1639,6 +1692,31 @@ function PartyManagement({ onNavigate }) {
     } finally {
       setBulkDeleting(false);
     }
+  };
+
+  // Handle edit notes
+  const handleEditNotes = (purchase) => {
+    setEditingNotes(purchase.id);
+    setEditNotesValue(purchase.notes || '');
+  };
+
+  const handleSaveNotes = async (purchaseId) => {
+    try {
+      await updatePartyPurchase(purchaseId, { notes: editNotesValue });
+      setPartyPurchases(partyPurchases.map(p =>
+        p.id === purchaseId ? { ...p, notes: editNotesValue } : p
+      ));
+      setEditingNotes(null);
+      setEditNotesValue('');
+    } catch (error) {
+      console.error('Error updating notes:', error);
+      alert('Error updating notes: ' + error.message);
+    }
+  };
+
+  const handleCancelEditNotes = () => {
+    setEditingNotes(null);
+    setEditNotesValue('');
   };
 
   return (
@@ -1743,7 +1821,14 @@ function PartyManagement({ onNavigate }) {
                   <span className="badge-info">{purchase.party_name}</span>
                 </div>
                 <div className="flex gap-2">
-                  <button 
+                  <button
+                    onClick={() => handleEditNotes(purchase)}
+                    className="p-1 text-gray-400 hover:text-accent-600"
+                    title="Edit Description"
+                  >
+                    <Edit className="h-4 w-4" />
+                  </button>
+                  <button
                     onClick={() => {
                       setSelectedPurchase(purchase);
                       setShowTransferModal(true);
@@ -1753,7 +1838,7 @@ function PartyManagement({ onNavigate }) {
                   >
                     <Package className="h-4 w-4" />
                   </button>
-                  <button 
+                  <button
                     onClick={() => handleDeletePurchase(purchase.id)}
                     className="p-1 text-gray-400 hover:text-danger-600"
                   >
@@ -1793,11 +1878,52 @@ function PartyManagement({ onNavigate }) {
                 </div>
               </div>
 
-              {purchase.notes && (
-                <div className="mt-3 p-2 bg-primary-50 rounded-lg">
-                  <p className="text-xs text-gray-600">{purchase.notes}</p>
-                </div>
-              )}
+              {/* Description/Notes Section */}
+              <div className="mt-3">
+                {editingNotes === purchase.id ? (
+                  <div className="space-y-2">
+                    <textarea
+                      value={editNotesValue}
+                      onChange={(e) => setEditNotesValue(e.target.value)}
+                      className="input-field w-full"
+                      rows={3}
+                      placeholder="Add description (e.g., '5 boxes purchased, each box contains 10 units')"
+                      autoFocus
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleSaveNotes(purchase.id)}
+                        className="btn-primary text-xs px-3 py-1 flex items-center gap-1"
+                      >
+                        <Check className="h-3 w-3" />
+                        Save
+                      </button>
+                      <button
+                        onClick={handleCancelEditNotes}
+                        className="btn-outline text-xs px-3 py-1 flex items-center gap-1"
+                      >
+                        <X className="h-3 w-3" />
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    onClick={() => handleEditNotes(purchase)}
+                    className={`p-2 rounded-lg cursor-pointer transition-colors ${
+                      purchase.notes
+                        ? 'bg-primary-50 hover:bg-primary-100'
+                        : 'bg-gray-50 hover:bg-gray-100 border border-dashed border-gray-300'
+                    }`}
+                  >
+                    {purchase.notes ? (
+                      <p className="text-xs text-gray-600 whitespace-pre-wrap">{purchase.notes}</p>
+                    ) : (
+                      <p className="text-xs text-gray-400 italic">Click to add description (boxes, packaging details, etc.)</p>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           ))}
         </div>
@@ -1894,17 +2020,32 @@ function PartyManagement({ onNavigate }) {
 
 // Add Purchase Modal Component
 function AddPurchaseModal({ onClose, onPurchaseAdded }) {
+  // Load remembered party name and date from localStorage
+  const getRememberedData = () => {
+    try {
+      const savedPartyName = localStorage.getItem('lastPartyName') || '';
+      const savedDate = localStorage.getItem('lastPartyDate') || new Date().toISOString().split('T')[0];
+      return { partyName: savedPartyName, date: savedDate };
+    } catch {
+      return { partyName: '', date: new Date().toISOString().split('T')[0] };
+    }
+  };
+
+  const rememberedData = getRememberedData();
+
   const [formData, setFormData] = useState({
-    party_name: '',
+    party_name: rememberedData.partyName,
     item_name: '',
     barcode: '',
     purchase_price: '',
     selling_price: '',
     purchased_quantity: '',
-    purchase_date: new Date().toISOString().split('T')[0],
+    purchase_date: rememberedData.date,
     notes: ''
   });
-  
+
+  const itemNameRef = useRef(null);
+
   // Handle ESC key to close modal
   useEffect(() => {
     const handleEscapeKey = (event) => {
@@ -1939,8 +2080,36 @@ function AddPurchaseModal({ onClose, onPurchaseAdded }) {
       };
 
       const newPurchase = await createPartyPurchase(purchaseData);
+
+      // Save party name and date to localStorage for next time
+      try {
+        localStorage.setItem('lastPartyName', formData.party_name);
+        localStorage.setItem('lastPartyDate', formData.purchase_date);
+      } catch (error) {
+        console.error('Error saving to localStorage:', error);
+      }
+
+      // Reset only the product-specific fields, keep party name and date
+      setFormData({
+        party_name: formData.party_name,
+        item_name: '',
+        barcode: '',
+        purchase_price: '',
+        selling_price: '',
+        purchased_quantity: '',
+        purchase_date: formData.purchase_date,
+        notes: ''
+      });
+
       onPurchaseAdded(newPurchase);
-      alert('Purchase record added successfully!');
+
+      // Focus the item name field for quick next entry
+      setTimeout(() => {
+        if (itemNameRef.current) {
+          itemNameRef.current.focus();
+        }
+      }, 100);
+      // Don't close the modal, just reset the form for quick entry
     } catch (error) {
       console.error('Error adding purchase:', error);
       alert('Error adding purchase: ' + error.message);
@@ -1990,6 +2159,7 @@ function AddPurchaseModal({ onClose, onPurchaseAdded }) {
             <div className="form-group">
               <label className="form-label">Item Name *</label>
               <input
+                ref={itemNameRef}
                 type="text"
                 required
                 value={formData.item_name}

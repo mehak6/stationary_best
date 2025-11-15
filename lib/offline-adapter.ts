@@ -261,6 +261,11 @@ export const getSalesByDateRange = async (startDate: string, endDate: string): P
   }
 };
 
+export const getSalesByDate = async (date: string): Promise<Sale[]> => {
+  // Get sales for a specific date
+  return getSalesByDateRange(date, date);
+};
+
 export const createSale = async (sale: any): Promise<Sale> => {
   try {
     if (isOnline) {
