@@ -597,6 +597,7 @@ function ProductManagement({ onNavigate }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
   const [showBulkEntry, setShowBulkEntry] = useState(false);
+  const [viewMode, setViewMode] = useState('card'); // 'card' or 'list'
   const [editingProduct, setEditingProduct] = useState(null);
   const [editingField, setEditingField] = useState(null);
   const [tempValue, setTempValue] = useState('');
@@ -744,23 +745,51 @@ function ProductManagement({ onNavigate }) {
         </div>
       </div>
 
-      {/* Search */}
+      {/* Search and View Toggle */}
       <div className="card mb-6">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search products..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="input-field pl-10"
-          />
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search products..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="input-field pl-10"
+            />
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setViewMode('card')}
+              className={`px-3 py-2 rounded-lg flex items-center gap-2 ${
+                viewMode === 'card'
+                  ? 'bg-primary-600 text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+              title="Card View"
+            >
+              <Package className="h-4 w-4" />
+              <span className="hidden sm:inline">Card</span>
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={`px-3 py-2 rounded-lg flex items-center gap-2 ${
+                viewMode === 'list'
+                  ? 'bg-primary-600 text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+              title="List View"
+            >
+              <BarChart3 className="h-4 w-4" />
+              <span className="hidden sm:inline">List</span>
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Products List */}
+      {/* Products Display */}
       {loading ? (
-        <div className="space-y-3">
+        <div className={viewMode === 'card' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6' : 'space-y-3'}>
           {[...Array(6)].map((_, i) => (
             <div key={i} className="card">
               <div className="skeleton-card mb-4"></div>
@@ -774,8 +803,132 @@ function ProductManagement({ onNavigate }) {
             </div>
           ))}
         </div>
+      ) : viewMode === 'list' ? (
+        <div className="space-y-2">
+          {filteredProducts.map(product => (
+            <div key={product.id} className="card hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between">
+                <div className="flex-1 grid grid-cols-1 sm:grid-cols-5 gap-2 sm:gap-4 items-center">
+                  <div className="sm:col-span-2">
+                    {editingProduct === product.id && editingField === 'name' ? (
+                      <input
+                        type="text"
+                        value={tempValue}
+                        onChange={(e) => setTempValue(e.target.value.toUpperCase())}
+                        onKeyDown={(e) => handleKeyPress(e, product.id, 'name')}
+                        className="w-full px-2 py-1 border border-blue-300 rounded font-semibold uppercase text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        autoFocus
+                        placeholder="PRODUCT NAME"
+                      />
+                    ) : (
+                      <div>
+                        <h3
+                          className="font-semibold text-gray-900 cursor-pointer hover:bg-blue-50 px-2 py-1 rounded inline-block hover:text-blue-700 transition-colors text-sm sm:text-base"
+                          onClick={() => startEditing(product.id, 'name', product.name)}
+                          title="Click to edit"
+                        >
+                          {product.name}
+                        </h3>
+                        <p className="text-xs text-gray-500">Code: {product.barcode}</p>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="text-gray-500">₹</span>
+                    {editingProduct === product.id && editingField === 'purchase_price' ? (
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={tempValue}
+                        onChange={(e) => setTempValue(e.target.value)}
+                        onKeyDown={(e) => handleKeyPress(e, product.id, 'purchase_price')}
+                        className="w-20 px-2 py-1 border border-primary-300 rounded text-sm"
+                        autoFocus
+                      />
+                    ) : (
+                      <span
+                        className="font-medium cursor-pointer hover:bg-primary-50 px-2 py-1 rounded text-primary-700"
+                        onClick={() => startEditing(product.id, 'purchase_price', product.purchase_price)}
+                      >
+                        {product.purchase_price}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="text-gray-500">₹</span>
+                    {editingProduct === product.id && editingField === 'selling_price' ? (
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={tempValue}
+                        onChange={(e) => setTempValue(e.target.value)}
+                        onKeyDown={(e) => handleKeyPress(e, product.id, 'selling_price')}
+                        className="w-20 px-2 py-1 border border-secondary-300 rounded text-sm"
+                        autoFocus
+                      />
+                    ) : (
+                      <span
+                        className="font-medium cursor-pointer hover:bg-secondary-50 px-2 py-1 rounded text-secondary-700"
+                        onClick={() => startEditing(product.id, 'selling_price', product.selling_price)}
+                      >
+                        {product.selling_price}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-4 text-sm">
+                    {editingProduct === product.id && editingField === 'stock_quantity' ? (
+                      <input
+                        type="number"
+                        value={tempValue}
+                        onChange={(e) => setTempValue(e.target.value)}
+                        onKeyDown={(e) => handleKeyPress(e, product.id, 'stock_quantity')}
+                        className="w-16 px-2 py-1 border border-accent-300 rounded text-sm"
+                        autoFocus
+                      />
+                    ) : (
+                      <span
+                        className={`font-medium cursor-pointer hover:bg-accent-50 px-2 py-1 rounded ${
+                          product.stock_quantity <= product.min_stock_level ? 'text-danger-600' : 'text-accent-700'
+                        }`}
+                        onClick={() => startEditing(product.id, 'stock_quantity', product.stock_quantity)}
+                      >
+                        {product.stock_quantity}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  {editingProduct === product.id && (
+                    <>
+                      <button
+                        onClick={() => saveEdit(editingProduct, editingField, tempValue)}
+                        disabled={saving}
+                        className="p-1 text-green-600 hover:text-green-800"
+                      >
+                        <Check className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={cancelEditing}
+                        disabled={saving}
+                        className="p-1 text-gray-400 hover:text-gray-600"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </>
+                  )}
+                  <button
+                    onClick={() => handleDeleteProduct(product.id)}
+                    className="p-1 text-gray-400 hover:text-danger-600"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       ) : (
-        <div className="space-y-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {filteredProducts.map(product => (
           <div key={product.id} className="card hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between mb-4">
