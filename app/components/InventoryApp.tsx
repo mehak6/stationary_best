@@ -2411,25 +2411,70 @@ function AddPurchaseModal({ onClose, onPurchaseAdded }) {
   };
 
   const [displayDate, setDisplayDate] = useState(formatDateFull(rememberedData.date));
+  const [products, setProducts] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [filteredSuggestions, setFilteredSuggestions] = useState([]);
   const itemNameRef = useRef(null);
+
+  // Fetch products for autocomplete
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const productsData = await getProducts();
+        setProducts(productsData || []);
+      } catch (error) {
+        console.error('Error fetching products:', error);
+      }
+    };
+    fetchProducts();
+  }, []);
 
   // Handle ESC key to close modal
   useEffect(() => {
     const handleEscapeKey = (event) => {
       if (event.key === 'Escape') {
+        setShowSuggestions(false);
         onClose();
       }
     };
-    
+
     document.addEventListener('keydown', handleEscapeKey);
     return () => document.removeEventListener('keydown', handleEscapeKey);
   }, [onClose]);
-  
+
   // Prevent body scroll
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     return () => { document.body.style.overflow = 'unset'; };
   }, []);
+
+  // Handle item name change with autocomplete
+  const handleItemNameChange = (value) => {
+    const upperValue = value.toUpperCase();
+    setFormData({...formData, item_name: upperValue});
+
+    if (upperValue.length > 0) {
+      const suggestions = products.filter(p =>
+        p.name.toUpperCase().includes(upperValue)
+      ).slice(0, 5);
+      setFilteredSuggestions(suggestions);
+      setShowSuggestions(suggestions.length > 0);
+    } else {
+      setShowSuggestions(false);
+    }
+  };
+
+  // Handle suggestion selection
+  const selectSuggestion = (product) => {
+    setFormData({
+      ...formData,
+      item_name: product.name,
+      barcode: product.barcode || '',
+      purchase_price: product.purchase_price || '',
+      selling_price: product.selling_price || ''
+    });
+    setShowSuggestions(false);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -2538,17 +2583,44 @@ function AddPurchaseModal({ onClose, onPurchaseAdded }) {
               </div>
             </div>
 
-            <div className="form-group">
+            <div className="form-group relative">
               <label className="form-label">Item Name *</label>
               <input
                 ref={itemNameRef}
                 type="text"
                 required
                 value={formData.item_name}
-                onChange={(e) => setFormData({...formData, item_name: e.target.value.toUpperCase()})}
+                onChange={(e) => handleItemNameChange(e.target.value)}
+                onFocus={() => {
+                  if (formData.item_name.length > 0 && filteredSuggestions.length > 0) {
+                    setShowSuggestions(true);
+                  }
+                }}
+                onBlur={() => {
+                  // Delay to allow click on suggestion
+                  setTimeout(() => setShowSuggestions(false), 200);
+                }}
                 className="input-field uppercase"
                 placeholder="PRODUCT NAME"
+                autoComplete="off"
               />
+              {showSuggestions && (
+                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                  {filteredSuggestions.map((product) => (
+                    <div
+                      key={product.id}
+                      onClick={() => selectSuggestion(product)}
+                      className="px-3 py-2 hover:bg-primary-50 cursor-pointer border-b border-gray-100 last:border-0"
+                    >
+                      <div className="font-medium text-gray-900">{product.name}</div>
+                      <div className="text-xs text-gray-500 flex justify-between">
+                        <span>{product.barcode || 'No barcode'}</span>
+                        <span>₹{product.selling_price}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="form-group">
