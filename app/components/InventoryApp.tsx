@@ -166,10 +166,9 @@ function Dashboard({ onNavigate }) {
 
       // Close edit modal
       setEditingSale(null);
-      alert('Sale updated successfully!');
+      
     } catch (error) {
       console.error('Error updating sale:', error);
-      alert('Error updating sale: ' + error.message);
     }
   };
 
@@ -202,10 +201,8 @@ function Dashboard({ onNavigate }) {
         await fetchAllSales(allSalesPage);
       }
 
-      alert('Sale deleted successfully!');
     } catch (error) {
       console.error('Error deleting sale:', error);
-      alert('Error deleting sale: ' + error.message);
     }
   };
 
@@ -599,6 +596,7 @@ function ProductManagement({ onNavigate }) {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showBulkEntry, setShowBulkEntry] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [editingField, setEditingField] = useState(null);
   const [tempValue, setTempValue] = useState('');
@@ -638,10 +636,8 @@ function ProductManagement({ onNavigate }) {
     try {
       await deleteProduct(productId);
       setProducts(products.filter(p => p.id !== productId));
-      alert('Product deleted successfully!');
     } catch (error) {
       console.error('Error deleting product:', error);
-      alert('Error deleting product: ' + error.message);
     }
   };
 
@@ -662,7 +658,6 @@ function ProductManagement({ onNavigate }) {
   // Save the edited value
   const saveEdit = async (productId, fieldName, newValue) => {
     if (!newValue.trim() || newValue === '') {
-      alert('Value cannot be empty');
       return;
     }
 
@@ -673,14 +668,12 @@ function ProductManagement({ onNavigate }) {
       if (fieldName === 'purchase_price' || fieldName === 'selling_price') {
         processedValue = parseFloat(newValue);
         if (isNaN(processedValue) || processedValue < 0) {
-          alert('Please enter a valid price');
           setSaving(false);
           return;
         }
       } else if (fieldName === 'stock_quantity' || fieldName === 'min_stock_level') {
         processedValue = parseInt(newValue);
         if (isNaN(processedValue) || processedValue < 0) {
-          alert('Please enter a valid quantity');
           setSaving(false);
           return;
         }
@@ -688,7 +681,6 @@ function ProductManagement({ onNavigate }) {
         // Keep as string but trim whitespace and convert to uppercase
         processedValue = newValue.trim().toUpperCase();
         if (processedValue.length < 2) {
-          alert('Product name must be at least 2 characters');
           setSaving(false);
           return;
         }
@@ -712,7 +704,6 @@ function ProductManagement({ onNavigate }) {
 
     } catch (error) {
       console.error('Error updating product:', error);
-      alert('Error updating product: ' + error.message);
     } finally {
       setSaving(false);
     }
@@ -735,13 +726,22 @@ function ProductManagement({ onNavigate }) {
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Products</h1>
           <p className="text-gray-600 mt-2">Manage your inventory items</p>
         </div>
-        <button 
-          onClick={() => setShowAddForm(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg mt-4 sm:mt-0 flex items-center"
-        >
-          <Plus className="h-5 w-5 mr-2" />
-          Add Product
-        </button>
+        <div className="flex gap-3 mt-4 sm:mt-0">
+          <button
+            onClick={() => setShowBulkEntry(true)}
+            className="btn-outline flex items-center"
+          >
+            <Package className="h-5 w-5 mr-2" />
+            Bulk Entry
+          </button>
+          <button
+            onClick={() => setShowAddForm(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg flex items-center"
+          >
+            <Plus className="h-5 w-5 mr-2" />
+            Add Product
+          </button>
+        </div>
       </div>
 
       {/* Search */}
@@ -758,9 +758,9 @@ function ProductManagement({ onNavigate }) {
         </div>
       </div>
 
-      {/* Products Grid */}
+      {/* Products List */}
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        <div className="space-y-3">
           {[...Array(6)].map((_, i) => (
             <div key={i} className="card">
               <div className="skeleton-card mb-4"></div>
@@ -775,7 +775,7 @@ function ProductManagement({ onNavigate }) {
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        <div className="space-y-3">
           {filteredProducts.map(product => (
           <div key={product.id} className="card hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between mb-4">
@@ -957,11 +957,20 @@ function ProductManagement({ onNavigate }) {
 
       {/* Add Product Modal */}
       {showAddForm && (
-        <AddProductModal 
+        <AddProductModal
           onClose={() => setShowAddForm(false)}
           onProductAdded={(newProduct) => {
             setProducts([newProduct, ...products]);
             setShowAddForm(false);
+          }}
+        />
+      )}
+
+      {showBulkEntry && (
+        <BulkProductEntryModal
+          onClose={() => setShowBulkEntry(false)}
+          onProductsAdded={(newProducts) => {
+            setProducts([...newProducts, ...products]);
           }}
         />
       )}
@@ -1026,11 +1035,9 @@ function AddProductModal({ onClose, onProductAdded }) {
       const newProduct = await createProduct(productData);
       
       onProductAdded(newProduct);
-      alert('Product added successfully!');
       
     } catch (error) {
       console.error('Error adding product:', error);
-      alert('Error adding product: ' + error.message);
     }
   };
 
@@ -1153,6 +1160,219 @@ function AddProductModal({ onClose, onProductAdded }) {
   );
 }
 
+// Bulk Product Entry Modal Component
+function BulkProductEntryModal({ onClose, onProductsAdded }) {
+  const [entries, setEntries] = useState([
+    { id: 1, name: '', barcode: '', purchase_price: '', selling_price: '', stock_quantity: '', min_stock_level: '5' }
+  ]);
+  const [saving, setSaving] = useState(false);
+
+  // Handle ESC key to close modal
+  useEffect(() => {
+    const handleEscapeKey = (event) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+    document.addEventListener('keydown', handleEscapeKey);
+    return () => document.removeEventListener('keydown', handleEscapeKey);
+  }, [onClose]);
+
+  // Prevent body scroll
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = 'unset'; };
+  }, []);
+
+  const addNewRow = () => {
+    const newId = Math.max(...entries.map(e => e.id)) + 1;
+    setEntries([...entries, { id: newId, name: '', barcode: '', purchase_price: '', selling_price: '', stock_quantity: '', min_stock_level: '5' }]);
+  };
+
+  const removeRow = (id) => {
+    if (entries.length > 1) {
+      setEntries(entries.filter(e => e.id !== id));
+    }
+  };
+
+  const updateEntry = (id, field, value) => {
+    setEntries(entries.map(e =>
+      e.id === id ? { ...e, [field]: field === 'name' ? value.toUpperCase() : value } : e
+    ));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    // Filter out empty entries
+    const validEntries = entries.filter(entry => entry.name.trim() && entry.purchase_price && entry.selling_price && entry.stock_quantity);
+
+    if (validEntries.length === 0) {
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const createdProducts = [];
+
+      for (const entry of validEntries) {
+        const productData = {
+          name: entry.name.trim().toUpperCase(),
+          category_id: null,
+          barcode: entry.barcode || null,
+          purchase_price: parseFloat(entry.purchase_price),
+          selling_price: parseFloat(entry.selling_price),
+          stock_quantity: parseInt(entry.stock_quantity),
+          min_stock_level: parseInt(entry.min_stock_level) || 5,
+          description: null
+        };
+
+        const newProduct = await createProduct(productData);
+        createdProducts.push(newProduct);
+      }
+
+      onProductsAdded(createdProducts);
+      onClose();
+    } catch (error) {
+      console.error('Error adding products:', error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999] overflow-y-auto"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div className="bg-white rounded-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto my-8">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-gray-900">Bulk Product Entry</h2>
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+              <X className="h-6 w-6" />
+            </button>
+          </div>
+
+          <form onSubmit={handleSubmit}>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[800px]">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left py-2 px-2 text-sm font-medium text-gray-700">Product Name *</th>
+                    <th className="text-left py-2 px-2 text-sm font-medium text-gray-700">Barcode</th>
+                    <th className="text-left py-2 px-2 text-sm font-medium text-gray-700">Purchase ₹ *</th>
+                    <th className="text-left py-2 px-2 text-sm font-medium text-gray-700">Selling ₹ *</th>
+                    <th className="text-left py-2 px-2 text-sm font-medium text-gray-700">Stock *</th>
+                    <th className="text-left py-2 px-2 text-sm font-medium text-gray-700">Min Stock</th>
+                    <th className="text-center py-2 px-2 text-sm font-medium text-gray-700">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {entries.map((entry, index) => (
+                    <tr key={entry.id} className="border-b">
+                      <td className="py-2 px-2">
+                        <input
+                          type="text"
+                          value={entry.name}
+                          onChange={(e) => updateEntry(entry.id, 'name', e.target.value)}
+                          className="input-field text-sm uppercase"
+                          placeholder="PRODUCT NAME"
+                          required
+                          autoFocus={index === 0}
+                        />
+                      </td>
+                      <td className="py-2 px-2">
+                        <input
+                          type="text"
+                          value={entry.barcode}
+                          onChange={(e) => updateEntry(entry.id, 'barcode', e.target.value)}
+                          className="input-field text-sm"
+                          placeholder="Code"
+                        />
+                      </td>
+                      <td className="py-2 px-2">
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={entry.purchase_price}
+                          onChange={(e) => updateEntry(entry.id, 'purchase_price', e.target.value)}
+                          className="input-field text-sm"
+                          placeholder="0.00"
+                          required
+                        />
+                      </td>
+                      <td className="py-2 px-2">
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={entry.selling_price}
+                          onChange={(e) => updateEntry(entry.id, 'selling_price', e.target.value)}
+                          className="input-field text-sm"
+                          placeholder="0.00"
+                          required
+                        />
+                      </td>
+                      <td className="py-2 px-2">
+                        <input
+                          type="number"
+                          value={entry.stock_quantity}
+                          onChange={(e) => updateEntry(entry.id, 'stock_quantity', e.target.value)}
+                          className="input-field text-sm"
+                          placeholder="0"
+                          required
+                        />
+                      </td>
+                      <td className="py-2 px-2">
+                        <input
+                          type="number"
+                          value={entry.min_stock_level}
+                          onChange={(e) => updateEntry(entry.id, 'min_stock_level', e.target.value)}
+                          className="input-field text-sm"
+                          placeholder="5"
+                        />
+                      </td>
+                      <td className="py-2 px-2 text-center">
+                        <button
+                          type="button"
+                          onClick={() => removeRow(entry.id)}
+                          className="p-1 text-gray-400 hover:text-danger-600"
+                          disabled={entries.length === 1}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="mt-4 flex justify-between items-center">
+              <button
+                type="button"
+                onClick={addNewRow}
+                className="btn-outline text-sm flex items-center"
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Add Row
+              </button>
+              <div className="flex gap-3">
+                <button type="button" onClick={onClose} className="btn-outline">
+                  Cancel
+                </button>
+                <button type="submit" className="btn-primary" disabled={saving}>
+                  {saving ? 'Saving...' : `Save ${entries.filter(e => e.name.trim()).length} Products`}
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Quick Sale Component
 function QuickSale({ onNavigate }) {
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -1249,12 +1469,10 @@ function QuickSale({ onNavigate }) {
 
   const handleSale = async () => {
     if (!selectedProduct) {
-      alert('Please select a product');
       return;
     }
 
     if (quantity > selectedProduct.stock_quantity) {
-      alert('Insufficient stock!');
       return;
     }
 
@@ -1305,7 +1523,6 @@ function QuickSale({ onNavigate }) {
       }, { totalQuantity: 0, totalAmount: 0, totalProfit: 0 });
       setDateSummary(newSummary);
 
-      alert(`Sale completed! Total: ₹${totalAmount.toFixed(2)}`);
       
       // Reset form (keep the same date)
       setSelectedProduct(null);
@@ -1315,7 +1532,6 @@ function QuickSale({ onNavigate }) {
 
     } catch (error) {
       console.error('Error processing sale:', error);
-      alert('Error processing sale: ' + error.message);
     }
   };
 
@@ -1634,10 +1850,8 @@ function PartyManagement({ onNavigate }) {
     try {
       await deletePartyPurchase(purchaseId);
       setPartyPurchases(partyPurchases.filter(p => p.id !== purchaseId));
-      alert('Purchase record deleted successfully!');
     } catch (error) {
       console.error('Error deleting purchase:', error);
-      alert('Error deleting purchase: ' + error.message);
     }
   };
 
@@ -1667,7 +1881,6 @@ function PartyManagement({ onNavigate }) {
   // Handle bulk delete
   const handleBulkDelete = async () => {
     if (selectedItems.size === 0) {
-      alert('Please select items to delete.');
       return;
     }
 
@@ -1683,10 +1896,8 @@ function PartyManagement({ onNavigate }) {
       setPartyPurchases(partyPurchases.filter(p => !selectedItems.has(p.id)));
       setSelectedItems(new Set());
       setSelectAll(false);
-      alert(`${selectedItems.size} purchase record(s) deleted successfully!`);
     } catch (error) {
       console.error('Error deleting purchases:', error);
-      alert('Error deleting purchases: ' + error.message);
     } finally {
       setBulkDeleting(false);
     }
@@ -1708,7 +1919,6 @@ function PartyManagement({ onNavigate }) {
       setEditNotesValue('');
     } catch (error) {
       console.error('Error updating notes:', error);
-      alert('Error updating notes: ' + error.message);
     }
   };
 
@@ -2093,7 +2303,6 @@ function AddPurchaseModal({ onClose, onPurchaseAdded }) {
       // Don't close the modal, just reset the form for quick entry
     } catch (error) {
       console.error('Error adding purchase:', error);
-      alert('Error adding purchase: ' + error.message);
     }
   };
 
@@ -2267,7 +2476,6 @@ function TransferModal({ purchase, onClose, onTransferComplete }) {
 
   const handleTransfer = async () => {
     if (transferQuantity > purchase.remaining_quantity) {
-      alert('Transfer quantity cannot exceed remaining quantity!');
       return;
     }
 
@@ -2293,10 +2501,8 @@ function TransferModal({ purchase, onClose, onTransferComplete }) {
       });
 
       onTransferComplete(updatedPurchase);
-      alert(`Successfully transferred ${transferQuantity} units to Products inventory!`);
     } catch (error) {
       console.error('Error transferring to products:', error);
-      alert('Error transferring to products: ' + error.message);
     }
   };
 
@@ -2995,7 +3201,6 @@ function FileUploadModal({ onClose, onFileProcessed }) {
     // Check file type
     const fileExtension = file.name.split('.').pop().toLowerCase();
     if (!['xlsx', 'xls', 'csv', 'pdf'].includes(fileExtension)) {
-      alert('Please upload an Excel (.xlsx, .xls), CSV (.csv), or PDF (.pdf) file');
       return;
     }
 
@@ -3181,12 +3386,10 @@ function FileUploadModal({ onClose, onFileProcessed }) {
           
           errorMessage += `\\n\\n📊 File Info:\\n• Name: ${file.name}\\n• Size: ${(file.size / 1024 / 1024).toFixed(2)} MB\\n\\n💡 Alternative: Convert to CSV/Excel format for reliable import.`;
           
-          alert(errorMessage);
           return;
         }
       } else {
         // Unsupported file type
-        alert('Unsupported file type. Please use CSV files for bulk import or enter data manually.');
         return;
       }
 
@@ -3248,7 +3451,6 @@ function FileUploadModal({ onClose, onFileProcessed }) {
       });
 
       if (processedPurchases.length === 0) {
-        alert('No valid data found in the file. Please check the format and try again.');
         return;
       }
 
@@ -3283,11 +3485,9 @@ function FileUploadModal({ onClose, onFileProcessed }) {
       }
 
       onFileProcessed(savedPurchases);
-      alert(`Successfully imported ${savedPurchases.length} purchases from file!`);
 
     } catch (error) {
       console.error('Error processing file:', error);
-      alert('Error processing file. Please check the format and try again.');
     } finally {
       setUploading(false);
       setUploadingStatus('');
@@ -3355,7 +3555,6 @@ function FileUploadModal({ onClose, onFileProcessed }) {
     }
 
     onFileProcessed(savedPurchases);
-    alert(`Successfully imported ${savedPurchases.length} purchases after review!`);
     
     // Reset states
     setUploading(false);
