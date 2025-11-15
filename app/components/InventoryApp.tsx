@@ -1588,13 +1588,11 @@ function PartyManagement({ onNavigate }) {
   const [showAddForm, setShowAddForm] = useState(false);
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [selectedPurchase, setSelectedPurchase] = useState(null);
-  const [showUploadModal, setShowUploadModal] = useState(false);
   const [selectedItems, setSelectedItems] = useState(new Set());
   const [selectAll, setSelectAll] = useState(false);
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const [editingNotes, setEditingNotes] = useState(null); // ID of purchase being edited
   const [editNotesValue, setEditNotesValue] = useState('');
-  const fileInputRef = useRef(null);
 
   // Fetch party purchases on component mount
   useEffect(() => {
@@ -1728,19 +1726,12 @@ function PartyManagement({ onNavigate }) {
           <p className="text-gray-600 mt-2">Manage your purchased inventory from suppliers</p>
         </div>
         <div className="flex gap-3 mt-4 sm:mt-0">
-          <button 
+          <button
             onClick={() => setShowAddForm(true)}
             className="btn-primary"
           >
             <Plus className="h-5 w-5 mr-2" />
             Add Purchase
-          </button>
-          <button 
-            onClick={() => setShowUploadModal(true)}
-            className="btn-outline"
-          >
-            <Upload className="h-5 w-5 mr-2" />
-            Upload File
           </button>
         </div>
       </div>
@@ -1958,30 +1949,9 @@ function PartyManagement({ onNavigate }) {
         />
       )}
 
-      {/* Floating Action Buttons - Mobile Only */}
-      <div className="md:hidden fixed bottom-6 right-6 flex flex-col gap-3 z-50">
-        <button 
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            setShowUploadModal(true);
-          }}
-          onTouchStart={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-          }}
-          className="btn-outline rounded-full p-3 shadow-lg hover:shadow-xl transition-shadow touch-target bg-white active:scale-95"
-          title="Upload File"
-          style={{ 
-            minHeight: '48px', 
-            minWidth: '48px',
-            touchAction: 'manipulation',
-            WebkitTapHighlightColor: 'transparent'
-          }}
-        >
-          <Upload className="h-5 w-5 pointer-events-none" />
-        </button>
-        <button 
+      {/* Floating Action Button - Mobile Only */}
+      <div className="md:hidden fixed bottom-6 right-6 z-50">
+        <button
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -1993,8 +1963,8 @@ function PartyManagement({ onNavigate }) {
           }}
           className="btn-primary rounded-full p-4 shadow-lg hover:shadow-xl transition-shadow touch-target active:scale-95"
           title="Add Purchase"
-          style={{ 
-            minHeight: '56px', 
+          style={{
+            minHeight: '56px',
             minWidth: '56px',
             touchAction: 'manipulation',
             WebkitTapHighlightColor: 'transparent'
@@ -2003,17 +1973,6 @@ function PartyManagement({ onNavigate }) {
           <Plus className="h-6 w-6 pointer-events-none" />
         </button>
       </div>
-
-      {/* File Upload Modal */}
-      {showUploadModal && (
-        <FileUploadModal 
-          onClose={() => setShowUploadModal(false)}
-          onFileProcessed={(newPurchases) => {
-            setPartyPurchases([...newPurchases, ...partyPurchases]);
-            setShowUploadModal(false);
-          }}
-        />
-      )}
     </div>
   );
 }
@@ -2044,6 +2003,28 @@ function AddPurchaseModal({ onClose, onPurchaseAdded }) {
     notes: ''
   });
 
+  // Helper function to format date as dd/mm/yyyy for display
+  const formatDateFull = (dateString) => {
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = String(date.getFullYear());
+    return `${day}/${month}/${year}`;
+  };
+
+  // Helper function to convert dd/mm/yyyy to yyyy-mm-dd
+  const parseDisplayDate = (displayDate) => {
+    const parts = displayDate.split('/');
+    if (parts.length === 3) {
+      const day = parts[0].padStart(2, '0');
+      const month = parts[1].padStart(2, '0');
+      const year = parts[2];
+      return `${year}-${month}-${day}`;
+    }
+    return new Date().toISOString().split('T')[0];
+  };
+
+  const [displayDate, setDisplayDate] = useState(formatDateFull(rememberedData.date));
   const itemNameRef = useRef(null);
 
   // Handle ESC key to close modal
@@ -2145,13 +2126,29 @@ function AddPurchaseModal({ onClose, onPurchaseAdded }) {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Purchase Date *</label>
+                <label className="form-label">Purchase Date (dd/mm/yyyy) *</label>
                 <input
-                  type="date"
+                  type="text"
                   required
-                  value={formData.purchase_date}
-                  onChange={(e) => setFormData({...formData, purchase_date: e.target.value})}
+                  value={displayDate}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setDisplayDate(value);
+                    // Try to parse and update the actual date if valid
+                    if (/^\d{2}\/\d{2}\/\d{4}$/.test(value)) {
+                      const parsed = parseDisplayDate(value);
+                      setFormData({...formData, purchase_date: parsed});
+                    }
+                  }}
+                  onBlur={() => {
+                    // Validate and fix format on blur
+                    if (!/^\d{2}\/\d{2}\/\d{4}$/.test(displayDate)) {
+                      setDisplayDate(formatDateFull(formData.purchase_date));
+                    }
+                  }}
                   className="input-field"
+                  placeholder="dd/mm/yyyy"
+                  maxLength={10}
                 />
               </div>
             </div>
