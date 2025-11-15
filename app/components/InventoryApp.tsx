@@ -2442,9 +2442,15 @@ function AddPurchaseModal({ onClose, onPurchaseAdded }) {
     return () => document.removeEventListener('keydown', handleEscapeKey);
   }, [onClose]);
 
-  // Prevent body scroll
+  // Prevent body scroll and autofocus item name
   useEffect(() => {
     document.body.style.overflow = 'hidden';
+    // Autofocus the item name field
+    setTimeout(() => {
+      if (itemNameRef.current) {
+        itemNameRef.current.focus();
+      }
+    }, 100);
     return () => { document.body.style.overflow = 'unset'; };
   }, []);
 
