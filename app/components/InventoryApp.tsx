@@ -1155,6 +1155,15 @@ function QuickSale({ onNavigate }) {
   const [dateSales, setDateSales] = useState([]);
   const [dateSummary, setDateSummary] = useState({ totalQuantity: 0, totalAmount: 0, totalProfit: 0 });
 
+  // Helper function to format date as dd/mm/yy
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = String(date.getFullYear()).slice(-2);
+    return `${day}/${month}/${year}`;
+  };
+
   // Fetch products on component mount
   useEffect(() => {
     const fetchProducts = async () => {
@@ -1472,7 +1481,7 @@ function QuickSale({ onNavigate }) {
         {/* Date Sales Summary */}
         <div className="card">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Sales for {new Date(saleDate).toLocaleDateString()}
+            Sales for {formatDate(saleDate)}
           </h3>
           
           {/* Summary Stats */}
