@@ -805,6 +805,29 @@ function ProductManagement({ onNavigate }) {
         </div>
       ) : viewMode === 'list' ? (
         <div className="space-y-2">
+          {/* List View Header */}
+          <div className="card bg-gray-50 border-b-2 border-gray-200">
+            <div className="flex items-center justify-between">
+              <div className="flex-1 grid grid-cols-1 sm:grid-cols-5 gap-2 sm:gap-4 items-center">
+                <div className="sm:col-span-2">
+                  <h3 className="font-semibold text-gray-700 text-sm">Product Name</h3>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-700 text-sm">Purchase Price</h3>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-700 text-sm">Selling Price</h3>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-700 text-sm">Stock</h3>
+                </div>
+              </div>
+              <div className="w-20 text-center">
+                <h3 className="font-semibold text-gray-700 text-sm">Actions</h3>
+              </div>
+            </div>
+          </div>
+
           {filteredProducts.map(product => (
             <div key={product.id} className="card hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
