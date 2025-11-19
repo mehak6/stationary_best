@@ -145,9 +145,11 @@ const withPWA = require('next-pwa')({
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
+  output: 'export',
   images: {
     domains: ['ccpvnpidhxkcbxeeyqeq.supabase.co'],
     formats: ['image/webp', 'image/avif'],
+    unoptimized: true,
   },
   // Disable output file tracing to prevent stack overflow during build
   outputFileTracing: false,

@@ -598,3 +598,53 @@ export const deletePartyPurchase = async (id: string): Promise<boolean> => {
     return false;
   }
 };
+
+// ==================== PRODUCT HISTORY ====================
+
+let productHistoryDB: any = null;
+
+const getProductHistoryDB = () => {
+  if (!productHistoryDB && typeof window !== 'undefined') {
+    const PouchDB = require('pouchdb').default;
+    productHistoryDB = new PouchDB('product_history');
+  }
+  return productHistoryDB;
+};
+
+export const saveProductHistory = async (entry: any): Promise<void> => {
+  try {
+    const db = getProductHistoryDB();
+    const docId = `history_${entry.id}`;
+    await db.put({
+      _id: docId,
+      ...entry
+    });
+  } catch (error) {
+    console.error('Error saving product history:', error);
+    throw error;
+  }
+};
+
+export const getProductHistory = async (productId: string): Promise<any[]> => {
+  try {
+    const db = getProductHistoryDB();
+    const result = await db.allDocs({ include_docs: true });
+    return result.rows
+      .map((row: any) => row.doc)
+      .filter((doc: any) => doc.product_id === productId)
+      .map((doc: any) => ({
+        id: doc.id,
+        product_id: doc.product_id,
+        product_name: doc.product_name,
+        action: doc.action,
+        quantity_change: doc.quantity_change,
+        stock_before: doc.stock_before,
+        stock_after: doc.stock_after,
+        date: doc.date,
+        notes: doc.notes
+      }));
+  } catch (error) {
+    console.error('Error getting product history:', error);
+    return [];
+  }
+};

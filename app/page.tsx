@@ -2,6 +2,8 @@
 
 import React, { Suspense, Component, ReactNode } from 'react';
 import InventoryApp from './components/InventoryApp';
+import { ToastProvider } from './context/ToastContext';
+import { ToastContainer } from './components/Toast';
 
 /**
  * Props for the ErrorBoundary component
@@ -123,9 +125,12 @@ export default function Home() {
         <InventoryErrorFallback error={error} resetError={resetError} />
       )}
     >
-      <Suspense fallback={<InventoryLoadingFallback />}>
-        <InventoryApp />
-      </Suspense>
+      <ToastProvider>
+        <Suspense fallback={<InventoryLoadingFallback />}>
+          <InventoryApp />
+        </Suspense>
+        <ToastContainer />
+      </ToastProvider>
     </ErrorBoundary>
   );
 }

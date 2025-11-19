@@ -48,6 +48,21 @@ export interface PartyPurchase {
 
 export type PartyPurchaseInsert = Omit<PartyPurchase, 'id' | 'created_at' | 'updated_at'>;
 
+// Product history type definitions
+export interface ProductHistory {
+  id: string;
+  product_id: string;
+  product_name: string;
+  action: 'created' | 'stock_added' | 'stock_updated';
+  quantity_change: number;
+  stock_before: number;
+  stock_after: number;
+  date: string;
+  notes?: string;
+}
+
+export type ProductHistoryInsert = Omit<ProductHistory, 'id'>;
+
 // Helper functions for common operations
 
 // Products

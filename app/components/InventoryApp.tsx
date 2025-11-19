@@ -16,7 +16,10 @@ import {
   Upload,
   Menu,
   ArrowLeft,
-  Home
+  Home,
+  History,
+  Undo2,
+  FileText
 } from 'lucide-react';
 
 // Import offline-aware database functions
@@ -37,6 +40,15 @@ import {
   updatePartyPurchase,
   deletePartyPurchase
 } from '../../lib/offline-adapter';
+
+// Import product history functions
+import { addProductHistory, getProductHistory } from '../../lib/product-history';
+
+// Import toast context
+import { useToast } from '../context/ToastContext';
+
+// Import utility functions
+import { formatDateToDDMMYYYY, parseDDMMYYYYToISO } from './inventory/utils/dateHelpers';
 
 // Import types from Supabase
 import type {
@@ -72,6 +84,14 @@ function Dashboard({ onNavigate }) {
   const [allSalesLoading, setAllSalesLoading] = useState(false);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
+  const [startDateDisplay, setStartDateDisplay] = useState('');
+  const [endDateDisplay, setEndDateDisplay] = useState(() => {
+    const today = new Date();
+    const day = String(today.getDate()).padStart(2, '0');
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const year = String(today.getFullYear());
+    return `${day}/${month}/${year}`;
+  });
   const [allSalesPage, setAllSalesPage] = useState(1);
   const SALES_PER_PAGE = 20;
   const [editingSale, setEditingSale] = useState(null);
@@ -80,6 +100,7 @@ function Dashboard({ onNavigate }) {
     unit_price: 0,
     sale_date: ''
   });
+  const [editSaleDateDisplay, setEditSaleDateDisplay] = useState('');
 
   // Fetch dashboard data on component mount
   useEffect(() => {
@@ -119,17 +140,40 @@ function Dashboard({ onNavigate }) {
 
   const handleEditSale = (sale: Sale) => {
     setEditingSale(sale);
+    const isoDate = sale.sale_date.split('T')[0];
     setEditSaleData({
       quantity: sale.quantity,
       unit_price: sale.unit_price,
-      sale_date: sale.sale_date.split('T')[0] // Format date for input field
+      sale_date: isoDate
     });
+    // Set display date in dd/mm/yyyy format
+    setEditSaleDateDisplay(formatDateToDDMMYYYY(isoDate));
   };
 
   const handleUpdateSale = async () => {
     if (!editingSale) return;
 
     try {
+      // Check if quantity is being increased
+      const quantityDifference = editSaleData.quantity - editingSale.quantity;
+
+      if (quantityDifference > 0) {
+        // Get current product stock
+        const products = await getProducts();
+        const product = products.find(p => p.id === editingSale.product_id);
+
+        if (!product) {
+          showToast('Error: Product not found. Cannot update sale.', 'error');
+          return;
+        }
+
+        // Check if sufficient stock is available
+        if (product.stock_quantity < quantityDifference) {
+          showToast(`Insufficient stock! Available: ${product.stock_quantity}, Required: ${quantityDifference}`, 'error', 5000);
+          return;
+        }
+      }
+
       // Calculate new total and profit
       const totalAmount = editSaleData.quantity * editSaleData.unit_price;
       const purchasePrice = editingSale.products?.purchase_price || 0;
@@ -164,11 +208,15 @@ function Dashboard({ onNavigate }) {
         await fetchAllSales(allSalesPage);
       }
 
+      // Show success message
+      showToast(`Sale updated successfully for ${editingSale.products?.name}`, 'success');
+
       // Close edit modal
       setEditingSale(null);
-      
+
     } catch (error) {
       console.error('Error updating sale:', error);
+      showToast('Error updating sale. Please try again.', 'error');
     }
   };
 
@@ -284,7 +332,7 @@ function Dashboard({ onNavigate }) {
       </div>
 
       {/* Analytics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         <div className="stat-card">
           <div className="flex items-center justify-between">
             <div>
@@ -314,48 +362,55 @@ function Dashboard({ onNavigate }) {
             <TrendingUp className="h-8 w-8 text-accent-600" />
           </div>
         </div>
-
-        <div className="stat-card">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="stat-label">Low Stock Alert</p>
-              <p className="stat-value text-danger-600">{analytics.lowStockProducts}</p>
-            </div>
-            <AlertTriangle className="h-8 w-8 text-danger-600" />
-          </div>
-        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-
-        {/* Low Stock Alerts */}
-        <div className="card">
+      {/* Low Stock Alerts */}
+      {lowStockItems.length > 0 && (
+        <div className="card bg-gradient-to-br from-orange-50 to-red-50 border-2 border-orange-200">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">Low Stock Alerts</h3>
-            <button 
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="h-6 w-6 text-orange-600" />
+              <h3 className="text-lg font-semibold text-gray-900">Low Stock Alerts</h3>
+              <span className="badge-danger">{lowStockItems.length}</span>
+            </div>
+            <button
               onClick={() => onNavigate('products')}
-              className="text-primary-600 hover:text-primary-700 font-medium"
+              className="btn-outline text-sm bg-white hover:bg-orange-100"
             >
               Manage Stock
             </button>
           </div>
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {lowStockItems.map(product => (
-              <div key={product.id} className="flex items-center justify-between p-4 bg-danger-50 rounded-lg border border-danger-200">
-                <div>
-                  <p className="font-medium text-gray-900">{product.name}</p>
+              <div
+                key={product.id}
+                className="bg-white rounded-lg p-3 border-2 border-orange-300 hover:border-orange-400 transition-colors cursor-pointer"
+                onClick={() => onNavigate('products')}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <p className="font-semibold text-gray-900 text-sm truncate">{product.name}</p>
+                    <p className="text-xs text-gray-500">Min: {product.min_stock_level}</p>
+                  </div>
+                  <div className="text-right ml-2">
+                    <p className="font-bold text-red-600 text-lg">{product.stock_quantity}</p>
+                    <p className="text-xs text-gray-500">units left</p>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <p className="font-medium text-danger-600">{product.stock_quantity} left</p>
-                  <p className="text-sm text-gray-500">Min: {product.min_stock_level}</p>
+                <div className="mt-2 bg-orange-100 rounded-full h-2 overflow-hidden">
+                  <div
+                    className="bg-red-500 h-full transition-all"
+                    style={{ width: `${Math.min(100, (product.stock_quantity / product.min_stock_level) * 100)}%` }}
+                  />
                 </div>
               </div>
             ))}
           </div>
         </div>
+      )}
 
-        {/* All Sales Section */}
-        <div className="lg:col-span-2 card mt-8">
+      {/* All Sales Section */}
+      <div className="card">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900">All Sales</h3>
             <button
@@ -374,19 +429,63 @@ function Dashboard({ onNavigate }) {
                 <div className="flex items-center gap-2">
                   <label className="text-sm font-medium text-gray-700">From:</label>
                   <input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className="input-field text-sm w-36"
+                    type="text"
+                    value={startDateDisplay}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      // Allow typing and update display immediately
+                      if (/^\d{0,2}\/?\d{0,2}\/?\d{0,4}$/.test(value)) {
+                        setStartDateDisplay(value);
+
+                        // Only update the actual date state when format is complete
+                        if (/^\d{2}\/\d{2}\/\d{4}$/.test(value)) {
+                          const isoDate = parseDDMMYYYYToISO(value);
+                          if (isoDate) {
+                            setStartDate(isoDate);
+                          }
+                        }
+                      }
+                    }}
+                    onBlur={(e) => {
+                      // Reset to valid date on blur if incomplete
+                      if (e.target.value && !/^\d{2}\/\d{2}\/\d{4}$/.test(e.target.value)) {
+                        setStartDateDisplay(startDate ? formatDateToDDMMYYYY(startDate) : '');
+                      }
+                    }}
+                    placeholder="dd/mm/yyyy"
+                    className="input-field text-sm w-36 text-gray-900"
+                    maxLength={10}
                   />
                 </div>
                 <div className="flex items-center gap-2">
                   <label className="text-sm font-medium text-gray-700">To:</label>
                   <input
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    className="input-field text-sm w-36"
+                    type="text"
+                    value={endDateDisplay}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      // Allow typing and update display immediately
+                      if (/^\d{0,2}\/?\d{0,2}\/?\d{0,4}$/.test(value)) {
+                        setEndDateDisplay(value);
+
+                        // Only update the actual date state when format is complete
+                        if (/^\d{2}\/\d{2}\/\d{4}$/.test(value)) {
+                          const isoDate = parseDDMMYYYYToISO(value);
+                          if (isoDate) {
+                            setEndDate(isoDate);
+                          }
+                        }
+                      }
+                    }}
+                    onBlur={(e) => {
+                      // Reset to valid date on blur if incomplete
+                      if (e.target.value && !/^\d{2}\/\d{2}\/\d{4}$/.test(e.target.value)) {
+                        setEndDateDisplay(formatDateToDDMMYYYY(endDate));
+                      }
+                    }}
+                    placeholder="dd/mm/yyyy"
+                    className="input-field text-sm w-36 text-gray-900"
+                    maxLength={10}
                   />
                 </div>
                 <button
@@ -397,8 +496,8 @@ function Dashboard({ onNavigate }) {
                 </button>
               </div>
 
-              {/* Sales List */}
-              <div className="space-y-3">
+              {/* Sales List - Grouped by Date */}
+              <div className="space-y-4">
                 {allSalesLoading ? (
                   <div className="text-center py-8">
                     <p className="text-gray-500">Loading sales...</p>
@@ -409,36 +508,85 @@ function Dashboard({ onNavigate }) {
                   </div>
                 ) : (
                   <>
-                    <div className="max-h-96 overflow-y-auto">
-                      {allSales.map(sale => (
-                        <div key={sale.id} className="flex items-center justify-between p-3 bg-primary-50 rounded-lg mb-2">
-                          <div className="flex-1">
-                            <p className="font-medium text-gray-900">{sale.products?.name || 'Unknown Product'}</p>
-                            <p className="text-sm text-gray-500">Qty: {sale.quantity} • ₹{sale.unit_price}</p>
-                            <p className="text-xs text-gray-400">Date: {new Date(sale.sale_date).toLocaleDateString()}</p>
-                          </div>
-                          <div className="text-right mr-3">
-                            <p className="font-medium text-gray-900">₹{sale.total_amount}</p>
-                            <p className="text-sm text-secondary-600">Profit: ₹{sale.profit}</p>
-                          </div>
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => handleEditSale(sale)}
-                              className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
-                              title="Edit Sale"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteSale(sale.id, sale)}
-                              className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
-                              title="Delete Sale"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                          </div>
-                        </div>
-                      ))}
+                    <div className="max-h-96 overflow-y-auto space-y-4">
+                      {(() => {
+                        // Group sales by date
+                        const salesByDate = allSales.reduce((groups, sale) => {
+                          const date = new Date(sale.sale_date).toLocaleDateString('en-GB', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric'
+                          });
+                          if (!groups[date]) {
+                            groups[date] = [];
+                          }
+                          groups[date].push(sale);
+                          return groups;
+                        }, {});
+
+                        // Sort dates in descending order
+                        const sortedDates = Object.keys(salesByDate).sort((a, b) => {
+                          const dateA = new Date(salesByDate[a][0].sale_date);
+                          const dateB = new Date(salesByDate[b][0].sale_date);
+                          return dateB - dateA;
+                        });
+
+                        return sortedDates.map(date => {
+                          const dateSales = salesByDate[date];
+                          const dateTotal = dateSales.reduce((sum, sale) => sum + sale.total_amount, 0);
+                          const dateProfit = dateSales.reduce((sum, sale) => sum + sale.profit, 0);
+
+                          return (
+                            <div key={date} className="border-2 border-gray-200 rounded-lg overflow-hidden">
+                              {/* Date Header */}
+                              <div className="bg-primary-100 border-b-2 border-primary-200 px-4 py-3">
+                                <div className="flex items-center justify-between">
+                                  <div>
+                                    <p className="font-bold text-gray-900 text-lg">{date}</p>
+                                    <p className="text-sm text-gray-600">{dateSales.length} {dateSales.length === 1 ? 'sale' : 'sales'}</p>
+                                  </div>
+                                  <div className="text-right">
+                                    <p className="font-bold text-secondary-600 text-lg">₹{dateTotal.toFixed(2)}</p>
+                                    <p className="text-sm text-accent-600">Profit: ₹{dateProfit.toFixed(2)}</p>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Sales for this date */}
+                              <div className="bg-white">
+                                {dateSales.map(sale => (
+                                  <div key={sale.id} className="flex items-center justify-between p-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50">
+                                    <div className="flex-1">
+                                      <p className="font-medium text-gray-900">{sale.products?.name || 'Unknown Product'}</p>
+                                      <p className="text-sm text-gray-500">Qty: {sale.quantity} • Unit: ₹{sale.unit_price}</p>
+                                    </div>
+                                    <div className="text-right mr-3">
+                                      <p className="font-medium text-gray-900">₹{sale.total_amount}</p>
+                                      <p className="text-sm text-secondary-600">+₹{sale.profit}</p>
+                                    </div>
+                                    <div className="flex gap-2">
+                                      <button
+                                        onClick={() => handleEditSale(sale)}
+                                        className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+                                        title="Edit Sale"
+                                      >
+                                        <Edit className="h-4 w-4" />
+                                      </button>
+                                      <button
+                                        onClick={() => handleDeleteSale(sale.id, sale)}
+                                        className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                                        title="Delete Sale"
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </button>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        });
+                      })()}
                     </div>
 
                     {/* Pagination */}
@@ -467,7 +615,6 @@ function Dashboard({ onNavigate }) {
             </div>
           )}
         </div>
-      </div>
 
       {/* Quick Actions - Improved with better visibility */}
       <div className="fixed bottom-8 right-8 flex flex-col gap-4 z-50">
@@ -535,20 +682,46 @@ function Dashboard({ onNavigate }) {
                   min="0"
                   step="0.01"
                   value={editSaleData.unit_price}
-                  onChange={(e) => setEditSaleData({ ...editSaleData, unit_price: parseFloat(e.target.value) || 0 })}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    // Store the actual value without parsing to avoid rounding
+                    setEditSaleData({ ...editSaleData, unit_price: value === '' ? 0 : parseFloat(value) });
+                  }}
                   className="input-field w-full"
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Sale Date
+                  Sale Date (dd/mm/yyyy)
                 </label>
                 <input
-                  type="date"
-                  value={editSaleData.sale_date}
-                  onChange={(e) => setEditSaleData({ ...editSaleData, sale_date: e.target.value })}
-                  className="input-field w-full"
+                  type="text"
+                  value={editSaleDateDisplay}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    // Allow typing and update display immediately
+                    if (/^\d{0,2}\/?\d{0,2}\/?\d{0,4}$/.test(value)) {
+                      setEditSaleDateDisplay(value);
+
+                      // Only update the actual date state when format is complete
+                      if (/^\d{2}\/\d{2}\/\d{4}$/.test(value)) {
+                        const isoDate = parseDDMMYYYYToISO(value);
+                        if (isoDate) {
+                          setEditSaleData({ ...editSaleData, sale_date: isoDate });
+                        }
+                      }
+                    }
+                  }}
+                  onBlur={(e) => {
+                    // Reset to valid date on blur if incomplete
+                    if (e.target.value && !/^\d{2}\/\d{2}\/\d{4}$/.test(e.target.value)) {
+                      setEditSaleDateDisplay(formatDateToDDMMYYYY(editSaleData.sale_date));
+                    }
+                  }}
+                  placeholder="dd/mm/yyyy"
+                  className="input-field w-full text-gray-900"
+                  maxLength={10}
                 />
               </div>
 
@@ -598,10 +771,14 @@ function ProductManagement({ onNavigate }) {
   const [showAddForm, setShowAddForm] = useState(false);
   const [showBulkEntry, setShowBulkEntry] = useState(false);
   const [viewMode, setViewMode] = useState('card'); // 'card' or 'list'
+  const [showHistory, setShowHistory] = useState(false);
+  const [selectedProductForHistory, setSelectedProductForHistory] = useState(null);
   const [editingProduct, setEditingProduct] = useState(null);
   const [editingField, setEditingField] = useState(null);
   const [tempValue, setTempValue] = useState('');
   const [saving, setSaving] = useState(false);
+  const [undoData, setUndoData] = useState(null); // {productId, fieldName, oldValue, newValue, productName}
+  const [showUndo, setShowUndo] = useState(false);
 
   // Fetch products on component mount
   useEffect(() => {
@@ -687,26 +864,91 @@ function ProductManagement({ onNavigate }) {
         }
       }
 
+      // Get the current product before updating
+      const currentProduct = products.find(p => p.id === productId);
+
       // Update the product
       const updatedProduct = {
-        ...products.find(p => p.id === productId),
+        ...currentProduct,
         [fieldName]: processedValue
       };
 
       await updateProduct(productId, updatedProduct);
+
+      // Track stock quantity changes in history
+      if (fieldName === 'stock_quantity' && currentProduct) {
+        const stockBefore = currentProduct.stock_quantity;
+        const stockAfter = processedValue;
+        const change = stockAfter - stockBefore;
+
+        await addProductHistory({
+          product_id: productId,
+          product_name: currentProduct.name,
+          action: change > 0 ? 'stock_added' : 'stock_updated',
+          quantity_change: change,
+          stock_before: stockBefore,
+          stock_after: stockAfter,
+          notes: change > 0
+            ? `Added ${change} units to stock`
+            : `Reduced stock by ${Math.abs(change)} units`
+        });
+      }
 
       // Update local state
       setProducts(products.map(p =>
         p.id === productId ? { ...p, [fieldName]: processedValue } : p
       ));
 
+      // Store undo data
+      setUndoData({
+        productId: productId,
+        fieldName: fieldName,
+        oldValue: currentProduct[fieldName],
+        newValue: processedValue,
+        productName: currentProduct.name
+      });
+
+      // Show undo toast for 5 seconds
+      setShowUndo(true);
+      setTimeout(() => {
+        setShowUndo(false);
+        setUndoData(null);
+      }, 5000);
+
       // Clear editing state
       cancelEditing();
 
     } catch (error) {
       console.error('Error updating product:', error);
+      showToast('Error updating product. Please try again.', 'error');
     } finally {
       setSaving(false);
+    }
+  };
+
+  // Undo the last edit
+  const handleUndo = async () => {
+    if (!undoData) return;
+
+    try {
+      const { productId, fieldName, oldValue, productName } = undoData;
+
+      // Update the product back to old value
+      await updateProduct(productId, { [fieldName]: oldValue });
+
+      // Update local state
+      setProducts(products.map(p =>
+        p.id === productId ? { ...p, [fieldName]: oldValue } : p
+      ));
+
+      // Hide undo toast
+      setShowUndo(false);
+      setUndoData(null);
+
+      showToast(`Undone: ${productName} - ${fieldName} reverted to previous value`, 'success');
+    } catch (error) {
+      console.error('Error undoing change:', error);
+      showToast('Error undoing change. Please try again.', 'error');
     }
   };
 
@@ -940,6 +1182,16 @@ function ProductManagement({ onNavigate }) {
                     </>
                   )}
                   <button
+                    onClick={() => {
+                      setSelectedProductForHistory(product);
+                      setShowHistory(true);
+                    }}
+                    className="p-1 text-gray-400 hover:text-primary-600"
+                    title="View History"
+                  >
+                    <History className="h-4 w-4" />
+                  </button>
+                  <button
                     onClick={() => handleDeleteProduct(product.id)}
                     className="p-1 text-gray-400 hover:text-danger-600"
                   >
@@ -979,7 +1231,17 @@ function ProductManagement({ onNavigate }) {
                     </button>
                   </>
                 )}
-                <button 
+                <button
+                  onClick={() => {
+                    setSelectedProductForHistory(product);
+                    setShowHistory(true);
+                  }}
+                  className="p-1 text-gray-400 hover:text-primary-600"
+                  title="View History"
+                >
+                  <History className="h-4 w-4" />
+                </button>
+                <button
                   onClick={() => handleDeleteProduct(product.id)}
                   className="p-1 text-gray-400 hover:text-danger-600"
                 >
@@ -1139,6 +1401,7 @@ function ProductManagement({ onNavigate }) {
             setProducts([newProduct, ...products]);
             setShowAddForm(false);
           }}
+          showToast={showToast}
         />
       )}
 
@@ -1150,12 +1413,126 @@ function ProductManagement({ onNavigate }) {
           }}
         />
       )}
+
+      {showHistory && selectedProductForHistory && (
+        <ProductHistoryModal
+          product={selectedProductForHistory}
+          onClose={() => {
+            setShowHistory(false);
+            setSelectedProductForHistory(null);
+          }}
+        />
+      )}
     </div>
   );
 }
 
-// Add Product Modal Component  
-function AddProductModal({ onClose, onProductAdded }) {
+// Product History Modal Component
+function ProductHistoryModal({ product, onClose }) {
+  const [history, setHistory] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchHistory = async () => {
+      try {
+        const { getProductHistory } = await import('../../lib/product-history');
+        const historyData = await getProductHistory(product.id);
+        setHistory(historyData);
+      } catch (error) {
+        console.error('Error fetching product history:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchHistory();
+  }, [product.id]);
+
+  // Handle ESC key
+  useEffect(() => {
+    const handleEsc = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', handleEsc);
+    return () => document.removeEventListener('keydown', handleEsc);
+  }, [onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999]"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div className="bg-white rounded-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-xl font-bold text-gray-900">Product History</h2>
+              <p className="text-sm text-gray-600 mt-1">{product.name}</p>
+            </div>
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+              <X className="h-6 w-6" />
+            </button>
+          </div>
+
+          {loading ? (
+            <div className="text-center py-8">
+              <p className="text-gray-500">Loading history...</p>
+            </div>
+          ) : history.length === 0 ? (
+            <div className="text-center py-8">
+              <Package className="h-12 w-12 mx-auto text-gray-300 mb-3" />
+              <p className="text-gray-500">No history recorded yet</p>
+              <p className="text-xs text-gray-400 mt-1">History tracking started from this update</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {history.map((entry, index) => (
+                <div key={entry.id} className="border-l-4 border-primary-500 bg-gray-50 p-4 rounded-r-lg">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        {entry.action === 'created' && (
+                          <span className="badge-success text-xs">Created</span>
+                        )}
+                        {entry.action === 'stock_added' && (
+                          <span className="badge-info text-xs">Stock Added</span>
+                        )}
+                        {entry.action === 'stock_updated' && (
+                          <span className="badge-warning text-xs">Stock Updated</span>
+                        )}
+                        <span className="text-xs text-gray-500">
+                          {new Date(entry.date).toLocaleString('en-IN', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </span>
+                      </div>
+                      <div className="text-sm text-gray-700">
+                        <span className="font-medium">Quantity: </span>
+                        {entry.stock_before} → {entry.stock_after}
+                        <span className={`ml-2 ${entry.quantity_change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          ({entry.quantity_change >= 0 ? '+' : ''}{entry.quantity_change})
+                        </span>
+                      </div>
+                      {entry.notes && (
+                        <p className="text-xs text-gray-500 mt-1">{entry.notes}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Add Product Modal Component
+function AddProductModal({ onClose, onProductAdded, showToast }) {
   const [formData, setFormData] = useState({
     name: '',
     barcode: '',
@@ -1209,9 +1586,20 @@ function AddProductModal({ onClose, onProductAdded }) {
 
       // Create product in Supabase
       const newProduct = await createProduct(productData);
-      
+
+      // Add to product history
+      await addProductHistory({
+        product_id: newProduct.id,
+        product_name: newProduct.name,
+        action: 'created',
+        quantity_change: newProduct.stock_quantity,
+        stock_before: 0,
+        stock_after: newProduct.stock_quantity,
+        notes: `Product created with initial stock of ${newProduct.stock_quantity}`
+      });
+
       onProductAdded(newProduct);
-      
+
     } catch (error) {
       console.error('Error adding product:', error);
     }
@@ -1405,6 +1793,17 @@ function BulkProductEntryModal({ onClose, onProductsAdded }) {
 
         const newProduct = await createProduct(productData);
         createdProducts.push(newProduct);
+
+        // Add to product history
+        await addProductHistory({
+          product_id: newProduct.id,
+          product_name: newProduct.name,
+          action: 'created',
+          quantity_change: newProduct.stock_quantity,
+          stock_before: 0,
+          stock_after: newProduct.stock_quantity,
+          notes: `Product created via bulk entry with initial stock of ${newProduct.stock_quantity}`
+        });
       }
 
       onProductsAdded(createdProducts);
@@ -1549,17 +1948,30 @@ function BulkProductEntryModal({ onClose, onProductsAdded }) {
   );
 }
 
+
 // Quick Sale Component
 function QuickSale({ onNavigate }) {
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const [quantity, setQuantity] = useState(1);
-  const [salePrice, setSalePrice] = useState(0);
+  const [cart, setCart] = useState([]); // Cart items: { product, quantity, salePrice, saleDate }
   const [saleDate, setSaleDate] = useState(new Date().toISOString().split('T')[0]);
+  const [saleDateDisplay, setSaleDateDisplay] = useState(() => {
+    const today = new Date();
+    const day = String(today.getDate()).padStart(2, '0');
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const year = String(today.getFullYear());
+    return `${day}/${month}/${year}`;
+  });
   const [searchTerm, setSearchTerm] = useState('');
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dateSales, setDateSales] = useState([]);
-  const [dateSummary, setDateSummary] = useState({ totalQuantity: 0, totalAmount: 0, totalProfit: 0 });
+  const [dateSummary, setDateSummary] = useState({ totalProducts: 0, totalAmount: 0, totalProfit: 0 });
+  const searchInputRef = useRef(null);
+  const [showAddStockModal, setShowAddStockModal] = useState(false);
+  const [addStockProduct, setAddStockProduct] = useState(null);
+  const [addStockQuantity, setAddStockQuantity] = useState(0);
+  const [processing, setProcessing] = useState(false);
+  const [showQuickAddModal, setShowQuickAddModal] = useState(false);
+  const [quickAddPrefillName, setQuickAddPrefillName] = useState('');
 
   // Helper function to format date as dd/mm/yy
   const formatDate = (dateString) => {
@@ -1591,9 +2003,6 @@ function QuickSale({ onNavigate }) {
     return new Date().toISOString().split('T')[0];
   };
 
-  // State for display date in dd/mm/yyyy format
-  const [displayDate, setDisplayDate] = useState(formatDateFull(new Date().toISOString().split('T')[0]));
-
   // Fetch products on component mount
   useEffect(() => {
     const fetchProducts = async () => {
@@ -1620,94 +2029,270 @@ function QuickSale({ onNavigate }) {
         setDateSales(salesData || []);
         
         // Calculate summary
+        const uniqueProducts = new Set((salesData || []).map(sale => sale.product_id));
         const summary = (salesData || []).reduce((acc, sale) => {
-          acc.totalQuantity += sale.quantity;
           acc.totalAmount += sale.total_amount;
           acc.totalProfit += sale.profit;
           return acc;
-        }, { totalQuantity: 0, totalAmount: 0, totalProfit: 0 });
+        }, { totalProducts: uniqueProducts.size, totalAmount: 0, totalProfit: 0 });
         
         setDateSummary(summary);
       } catch (error) {
         console.error('Error fetching date sales:', error);
         setDateSales([]);
-        setDateSummary({ totalQuantity: 0, totalAmount: 0, totalProfit: 0 });
+        setDateSummary({ totalProducts: 0, totalAmount: 0, totalProfit: 0 });
       }
     };
 
     fetchDateSales();
   }, [saleDate]);
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Focus search with / key
+      if (e.key === '/' && document.activeElement !== searchInputRef.current) {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+
+      // Clear search with Esc
+      if (e.key === 'Escape') {
+        setSearchTerm('');
+        searchInputRef.current?.blur();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Auto-focus search on mount
+  useEffect(() => {
+    searchInputRef.current?.focus();
+  }, []);
+
   const filteredProducts = products.filter(product =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     product.barcode?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleSale = async () => {
-    if (!selectedProduct) {
+  // Detect no results state for Quick Add feature
+  const hasSearchTerm = searchTerm.trim().length > 0;
+  const noResults = hasSearchTerm && filteredProducts.length === 0;
+
+  // Handle sale date change from dd/mm/yyyy input
+  const handleSaleDateChange = (displayValue) => {
+    setSaleDateDisplay(displayValue);
+
+    // Parse dd/mm/yyyy to yyyy-mm-dd
+    const parts = displayValue.split('/');
+    if (parts.length === 3 && parts[0].length <= 2 && parts[1].length <= 2 && parts[2].length === 4) {
+      const day = parts[0].padStart(2, '0');
+      const month = parts[1].padStart(2, '0');
+      const year = parts[2];
+
+      // Validate date
+      const date = new Date(`${year}-${month}-${day}`);
+      if (!isNaN(date.getTime())) {
+        setSaleDate(`${year}-${month}-${day}`);
+
+        // Update all cart items with the new date
+        setCart(prevCart =>
+          prevCart.map(item => ({
+            ...item,
+            saleDate: `${year}-${month}-${day}`
+          }))
+        );
+      }
+    }
+  };
+
+  // Add product to cart
+  const addToCart = (product) => {
+    setCart(prevCart => {
+      // Check if same product with same price already exists in cart
+      const existingItem = prevCart.find(item =>
+        item.product.id === product.id && item.salePrice === product.selling_price
+      );
+      if (existingItem) {
+        // Increase quantity if already in cart with same price
+        return prevCart.map(item =>
+          item.product.id === product.id && item.salePrice === product.selling_price
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        );
+      } else {
+        // Add new item to cart (allows same product with different price)
+        return [...prevCart, {
+          product: product,
+          quantity: 1,
+          salePrice: product.selling_price,
+          saleDate: saleDate
+        }];
+      }
+    });
+    setSearchTerm('');
+  };
+
+  // Update cart item by index
+  const updateCartItem = (index, field, value) => {
+    setCart(prevCart =>
+      prevCart.map((item, i) =>
+        i === index
+          ? { ...item, [field]: value }
+          : item
+      )
+    );
+  };
+
+  // Remove from cart by index
+  const removeFromCart = (index) => {
+    setCart(prevCart => prevCart.filter((_, i) => i !== index));
+  };
+
+  // Handle opening Quick Add modal
+  const handleAddNewProduct = (searchTerm) => {
+    setQuickAddPrefillName(searchTerm);
+    setShowQuickAddModal(true);
+  };
+
+  // Handle product added from Quick Add modal
+  const handleQuickAddProductAdded = (newProduct) => {
+    // Add to products list
+    setProducts(prevProducts => [newProduct, ...prevProducts]);
+
+    // Automatically add to cart
+    addToCart(newProduct);
+
+    // Close modal
+    setShowQuickAddModal(false);
+
+    // Focus search input for next product
+    setTimeout(() => {
+      if (searchInputRef.current) {
+        searchInputRef.current.focus();
+      }
+    }, 100);
+  };
+
+  // Complete sale for all cart items
+  const handleCompleteSale = async () => {
+    if (cart.length === 0) return;
+
+    // Prevent multiple simultaneous calls
+    if (processing) {
       return;
     }
 
-    if (quantity > selectedProduct.stock_quantity) {
+    // Check stock for all items
+    const insufficientStock = cart.find(item => item.quantity > item.product.stock_quantity);
+    if (insufficientStock) {
+      showToast(`Insufficient stock for ${insufficientStock.product.name}. Available: ${insufficientStock.product.stock_quantity}, Required: ${insufficientStock.quantity}`, 'error', 5000);
       return;
     }
 
     try {
-      const actualSalePrice = salePrice || selectedProduct.selling_price;
-      const totalAmount = actualSalePrice * quantity;
-      const profit = (actualSalePrice - selectedProduct.purchase_price) * quantity;
+      setProcessing(true);
 
-      // Create sale record
-      const saleData = {
-        product_id: selectedProduct.id,
-        quantity: parseInt(quantity.toString()),
-        unit_price: parseFloat(actualSalePrice),
-        total_amount: totalAmount,
-        profit: profit,
-        customer_info: null,
-        sale_date: saleDate,
-        notes: null
-      };
+      // Process each cart item
+      for (const item of cart) {
+        const totalAmount = item.salePrice * item.quantity;
+        const profit = (item.salePrice - item.product.purchase_price) * item.quantity;
 
-      await createSale(saleData);
+        const saleData = {
+          product_id: item.product.id,
+          quantity: parseInt(item.quantity.toString()),
+          unit_price: parseFloat(item.salePrice),
+          total_amount: totalAmount,
+          profit: profit,
+          customer_info: null,
+          sale_date: item.saleDate,
+          notes: null
+        };
 
-      // Update product stock
-      const newStockQuantity = selectedProduct.stock_quantity - quantity;
-      await updateProduct(selectedProduct.id, {
+        await createSale(saleData);
+
+        // Update stock
+        const newStockQuantity = item.product.stock_quantity - item.quantity;
+        await updateProduct(item.product.id, {
+          stock_quantity: newStockQuantity
+        });
+
+        // Update local products state
+        setProducts(prevProducts =>
+          prevProducts.map(p =>
+            p.id === item.product.id
+              ? { ...p, stock_quantity: newStockQuantity }
+              : p
+          )
+        );
+      }
+
+      // Refresh sales data
+      const updatedSalesData = await getSalesByDate(saleDate);
+      setDateSales(updatedSalesData || []);
+
+      const uniqueProducts = new Set((updatedSalesData || []).map(sale => sale.product_id));
+      const newSummary = (updatedSalesData || []).reduce((acc, sale) => {
+        acc.totalAmount += sale.total_amount;
+        acc.totalProfit += sale.profit;
+        return acc;
+      }, { totalProducts: uniqueProducts.size, totalAmount: 0, totalProfit: 0 });
+      setDateSummary(newSummary);
+
+      // Clear cart
+      setCart([]);
+      setSearchTerm('');
+
+      showToast(`Successfully completed sale of ${cart.length} item(s)!`, 'success');
+    } catch (error) {
+      console.error('Error processing sale:', error);
+      showToast('Error processing sale. Please try again.', 'error');
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  // Handle adding stock to a product
+  const handleAddStock = async () => {
+    if (!addStockProduct || addStockQuantity <= 0) return;
+
+    try {
+      const newStockQuantity = addStockProduct.stock_quantity + addStockQuantity;
+
+      // Update product stock in database
+      await updateProduct(addStockProduct.id, {
         stock_quantity: newStockQuantity
       });
 
-      // Update local product state
-      setProducts(prevProducts => 
-        prevProducts.map(p => 
-          p.id === selectedProduct.id 
+      // Update local products state
+      setProducts(prevProducts =>
+        prevProducts.map(p =>
+          p.id === addStockProduct.id
             ? { ...p, stock_quantity: newStockQuantity }
             : p
         )
       );
 
-      // Refresh date sales to show updated data
-      const updatedSalesData = await getSalesByDate(saleDate);
-      setDateSales(updatedSalesData || []);
-      
-      // Update date summary
-      const newSummary = (updatedSalesData || []).reduce((acc, sale) => {
-        acc.totalQuantity += sale.quantity;
-        acc.totalAmount += sale.total_amount;
-        acc.totalProfit += sale.profit;
-        return acc;
-      }, { totalQuantity: 0, totalAmount: 0, totalProfit: 0 });
-      setDateSummary(newSummary);
+      // Update cart item's product reference
+      setCart(prevCart =>
+        prevCart.map(item =>
+          item.product.id === addStockProduct.id
+            ? { ...item, product: { ...item.product, stock_quantity: newStockQuantity } }
+            : item
+        )
+      );
 
-      
-      // Reset form (keep the same date)
-      setSelectedProduct(null);
-      setQuantity(1);
-      setSalePrice(0);
-      setSearchTerm('');
+      // Close modal and reset
+      setShowAddStockModal(false);
+      setAddStockProduct(null);
+      setAddStockQuantity(0);
 
+      showToast(`Successfully added ${addStockQuantity} units to ${addStockProduct.name}`, 'success');
     } catch (error) {
-      console.error('Error processing sale:', error);
+      console.error('Error adding stock:', error);
+      showToast('Error adding stock. Please try again.', 'error');
     }
   };
 
@@ -1719,233 +2304,265 @@ function QuickSale({ onNavigate }) {
         <p className="text-gray-600 mt-2">Process sales quickly and efficiently</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Product Selection */}
-        <div className="card">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Select Product</h3>
-          
-          <div className="mb-4">
-            <div className="relative">
+      <div className="space-y-6">
+        {/* Top Bar: Date Selector & Search */}
+        <div className="card bg-gradient-to-r from-primary-500 to-primary-600 text-white">
+          <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
+            <div className="flex-shrink-0">
+              <label className="block text-xs font-medium text-primary-100 mb-1">Sale Date</label>
+              <input
+                type="text"
+                value={saleDateDisplay}
+                onChange={(e) => handleSaleDateChange(e.target.value)}
+                placeholder="DD/MM/YYYY"
+                className="input-field w-36 bg-white text-gray-900 font-semibold"
+              />
+            </div>
+            <div className="flex-1 w-full md:w-auto relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
               <input
+                ref={searchInputRef}
                 type="text"
                 placeholder="Search products or scan barcode..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="input-field pl-10"
+                className="input-field pl-10 pr-32 w-full bg-white text-gray-900"
               />
+              <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded">
+                / to focus • Esc to clear
+              </span>
             </div>
           </div>
+        </div>
 
-          <div className="space-y-3 max-h-96 overflow-y-auto">
-            {filteredProducts.map(product => (
+        {/* Quick Access Products - Horizontal Scroll */}
+        <div className="card">
+          <h3 className="text-sm font-semibold text-gray-700 mb-3">Quick Access Products</h3>
+          <div className="flex gap-3 overflow-x-auto pb-3 scrollbar-thin">
+            {filteredProducts.slice(0, 10).map(product => (
               <div
                 key={product.id}
-                onClick={() => {
-                  setSelectedProduct(product);
-                  setSalePrice(product.selling_price);
-                }}
-                className={`p-3 sm:p-4 border rounded-lg cursor-pointer transition-colors touch-target ${
-                  selectedProduct?.id === product.id
-                    ? 'border-primary-500 bg-primary-50'
-                    : 'border-gray-200 hover:border-primary-300'
-                }`}
+                onClick={() => addToCart(product)}
+                onKeyDown={(e) => e.key === 'Enter' && addToCart(product)}
+                tabIndex={0}
+                className="flex-shrink-0 w-36 p-3 border-2 border-gray-200 rounded-lg cursor-pointer transition-all hover:border-primary-500 hover:shadow-md hover:-translate-y-1 touch-target"
               >
-                <div className="flex items-center justify-between">
-                  <div className="min-w-0 flex-1">
-                    <h4 className="font-medium text-gray-900 text-sm sm:text-base truncate">{product.name}</h4>
-                    <p className="text-xs sm:text-sm text-gray-500 truncate">{product.barcode}</p>
-                    <p className="text-sm font-medium text-secondary-600">₹{product.selling_price}</p>
-                  </div>
-                  <div className="text-right flex-shrink-0 ml-2">
-                    <p className={`text-xs sm:text-sm ${product.stock_quantity <= product.min_stock_level ? 'text-danger-600' : 'text-gray-600'}`}>
-                      {product.stock_quantity} in stock
-                    </p>
-                  </div>
+                <div className="text-center">
+                  <p className="font-bold text-sm text-gray-900 mb-1 truncate">{product.name}</p>
+                  <p className="text-lg font-bold text-primary-600 mb-1">₹{product.selling_price}</p>
+                  <p className={`text-xs ${product.stock_quantity <= product.min_stock_level ? 'text-danger-600' : 'text-gray-500'}`}>
+                    {product.stock_quantity} left
+                  </p>
                 </div>
               </div>
             ))}
+            {filteredProducts.length > 10 && (
+              <div className="flex-shrink-0 w-36 p-3 border-2 border-dashed border-primary-400 rounded-lg bg-primary-50 flex items-center justify-center cursor-pointer hover:bg-primary-100 transition-colors">
+                <p className="text-primary-600 font-bold text-sm">+ More...</p>
+              </div>
+            )}
           </div>
-        </div>
 
-        {/* Sale Details */}
-        <div className="card">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Sale Details</h3>
-          
-          {selectedProduct ? (
-            <div className="space-y-6">
-              {/* Selected Product */}
-              <div className="p-4 bg-primary-50 border border-primary-200 rounded-lg">
-                <h4 className="font-medium text-gray-900">{selectedProduct.name}</h4>
-                <p className="text-sm text-gray-500">{selectedProduct.categories?.name || 'No Category'}</p>
-                <p className="text-lg font-semibold text-primary-600">₹{selectedProduct.selling_price}</p>
-              </div>
-
-              {/* Quantity */}
-              <div className="form-group">
-                <label className="form-label">Quantity</label>
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="btn-outline px-3 py-2"
-                  >
-                    -
-                  </button>
-                  <input
-                    type="number"
-                    min="1"
-                    max={selectedProduct.stock_quantity}
-                    value={quantity}
-                    onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
-                    className="input-field text-center w-20"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setQuantity(Math.min(selectedProduct.stock_quantity, quantity + 1))}
-                    className="btn-outline px-3 py-2"
-                  >
-                    +
-                  </button>
-                </div>
-                <p className="text-sm text-gray-500 mt-1">
-                  Available: {selectedProduct.stock_quantity} units
-                </p>
-              </div>
-
-              {/* Sale Price */}
-              <div className="form-group">
-                <label className="form-label">Sale Price</label>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-500">₹</span>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={salePrice}
-                    onChange={(e) => setSalePrice(parseFloat(e.target.value) || 0)}
-                    className="input-field flex-1"
-                    placeholder={`Default: ₹${selectedProduct?.selling_price || 0}`}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setSalePrice(selectedProduct.selling_price)}
-                    className="btn-outline text-xs px-2 py-1"
-                    title="Reset to default price"
-                  >
-                    Reset
-                  </button>
-                </div>
-                <p className="text-sm text-gray-500 mt-1">
-                  Default price: ₹{selectedProduct?.selling_price}
-                </p>
-              </div>
-
-              {/* Sale Date */}
-              <div className="form-group">
-                <label className="form-label">Sale Date (dd/mm/yyyy)</label>
-                <input
-                  type="text"
-                  value={displayDate}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setDisplayDate(value);
-                    // Try to parse and update the actual date if valid
-                    if (/^\d{2}\/\d{2}\/\d{4}$/.test(value)) {
-                      const parsed = parseDisplayDate(value);
-                      setSaleDate(parsed);
-                    }
-                  }}
-                  onBlur={() => {
-                    // Validate and fix format on blur
-                    if (!/^\d{2}\/\d{2}\/\d{4}$/.test(displayDate)) {
-                      setDisplayDate(formatDateFull(saleDate));
-                    }
-                  }}
-                  className="input-field"
-                  placeholder="dd/mm/yyyy"
-                  maxLength={10}
-                />
-              </div>
-
-              {/* Sale Summary */}
-              <div className="p-4 bg-primary-50 rounded-lg">
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span>Unit Price:</span>
-                    <span>₹{salePrice || selectedProduct.selling_price}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Quantity:</span>
-                    <span>{quantity}</span>
-                  </div>
-                  <div className="flex justify-between font-semibold text-lg border-t pt-2">
-                    <span>Total:</span>
-                    <span>₹{((salePrice || selectedProduct.selling_price) * quantity).toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-secondary-600">
-                    <span>Profit:</span>
-                    <span>₹{(((salePrice || selectedProduct.selling_price) - selectedProduct.purchase_price) * quantity).toFixed(2)}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex gap-3">
-                <button
-                  onClick={() => {
-                    setSelectedProduct(null);
-                    setQuantity(1);
-                    const today = new Date().toISOString().split('T')[0];
-                    setSaleDate(today);
-                    setDisplayDate(formatDateFull(today));
-                  }}
-                  className="btn-outline flex-1"
-                >
-                  Clear
-                </button>
-                <button
-                  onClick={handleSale}
-                  className="btn-success flex-1"
-                >
-                  <ShoppingCart className="h-5 w-5 mr-2" />
-                  Complete Sale
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="text-center py-12">
-              <ShoppingCart className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500">Select a product to start a sale</p>
+          {/* No Results - Quick Add Product */}
+          {noResults && (
+            <div className="mt-4 p-4 bg-yellow-50 border-2 border-yellow-200 rounded-lg">
+              <p className="text-gray-700 mb-3">
+                No products found for "<strong>{searchTerm}</strong>"
+              </p>
+              <button
+                onClick={() => handleAddNewProduct(searchTerm)}
+                className="btn-primary w-full flex items-center justify-center gap-2"
+              >
+                <Plus className="h-5 w-5" />
+                Add "{searchTerm.toUpperCase()}" as New Product
+              </button>
             </div>
           )}
         </div>
+
+        {/* Current Sale - Cart Section */}
+        <div className="card bg-gray-50">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Current Sale</h3>
+            <div className="text-sm text-gray-500">
+              {cart.length} {cart.length === 1 ? 'item' : 'items'}
+            </div>
+          </div>
+
+          {cart.length === 0 ? (
+            <div className="text-center py-12 bg-white rounded-lg border-2 border-dashed border-gray-200">
+              <ShoppingCart className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+              <p className="text-gray-500">Click on products above to add to cart</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+{cart.map((item, index) => (
+                  <div key={index} className="bg-white border-2 border-gray-200 rounded-lg p-4">
+                    <div className="grid grid-cols-1 md:grid-cols-10 gap-4 items-center">
+                      {/* Product Info */}
+                      <div className="md:col-span-4 flex items-center gap-3">
+                        <Package className="h-6 w-6 text-primary-500 flex-shrink-0" />
+                        <div className="min-w-0">
+                          <p className="font-bold text-gray-900 text-sm truncate">{item.product.name}</p>
+                          <p className="text-xs text-gray-500">₹{item.product.selling_price} per unit</p>
+                        </div>
+                      </div>
+
+                      {/* Quantity Control */}
+                      <div className="md:col-span-3">
+                        <label className="text-xs text-gray-500 mb-1 block">Quantity</label>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => updateCartItem(index, 'quantity', Math.max(1, item.quantity - 1))}
+                            className="w-8 h-8 border-2 border-primary-500 text-primary-600 rounded-md hover:bg-primary-50 font-bold flex items-center justify-center"
+                          >
+                            −
+                          </button>
+                          <input
+                            type="number"
+                            min="1"
+                            max={item.product.stock_quantity}
+                            value={item.quantity}
+                            onChange={(e) => updateCartItem(index, 'quantity', parseInt(e.target.value) || 1)}
+                            onFocus={(e) => e.target.select()}
+                            className="w-16 text-center border border-gray-300 rounded-md py-1 font-semibold"
+                          />
+                          <button
+                            onClick={() => updateCartItem(index, 'quantity', Math.min(item.product.stock_quantity, item.quantity + 1))}
+                            className="w-8 h-8 border-2 border-primary-500 text-primary-600 rounded-md hover:bg-primary-50 font-bold flex items-center justify-center"
+                          >
+                            +
+                          </button>
+                        </div>
+                        {item.quantity > item.product.stock_quantity && (
+                          <div className="mt-1">
+                            <p className="text-xs text-danger-600 mb-1">⚠️ Insufficient stock!</p>
+                            <button
+                              onClick={() => {
+                                setAddStockProduct(item.product);
+                                setAddStockQuantity(item.quantity - item.product.stock_quantity);
+                                setShowAddStockModal(true);
+                              }}
+                              className="text-xs bg-primary-500 text-white px-2 py-1 rounded hover:bg-primary-600 flex items-center gap-1"
+                            >
+                              <Plus className="h-3 w-3" />
+                              Add Stock
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Price */}
+                      <div className="md:col-span-2">
+                        <label className="text-xs text-gray-500 mb-1 block">Price</label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={item.salePrice}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            // Store the actual value without parsing to avoid rounding
+                            updateCartItem(index, 'salePrice', value === '' ? 0 : parseFloat(value));
+                          }}
+                          onFocus={(e) => e.target.select()}
+                          className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm"
+                        />
+                      </div>
+
+                      {/* Total & Remove */}
+                      <div className="md:col-span-1 flex flex-col items-end gap-2">
+                        <p className="font-bold text-secondary-600 text-lg">
+                          ₹{(item.salePrice * item.quantity).toFixed(2)}
+                        </p>
+                        <button
+                          onClick={() => removeFromCart(index)}
+                          className="w-8 h-8 bg-danger-500 text-white rounded-md hover:bg-danger-600 flex items-center justify-center"
+                          title="Remove item"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+              ))}
+
+              {/* Add More Products Button */}
+              <button
+                onClick={() => searchInputRef.current?.focus()}
+                className="w-full py-3 border-2 border-dashed border-primary-400 text-primary-600 rounded-lg hover:bg-primary-50 transition-colors font-semibold"
+              >
+                + Add More Products
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Bottom Action Bar */}
+        {cart.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Total Display */}
+            <div className="card bg-gradient-to-br from-secondary-500 to-secondary-600 text-white">
+              <div className="text-center">
+                <p className="text-sm opacity-90 mb-1">TOTAL AMOUNT</p>
+                <p className="text-4xl font-bold">
+                  ₹{cart.reduce((sum, item) => sum + (item.salePrice * item.quantity), 0).toFixed(2)}
+                </p>
+                <p className="text-xs opacity-80 mt-2">
+                  Profit: ₹{cart.reduce((sum, item) => sum + ((item.salePrice - item.product.purchase_price) * item.quantity), 0).toFixed(2)}
+                </p>
+              </div>
+            </div>
+
+            {/* Complete Sale Button */}
+            <div className="card bg-gradient-to-br from-primary-500 to-primary-600 text-white">
+              <button
+                onClick={handleCompleteSale}
+                disabled={processing}
+                className={`w-full h-full flex flex-col items-center justify-center gap-2 transition-opacity ${processing ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90'}`}
+              >
+                {processing ? (
+                  <>
+                    <div className="animate-spin h-8 w-8 border-4 border-white border-t-transparent rounded-full"></div>
+                    <span className="text-xl font-bold">Processing...</span>
+                    <span className="text-xs opacity-90">Please wait</span>
+                  </>
+                ) : (
+                  <>
+                    <ShoppingCart className="h-8 w-8" />
+                    <span className="text-xl font-bold">Complete Sale</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Date Sales Summary */}
         <div className="card">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Sales for {formatDate(saleDate)}
           </h3>
-          
+
           {/* Summary Stats */}
-          <div className="grid grid-cols-1 gap-4 mb-6">
-            <div className="bg-primary-50 p-4 rounded-lg">
-              <p className="text-sm text-primary-600 font-medium">Total Items Sold</p>
-              <p className="text-2xl font-bold text-primary-700">{dateSummary.totalQuantity}</p>
+          <div className="grid grid-cols-3 gap-4 mb-6">
+            <div className="bg-primary-50 p-4 rounded-lg text-center">
+              <p className="text-xs text-primary-600 font-medium mb-1">Products Sold</p>
+              <p className="text-2xl font-bold text-primary-700">{dateSummary.totalProducts}</p>
             </div>
-            <div className="bg-secondary-50 p-4 rounded-lg">
-              <p className="text-sm text-secondary-600 font-medium">Total Revenue</p>
+            <div className="bg-secondary-50 p-4 rounded-lg text-center">
+              <p className="text-xs text-secondary-600 font-medium mb-1">Revenue</p>
               <p className="text-2xl font-bold text-secondary-700">₹{dateSummary.totalAmount.toFixed(2)}</p>
             </div>
-            <div className="bg-accent-50 p-4 rounded-lg">
-              <p className="text-sm text-accent-600 font-medium">Total Profit</p>
+            <div className="bg-accent-50 p-4 rounded-lg text-center">
+              <p className="text-xs text-accent-600 font-medium mb-1">Profit</p>
               <p className="text-2xl font-bold text-accent-700">₹{dateSummary.totalProfit.toFixed(2)}</p>
             </div>
           </div>
 
           {/* Sales List */}
-          <div className="space-y-3 max-h-96 overflow-y-auto">
-            <h4 className="font-medium text-gray-900">Sales Details</h4>
+          <div className="space-y-2 max-h-80 overflow-y-auto">
+            <h4 className="font-medium text-gray-900 text-sm mb-3">Recent Sales</h4>
             {dateSales.length === 0 ? (
               <div className="text-center py-8">
                 <BarChart3 className="h-12 w-12 text-gray-300 mx-auto mb-2" />
@@ -1953,13 +2570,13 @@ function QuickSale({ onNavigate }) {
               </div>
             ) : (
               dateSales.map(sale => (
-                <div key={sale.id} className="flex items-center justify-between p-3 bg-primary-50 rounded-lg">
+                <div key={sale.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
                   <div className="flex-1">
                     <p className="font-medium text-gray-900 text-sm">{sale.products?.name || 'Unknown Product'}</p>
                     <p className="text-xs text-gray-500">Qty: {sale.quantity} • Unit: ₹{sale.unit_price}</p>
                   </div>
                   <div className="text-right">
-                    <p className="font-medium text-gray-900 text-sm">₹{sale.total_amount}</p>
+                    <p className="font-semibold text-gray-900 text-sm">₹{sale.total_amount}</p>
                     <p className="text-xs text-secondary-600">+₹{sale.profit}</p>
                   </div>
                 </div>
@@ -1967,6 +2584,297 @@ function QuickSale({ onNavigate }) {
             )}
           </div>
         </div>
+      </div>
+
+      {/* Add Stock Modal */}
+      {showAddStockModal && addStockProduct && (
+        <div className="modal-backdrop" onClick={() => setShowAddStockModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-semibold text-gray-900">Add Stock to {addStockProduct.name}</h3>
+              <button
+                onClick={() => setShowAddStockModal(false)}
+                className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <X className="h-5 w-5 text-gray-500" />
+              </button>
+            </div>
+
+            <div className="mb-6">
+              <p className="text-sm text-gray-600 mb-4">
+                Current stock: <span className="font-semibold text-gray-900">{addStockProduct.stock_quantity} units</span>
+              </p>
+
+              <div className="form-group">
+                <label className="form-label">Quantity to Add</label>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setAddStockQuantity(Math.max(1, addStockQuantity - 1))}
+                    className="btn-outline px-3 py-2"
+                  >
+                    -
+                  </button>
+                  <input
+                    type="number"
+                    min="1"
+                    value={addStockQuantity}
+                    onChange={(e) => setAddStockQuantity(parseInt(e.target.value) || 1)}
+                    onFocus={(e) => e.target.select()}
+                    className="input-field text-center w-24"
+                    autoFocus
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setAddStockQuantity(addStockQuantity + 1)}
+                    className="btn-outline px-3 py-2"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+
+              <div className="mt-4 p-3 bg-primary-50 rounded-lg border border-primary-200">
+                <p className="text-sm text-gray-700">
+                  New stock after adding: <span className="font-bold text-primary-600">{addStockProduct.stock_quantity + addStockQuantity} units</span>
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={handleAddStock}
+                disabled={addStockQuantity <= 0}
+                className="btn-primary flex-1"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add {addStockQuantity} Units
+              </button>
+              <button
+                onClick={() => setShowAddStockModal(false)}
+                className="btn-secondary"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Quick Add Product Modal */}
+      {showQuickAddModal && (
+        <QuickAddProductModal
+          onClose={() => setShowQuickAddModal(false)}
+          onProductAdded={handleQuickAddProductAdded}
+          prefillName={quickAddPrefillName}
+        />
+      )}
+    </div>
+  );
+}
+
+// Quick Add Product Modal Component
+function QuickAddProductModal({ onClose, onProductAdded, prefillName }) {
+  const [formData, setFormData] = useState({
+    name: prefillName.toUpperCase(),
+    barcode: '',
+    purchase_price: '',
+    selling_price: '',
+    stock_quantity: '',
+    min_stock_level: '5',
+    description: ''
+  });
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const purchasePriceRef = useRef(null);
+
+  // Handle ESC key to close modal
+  useEffect(() => {
+    const handleEscapeKey = (event) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    document.addEventListener('keydown', handleEscapeKey);
+    return () => document.removeEventListener('keydown', handleEscapeKey);
+  }, [onClose]);
+
+  // Prevent body scroll and autofocus purchase price field
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    // Autofocus the purchase price field (since name is pre-filled)
+    setTimeout(() => {
+      if (purchasePriceRef.current) {
+        purchasePriceRef.current.focus();
+      }
+    }, 100);
+    return () => { document.body.style.overflow = 'unset'; };
+  }, []);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const productData = {
+        name: formData.name,
+        category_id: null,
+        barcode: formData.barcode || null,
+        purchase_price: parseFloat(formData.purchase_price),
+        selling_price: parseFloat(formData.selling_price),
+        stock_quantity: parseInt(formData.stock_quantity),
+        min_stock_level: parseInt(formData.min_stock_level) || 5,
+        description: formData.description || null
+      };
+
+      const newProduct = await createProduct(productData);
+
+      // Add to product history
+      const { addProductHistory } = await import('../../lib/product-history');
+      await addProductHistory({
+        product_id: newProduct.id,
+        product_name: newProduct.name,
+        action: 'created',
+        quantity_change: newProduct.stock_quantity,
+        stock_before: 0,
+        stock_after: newProduct.stock_quantity,
+        notes: `Product created via Quick Sale - initial stock ${newProduct.stock_quantity}`
+      });
+
+      onProductAdded(newProduct);
+    } catch (error) {
+      console.error('Error adding product:', error);
+      showToast('Failed to add product. Please try again.', 'error');
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999] overflow-y-auto"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 relative">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold text-gray-900">Quick Add Product</h2>
+          <button
+            onClick={onClose}
+            className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <X className="h-5 w-5 text-gray-500" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="form-group">
+            <label className="form-label">Product Name *</label>
+            <input
+              type="text"
+              required
+              value={formData.name}
+              onChange={(e) => setFormData({...formData, name: e.target.value.toUpperCase()})}
+              className="input-field"
+              placeholder="PRODUCT NAME"
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Barcode</label>
+            <input
+              type="text"
+              value={formData.barcode}
+              onChange={(e) => setFormData({...formData, barcode: e.target.value})}
+              className="input-field"
+              placeholder="Product barcode or code"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="form-group">
+              <label className="form-label">Purchase Price *</label>
+              <input
+                ref={purchasePriceRef}
+                type="number"
+                step="0.01"
+                required
+                value={formData.purchase_price}
+                onChange={(e) => setFormData({...formData, purchase_price: e.target.value})}
+                className="input-field"
+                placeholder="0.00"
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Selling Price *</label>
+              <input
+                type="number"
+                step="0.01"
+                required
+                value={formData.selling_price}
+                onChange={(e) => setFormData({...formData, selling_price: e.target.value})}
+                className="input-field"
+                placeholder="0.00"
+              />
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Stock Quantity *</label>
+            <input
+              type="number"
+              required
+              min="0"
+              value={formData.stock_quantity}
+              onChange={(e) => setFormData({...formData, stock_quantity: e.target.value})}
+              className="input-field"
+              placeholder="0"
+            />
+          </div>
+
+          {/* Advanced Options */}
+          <div>
+            <button
+              type="button"
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              className="text-sm text-primary-600 hover:text-primary-700 font-medium flex items-center gap-1"
+            >
+              {showAdvanced ? '▼' : '▶'} Advanced Options
+            </button>
+
+            {showAdvanced && (
+              <div className="mt-3 space-y-3 pl-4 border-l-2 border-primary-200">
+                <div className="form-group">
+                  <label className="form-label">Min Stock Level</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={formData.min_stock_level}
+                    onChange={(e) => setFormData({...formData, min_stock_level: e.target.value})}
+                    className="input-field"
+                    placeholder="5"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Description</label>
+                  <textarea
+                    value={formData.description}
+                    onChange={(e) => setFormData({...formData, description: e.target.value})}
+                    className="input-field"
+                    rows={2}
+                    placeholder="Optional product description"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="flex gap-3 pt-4">
+            <button type="button" onClick={onClose} className="btn-outline flex-1">
+              Cancel
+            </button>
+            <button type="submit" className="btn-primary flex-1">
+              Add & Continue Sale
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );
@@ -1979,6 +2887,7 @@ function PartyManagement({ onNavigate }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
   const [showTransferModal, setShowTransferModal] = useState(false);
+  const [showRevertModal, setShowRevertModal] = useState(false);
   const [selectedPurchase, setSelectedPurchase] = useState(null);
   const [selectedItems, setSelectedItems] = useState(new Set());
   const [selectAll, setSelectAll] = useState(false);
@@ -2147,6 +3056,11 @@ function PartyManagement({ onNavigate }) {
         ));
         cancelEditing();
         return;
+      } else if (field === 'purchase_price' || field === 'selling_price') {
+        processedValue = parseFloat(value);
+        if (isNaN(processedValue) || processedValue < 0) {
+          return;
+        }
       }
 
       await updatePartyPurchase(purchaseId, { [field]: processedValue });
@@ -2279,6 +3193,18 @@ function PartyManagement({ onNavigate }) {
                   >
                     <Package className="h-4 w-4" />
                   </button>
+                  {purchase.remaining_quantity < purchase.purchased_quantity && (
+                    <button
+                      onClick={() => {
+                        setSelectedPurchase(purchase);
+                        setShowRevertModal(true);
+                      }}
+                      className="p-1 text-gray-400 hover:text-orange-600"
+                      title="Revert Transfer (Undo)"
+                    >
+                      <Undo2 className="h-4 w-4" />
+                    </button>
+                  )}
                   <button
                     onClick={() => handleDeletePurchase(purchase.id)}
                     className="p-1 text-gray-400 hover:text-danger-600"
@@ -2331,13 +3257,79 @@ function PartyManagement({ onNavigate }) {
               </div>
 
               <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-500">Purchase:</span>
-                  <span className="font-medium">₹{purchase.purchase_price}</span>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-500">Cost Price (Paid to Party):</span>
+                  {editingPurchase === purchase.id && editingField === 'purchase_price' ? (
+                    <div className="flex items-center gap-2">
+                      <span className="text-orange-600">₹</span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        onKeyDown={(e) => handleKeyPress(e, purchase.id, 'purchase_price')}
+                        className="w-24 px-2 py-1 border border-orange-300 rounded text-sm focus:ring-1 focus:ring-orange-500"
+                        autoFocus
+                      />
+                      <button
+                        onClick={() => saveEdit(purchase.id, 'purchase_price', editValue)}
+                        className="p-1 text-green-600 hover:text-green-800"
+                      >
+                        <Check className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={cancelEditing}
+                        className="p-1 text-gray-400 hover:text-gray-600"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <span
+                      className="font-medium text-orange-600 cursor-pointer hover:bg-orange-50 px-2 py-1 rounded hover:text-orange-700 transition-colors"
+                      onClick={() => startEditing(purchase.id, 'purchase_price', purchase.purchase_price)}
+                      title="Click to edit purchase price"
+                    >
+                      ₹{purchase.purchase_price}
+                    </span>
+                  )}
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-500">Selling:</span>
-                  <span className="font-medium text-secondary-600">₹{purchase.selling_price}</span>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-500">Selling Price:</span>
+                  {editingPurchase === purchase.id && editingField === 'selling_price' ? (
+                    <div className="flex items-center gap-2">
+                      <span className="text-secondary-600">₹</span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        onKeyDown={(e) => handleKeyPress(e, purchase.id, 'selling_price')}
+                        className="w-24 px-2 py-1 border border-secondary-300 rounded text-sm focus:ring-1 focus:ring-secondary-500"
+                        autoFocus
+                      />
+                      <button
+                        onClick={() => saveEdit(purchase.id, 'selling_price', editValue)}
+                        className="p-1 text-green-600 hover:text-green-800"
+                      >
+                        <Check className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={cancelEditing}
+                        className="p-1 text-gray-400 hover:text-gray-600"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <span
+                      className="font-medium text-secondary-600 cursor-pointer hover:bg-secondary-50 px-2 py-1 rounded hover:text-secondary-700 transition-colors"
+                      onClick={() => startEditing(purchase.id, 'selling_price', purchase.selling_price)}
+                      title="Click to edit selling price"
+                    >
+                      ₹{purchase.selling_price}
+                    </span>
+                  )}
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm text-gray-500">Purchased:</span>
@@ -2378,6 +3370,12 @@ function PartyManagement({ onNavigate }) {
                   <span className="text-sm text-gray-500">Remaining:</span>
                   <span className={`font-medium ${purchase.remaining_quantity <= 0 ? 'text-danger-600' : 'text-accent-600'}`}>
                     {purchase.remaining_quantity} units
+                  </span>
+                </div>
+                <div className="flex justify-between pt-2 mt-2 border-t border-gray-200">
+                  <span className="text-sm font-semibold text-gray-700">Total Investment:</span>
+                  <span className="font-bold text-orange-600">
+                    ₹{(purchase.purchase_price * purchase.purchased_quantity).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                 </div>
               </div>
@@ -2446,19 +3444,38 @@ function PartyManagement({ onNavigate }) {
 
       {/* Transfer to Products Modal */}
       {showTransferModal && selectedPurchase && (
-        <TransferModal 
+        <TransferModal
           purchase={selectedPurchase}
           onClose={() => {
             setShowTransferModal(false);
             setSelectedPurchase(null);
           }}
           onTransferComplete={(updatedPurchase) => {
-            setPartyPurchases(partyPurchases.map(p => 
+            setPartyPurchases(partyPurchases.map(p =>
               p.id === updatedPurchase.id ? updatedPurchase : p
             ));
             setShowTransferModal(false);
             setSelectedPurchase(null);
           }}
+          showToast={showToast}
+        />
+      )}
+
+      {showRevertModal && selectedPurchase && (
+        <RevertModal
+          purchase={selectedPurchase}
+          onClose={() => {
+            setShowRevertModal(false);
+            setSelectedPurchase(null);
+          }}
+          onRevertComplete={(updatedPurchase) => {
+            setPartyPurchases(partyPurchases.map(p =>
+              p.id === updatedPurchase.id ? updatedPurchase : p
+            ));
+            setShowRevertModal(false);
+            setSelectedPurchase(null);
+          }}
+          showToast={showToast}
         />
       )}
 
@@ -2599,13 +3616,14 @@ function AddPurchaseModal({ onClose, onPurchaseAdded }) {
 
   // Handle suggestion selection
   const selectSuggestion = (product) => {
-    setFormData({
-      ...formData,
+    setFormData(prev => ({
+      ...prev,
       item_name: product.name,
       barcode: product.barcode || '',
-      purchase_price: product.purchase_price || '',
-      selling_price: product.selling_price || ''
-    });
+      purchase_price: product.purchase_price ? String(product.purchase_price) : '',
+      selling_price: product.selling_price ? String(product.selling_price) : ''
+      // Keep purchased_quantity unchanged
+    }));
     setShowSuggestions(false);
   };
 
@@ -2800,8 +3818,16 @@ function AddPurchaseModal({ onClose, onPurchaseAdded }) {
               <input
                 type="number"
                 required
+                min="1"
+                step="1"
                 value={formData.purchased_quantity}
-                onChange={(e) => setFormData({...formData, purchased_quantity: e.target.value})}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  // Allow empty string for clearing, or valid positive numbers
+                  if (value === '' || (!isNaN(value) && parseInt(value) >= 0)) {
+                    setFormData({...formData, purchased_quantity: value});
+                  }
+                }}
                 className="input-field"
                 placeholder="0"
               />
@@ -2834,9 +3860,12 @@ function AddPurchaseModal({ onClose, onPurchaseAdded }) {
 }
 
 // Transfer Modal Component
-function TransferModal({ purchase, onClose, onTransferComplete }) {
+function TransferModal({ purchase, onClose, onTransferComplete, showToast }) {
   const [transferQuantity, setTransferQuantity] = useState(1);
-  
+  const [existingProduct, setExistingProduct] = useState(null);
+  const [showMergeConfirm, setShowMergeConfirm] = useState(false);
+  const [loading, setLoading] = useState(true);
+
   // Handle ESC key to close modal
   useEffect(() => {
     const handleEscapeKey = (event) => {
@@ -2844,36 +3873,72 @@ function TransferModal({ purchase, onClose, onTransferComplete }) {
         onClose();
       }
     };
-    
+
     document.addEventListener('keydown', handleEscapeKey);
     return () => document.removeEventListener('keydown', handleEscapeKey);
   }, [onClose]);
-  
+
   // Prevent body scroll
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     return () => { document.body.style.overflow = 'unset'; };
   }, []);
 
+  // Check for existing product on mount
+  useEffect(() => {
+    const checkExistingProduct = async () => {
+      try {
+        const allProducts = await getProducts();
+        const existing = allProducts.find(p =>
+          p.name.toUpperCase() === purchase.item_name.toUpperCase()
+        );
+        setExistingProduct(existing || null);
+      } catch (error) {
+        console.error('Error checking for existing product:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkExistingProduct();
+  }, [purchase.item_name]);
+
   const handleTransfer = async () => {
     if (transferQuantity > purchase.remaining_quantity) {
       return;
     }
 
-    try {
-      // Create product in main inventory
-      const productData = {
-        name: purchase.item_name,
-        category_id: null,
-        barcode: purchase.barcode || null,
-        purchase_price: purchase.purchase_price,
-        selling_price: purchase.selling_price,
-        stock_quantity: transferQuantity,
-        min_stock_level: 5,
-        description: `Transferred from ${purchase.party_name} purchase`
-      };
+    // If product exists, show confirmation dialog
+    if (existingProduct && !showMergeConfirm) {
+      setShowMergeConfirm(true);
+      return;
+    }
 
-      await createProduct(productData);
+    try {
+      if (existingProduct) {
+        // Merge with existing product - add stock quantity
+        const newStockQuantity = existingProduct.stock_quantity + transferQuantity;
+        await updateProduct(existingProduct.id, {
+          stock_quantity: newStockQuantity
+        });
+
+        showToast(`Added ${transferQuantity} units to "${existingProduct.name}". New stock: ${newStockQuantity}`, 'success', 4000);
+      } else {
+        // Create new product in main inventory
+        const productData = {
+          name: purchase.item_name,
+          category_id: null,
+          barcode: purchase.barcode || null,
+          purchase_price: purchase.purchase_price,
+          selling_price: purchase.selling_price,
+          stock_quantity: transferQuantity,
+          min_stock_level: 5,
+          description: `Transferred from ${purchase.party_name} purchase`
+        };
+
+        await createProduct(productData);
+        showToast(`Created new product "${purchase.item_name}" with ${transferQuantity} units`, 'success', 4000);
+      }
 
       // Update remaining quantity in party purchase
       const newRemainingQuantity = purchase.remaining_quantity - transferQuantity;
@@ -2884,6 +3949,7 @@ function TransferModal({ purchase, onClose, onTransferComplete }) {
       onTransferComplete(updatedPurchase);
     } catch (error) {
       console.error('Error transferring to products:', error);
+      showToast('Error transferring to products. Please try again.', 'error');
     }
   };
 
@@ -2908,6 +3974,27 @@ function TransferModal({ purchase, onClose, onTransferComplete }) {
               <p className="text-sm text-gray-500">Available: {purchase.remaining_quantity} units</p>
             </div>
 
+            {/* Show warning if product already exists */}
+            {loading ? (
+              <div className="p-4 bg-gray-50 rounded-lg text-center text-gray-500">
+                Checking for existing products...
+              </div>
+            ) : existingProduct && !showMergeConfirm ? (
+              <div className="p-4 bg-warning-50 border-2 border-warning-300 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <div className="text-warning-600 mt-0.5">⚠️</div>
+                  <div className="flex-1">
+                    <p className="font-semibold text-warning-900 mb-1">Product Already Exists</p>
+                    <p className="text-sm text-warning-700 mb-2">
+                      A product named "{existingProduct.name}" already exists with {existingProduct.stock_quantity} units in stock.
+                    </p>
+                    <p className="text-sm text-warning-700">
+                      Click "Transfer & Merge" to add {transferQuantity} units to the existing product.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ) : null}
 
             <div className="form-group">
               <label className="form-label">Transfer Quantity</label>
@@ -2944,9 +4031,158 @@ function TransferModal({ purchase, onClose, onTransferComplete }) {
               <button
                 onClick={handleTransfer}
                 className="btn-success flex-1"
-                disabled={transferQuantity <= 0 || transferQuantity > purchase.remaining_quantity}
+                disabled={loading || transferQuantity <= 0 || transferQuantity > purchase.remaining_quantity}
               >
-                Transfer
+                {existingProduct ? 'Transfer & Merge' : 'Transfer'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Revert Transfer Modal Component
+function RevertModal({ purchase, onClose, onRevertComplete, showToast }) {
+  const [revertQuantity, setRevertQuantity] = useState(1);
+  const transferredQty = purchase.purchased_quantity - purchase.remaining_quantity;
+
+  // Handle ESC key to close modal
+  useEffect(() => {
+    const handleEscapeKey = (event) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    document.addEventListener('keydown', handleEscapeKey);
+    return () => document.removeEventListener('keydown', handleEscapeKey);
+  }, [onClose]);
+
+  // Prevent body scroll
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = 'unset'; };
+  }, []);
+
+  const handleRevert = async () => {
+    if (revertQuantity > transferredQty) {
+      return;
+    }
+
+    try {
+      // Add quantity back to remaining_quantity in party purchases
+      const newRemainingQuantity = purchase.remaining_quantity + revertQuantity;
+      const updatedPurchase = await updatePartyPurchase(purchase.id, {
+        remaining_quantity: newRemainingQuantity
+      });
+
+      // Find and update the product in Products tab to reduce stock
+      const products = await getProducts();
+      const matchingProduct = products.find(p =>
+        p.name.toUpperCase() === purchase.item_name.toUpperCase()
+      );
+
+      if (matchingProduct) {
+        // Reduce stock quantity from the product
+        const newStockQuantity = Math.max(0, matchingProduct.stock_quantity - revertQuantity);
+        await updateProduct(matchingProduct.id, {
+          stock_quantity: newStockQuantity
+        });
+
+        // Add product history entry
+        const { addProductHistory } = await import('../../lib/product-history');
+        await addProductHistory({
+          product_id: matchingProduct.id,
+          product_name: matchingProduct.name,
+          action: 'stock_reduced',
+          quantity_change: -revertQuantity,
+          stock_before: matchingProduct.stock_quantity,
+          stock_after: newStockQuantity,
+          notes: `Reverted transfer from party purchase - ${purchase.party_name}`
+        });
+      }
+
+      onRevertComplete(updatedPurchase);
+    } catch (error) {
+      console.error('Error reverting transfer:', error);
+      showToast('Failed to revert transfer. Please try again.', 'error');
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999] overflow-y-auto"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div className="bg-white rounded-xl max-w-md w-full my-8">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-gray-900">Revert Transfer</h2>
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+              <X className="h-6 w-6" />
+            </button>
+          </div>
+
+          <div className="space-y-4">
+            <div className="p-4 bg-orange-50 rounded-lg border border-orange-200">
+              <h3 className="font-medium text-gray-900">{purchase.item_name}</h3>
+              <p className="text-sm text-gray-500">From: {purchase.party_name}</p>
+              <p className="text-sm text-gray-500">
+                Transferred: {transferredQty} units
+              </p>
+              <p className="text-sm text-gray-500">
+                Remaining: {purchase.remaining_quantity} units
+              </p>
+            </div>
+
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+              <p className="text-sm text-yellow-800">
+                <AlertTriangle className="h-4 w-4 inline mr-1" />
+                This will add the quantity back to remaining stock. Make sure you've removed or adjusted the product from the Products tab manually if needed.
+              </p>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Revert Quantity</label>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setRevertQuantity(Math.max(1, revertQuantity - 1))}
+                  className="btn-outline px-3 py-2"
+                >
+                  -
+                </button>
+                <input
+                  type="number"
+                  min="1"
+                  max={transferredQty}
+                  value={revertQuantity}
+                  onChange={(e) => setRevertQuantity(parseInt(e.target.value) || 1)}
+                  onFocus={(e) => e.target.select()}
+                  className="input-field text-center w-20"
+                />
+                <button
+                  type="button"
+                  onClick={() => setRevertQuantity(Math.min(transferredQty, revertQuantity + 1))}
+                  className="btn-outline px-3 py-2"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            <div className="flex gap-3 pt-4">
+              <button onClick={onClose} className="btn-outline flex-1">
+                Cancel
+              </button>
+              <button
+                onClick={handleRevert}
+                className="btn-primary flex-1 bg-orange-600 hover:bg-orange-700"
+                disabled={revertQuantity <= 0 || revertQuantity > transferredQty}
+              >
+                Revert {revertQuantity}
               </button>
             </div>
           </div>
@@ -4160,10 +5396,24 @@ function FileUploadModal({ onClose, onFileProcessed }) {
                         </td>
                         <td className="px-4 py-3">
                           <input
-                            type="date"
-                            value={item.purchase_date}
-                            onChange={(e) => handleDataEdit(index, 'purchase_date', e.target.value)}
+                            type="text"
+                            value={formatDateToDDMMYYYY(item.purchase_date)}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              if (/^\d{0,2}\/?\d{0,2}\/?\d{0,4}$/.test(value)) {
+                                if (/^\d{2}\/\d{2}\/\d{4}$/.test(value)) {
+                                  handleDataEdit(index, 'purchase_date', parseDDMMYYYYToISO(value));
+                                }
+                              }
+                            }}
+                            onBlur={(e) => {
+                              if (e.target.value && !/^\d{2}\/\d{2}\/\d{4}$/.test(e.target.value)) {
+                                e.target.value = formatDateToDDMMYYYY(item.purchase_date);
+                              }
+                            }}
+                            placeholder="dd/mm/yyyy"
                             className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
+                            maxLength={10}
                           />
                         </td>
                       </tr>
@@ -4220,8 +5470,401 @@ function FileUploadModal({ onClose, onFileProcessed }) {
   );
 }
 
+// Reports Component
+function Reports({ onNavigate }) {
+  const [loading, setLoading] = useState(true);
+  const [products, setProducts] = useState([]);
+  const [sales, setSales] = useState([]);
+  const [partyPurchases, setPartyPurchases] = useState([]);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
+  const [startDateDisplay, setStartDateDisplay] = useState('');
+  const [endDateDisplay, setEndDateDisplay] = useState(() => {
+    const today = new Date();
+    const day = String(today.getDate()).padStart(2, '0');
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const year = String(today.getFullYear());
+    return `${day}/${month}/${year}`;
+  });
+  const [filterApplied, setFilterApplied] = useState(false);
+
+  // Fetch all data
+  useEffect(() => {
+    fetchReportsData();
+  }, []);
+
+  const fetchReportsData = async () => {
+    try {
+      setLoading(true);
+      const [productsData, salesData, partyData] = await Promise.all([
+        getProducts(),
+        getSales(),
+        getPartyPurchases()
+      ]);
+
+      setProducts(productsData || []);
+      setSales(salesData || []);
+      setPartyPurchases(partyData || []);
+    } catch (error) {
+      console.error('Error fetching reports data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const applyDateFilter = async () => {
+    if (startDate && endDate) {
+      try {
+        setLoading(true);
+        const filteredSales = await getSalesByDateRange(startDate, endDate);
+        setSales(filteredSales || []);
+        setFilterApplied(true);
+      } catch (error) {
+        console.error('Error applying date filter:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  const clearFilter = async () => {
+    setStartDate('');
+    setEndDate(new Date().toISOString().split('T')[0]);
+    setFilterApplied(false);
+    try {
+      setLoading(true);
+      const allSales = await getSales();
+      setSales(allSales || []);
+    } catch (error) {
+      console.error('Error clearing filter:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Calculate metrics
+  const totalProductInvestment = products.reduce((sum, p) => sum + (p.purchase_price * p.stock_quantity), 0);
+  const totalPartyInvestment = partyPurchases.reduce((sum, pp) => sum + (pp.purchase_price * pp.remaining_quantity), 0);
+  const totalInvestment = totalProductInvestment + totalPartyInvestment;
+
+  const totalSalesRevenue = sales.reduce((sum, s) => sum + s.total_amount, 0);
+  const totalProfit = sales.reduce((sum, s) => sum + s.profit, 0);
+  const profitMargin = totalSalesRevenue > 0 ? (totalProfit / totalSalesRevenue) * 100 : 0;
+
+  const currentInventoryValue = products.reduce((sum, p) => sum + (p.selling_price * p.stock_quantity), 0);
+
+  // Group party purchases by party name
+  const partyGroups = partyPurchases.reduce((acc, pp) => {
+    if (!acc[pp.party_name]) {
+      acc[pp.party_name] = {
+        partyName: pp.party_name,
+        totalInvestment: 0,
+        totalQuantity: 0,
+        items: []
+      };
+    }
+    acc[pp.party_name].totalInvestment += pp.purchase_price * pp.purchased_quantity;
+    acc[pp.party_name].totalQuantity += pp.purchased_quantity;
+    acc[pp.party_name].items.push(pp);
+    return acc;
+  }, {});
+
+  const partyGroupArray = Object.values(partyGroups);
+
+  // Get top 5 products by revenue
+  const productSalesMap = sales.reduce((acc, sale) => {
+    if (!acc[sale.product_id]) {
+      acc[sale.product_id] = {
+        revenue: 0,
+        profit: 0,
+        quantity: 0
+      };
+    }
+    acc[sale.product_id].revenue += sale.total_amount;
+    acc[sale.product_id].profit += sale.profit;
+    acc[sale.product_id].quantity += sale.quantity;
+    return acc;
+  }, {});
+
+  const topProducts = products
+    .map(p => ({
+      ...p,
+      salesData: productSalesMap[p.id] || { revenue: 0, profit: 0, quantity: 0 }
+    }))
+    .filter(p => p.salesData.revenue > 0)
+    .sort((a, b) => b.salesData.revenue - a.salesData.revenue)
+    .slice(0, 5);
+
+  if (loading) {
+    return (
+      <div className="container-padding">
+        <div className="text-center py-12">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+          <p className="mt-4 text-gray-600">Loading reports...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container-padding">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Summary Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="card bg-gradient-to-br from-orange-500 to-orange-600 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-orange-100 text-sm font-medium">Total Investment</p>
+                <p className="text-2xl font-bold mt-1">₹{totalInvestment.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                <p className="text-xs text-orange-100 mt-1">Products + Party Purchases</p>
+              </div>
+              <DollarSign className="h-12 w-12 text-orange-200 opacity-80" />
+            </div>
+          </div>
+
+          <div className="card bg-gradient-to-br from-green-500 to-green-600 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-green-100 text-sm font-medium">Total Sales Revenue</p>
+                <p className="text-2xl font-bold mt-1">₹{totalSalesRevenue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                <p className="text-xs text-green-100 mt-1">{filterApplied ? 'Filtered Period' : 'All Time'}</p>
+              </div>
+              <TrendingUp className="h-12 w-12 text-green-200 opacity-80" />
+            </div>
+          </div>
+
+          <div className="card bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-blue-100 text-sm font-medium">Total Profit</p>
+                <p className="text-2xl font-bold mt-1">₹{totalProfit.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                <p className="text-xs text-blue-100 mt-1">{filterApplied ? 'Filtered Period' : 'All Time'}</p>
+              </div>
+              <BarChart3 className="h-12 w-12 text-blue-200 opacity-80" />
+            </div>
+          </div>
+
+          <div className="card bg-gradient-to-br from-purple-500 to-purple-600 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-purple-100 text-sm font-medium">Profit Margin</p>
+                <p className="text-2xl font-bold mt-1">{profitMargin.toFixed(2)}%</p>
+                <p className="text-xs text-purple-100 mt-1">{filterApplied ? 'Filtered Period' : 'All Time'}</p>
+              </div>
+              <TrendingUp className="h-12 w-12 text-purple-200 opacity-80" />
+            </div>
+          </div>
+        </div>
+
+        {/* Date Range Filter */}
+        <div className="card">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">Filter Sales by Date Range</h3>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Start Date (dd/mm/yyyy)</label>
+              <input
+                type="text"
+                value={startDateDisplay}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  // Allow typing and update display immediately
+                  if (/^\d{0,2}\/?\d{0,2}\/?\d{0,4}$/.test(value)) {
+                    setStartDateDisplay(value);
+
+                    // Only update the actual date state when format is complete
+                    if (/^\d{2}\/\d{2}\/\d{4}$/.test(value)) {
+                      const isoDate = parseDDMMYYYYToISO(value);
+                      if (isoDate) {
+                        setStartDate(isoDate);
+                      }
+                    }
+                  }
+                }}
+                onBlur={(e) => {
+                  // Reset to valid date on blur if incomplete
+                  if (e.target.value && !/^\d{2}\/\d{2}\/\d{4}$/.test(e.target.value)) {
+                    setStartDateDisplay(startDate ? formatDateToDDMMYYYY(startDate) : '');
+                  }
+                }}
+                placeholder="dd/mm/yyyy"
+                className="input-field text-gray-900"
+                maxLength={10}
+              />
+            </div>
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1">End Date (dd/mm/yyyy)</label>
+              <input
+                type="text"
+                value={endDateDisplay}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  // Allow typing and update display immediately
+                  if (/^\d{0,2}\/?\d{0,2}\/?\d{0,4}$/.test(value)) {
+                    setEndDateDisplay(value);
+
+                    // Only update the actual date state when format is complete
+                    if (/^\d{2}\/\d{2}\/\d{4}$/.test(value)) {
+                      const isoDate = parseDDMMYYYYToISO(value);
+                      if (isoDate) {
+                        setEndDate(isoDate);
+                      }
+                    }
+                  }
+                }}
+                onBlur={(e) => {
+                  // Reset to valid date on blur if incomplete
+                  if (e.target.value && !/^\d{2}\/\d{2}\/\d{4}$/.test(e.target.value)) {
+                    setEndDateDisplay(formatDateToDDMMYYYY(endDate));
+                  }
+                }}
+                placeholder="dd/mm/yyyy"
+                className="input-field text-gray-900"
+                maxLength={10}
+              />
+            </div>
+            <div className="flex items-end gap-2">
+              <button
+                onClick={applyDateFilter}
+                disabled={!startDate || !endDate}
+                className="btn-primary whitespace-nowrap"
+              >
+                Apply Filter
+              </button>
+              {filterApplied && (
+                <button
+                  onClick={clearFilter}
+                  className="btn-secondary whitespace-nowrap"
+                >
+                  Clear Filter
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Investment Breakdown */}
+        <div className="card">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">Investment Breakdown</h3>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+              <span className="text-sm font-medium text-gray-700">Products Inventory</span>
+              <span className="text-lg font-semibold text-gray-900">₹{totalProductInvestment.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+            </div>
+            <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+              <span className="text-sm font-medium text-gray-700">Party Purchases (Remaining)</span>
+              <span className="text-lg font-semibold text-gray-900">₹{totalPartyInvestment.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+            </div>
+            <div className="flex justify-between items-center p-3 bg-orange-50 rounded-lg border border-orange-200">
+              <span className="text-sm font-bold text-orange-900">Total Investment</span>
+              <span className="text-xl font-bold text-orange-600">₹{totalInvestment.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Current Inventory Value */}
+        <div className="card">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">Current Inventory Value</h3>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg border border-green-200">
+              <div>
+                <span className="text-sm font-medium text-green-900 block">Potential Revenue (if all stock sells)</span>
+                <span className="text-xs text-green-700">Based on selling prices × current stock</span>
+              </div>
+              <span className="text-xl font-bold text-green-600">₹{currentInventoryValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+            </div>
+            <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <span className="text-sm font-medium text-blue-900">Potential Profit on Current Stock</span>
+              <span className="text-xl font-bold text-blue-600">₹{(currentInventoryValue - totalProductInvestment).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Top Performing Products */}
+        {topProducts.length > 0 && (
+          <div className="card">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Top 5 Products by Revenue</h3>
+            <div className="overflow-x-auto">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Product Name</th>
+                    <th>Qty Sold</th>
+                    <th>Revenue</th>
+                    <th>Profit</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {topProducts.map((product, index) => (
+                    <tr key={product.id}>
+                      <td className="font-medium">{index + 1}. {product.name}</td>
+                      <td>{product.salesData.quantity}</td>
+                      <td className="text-green-600 font-semibold">₹{product.salesData.revenue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                      <td className="text-blue-600 font-semibold">₹{product.salesData.profit.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* Party-wise Investment */}
+        {partyGroupArray.length > 0 && (
+          <div className="card">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Party-wise Investment Details</h3>
+            <div className="overflow-x-auto">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Party Name</th>
+                    <th>Total Items</th>
+                    <th>Total Quantity Purchased</th>
+                    <th>Total Investment</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {partyGroupArray.map((party, index) => (
+                    <tr key={index}>
+                      <td className="font-medium">{party.partyName}</td>
+                      <td>{party.items.length}</td>
+                      <td>{party.totalQuantity}</td>
+                      <td className="text-orange-600 font-semibold">₹{party.totalInvestment.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* Sales Summary */}
+        <div className="card">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">Sales Summary {filterApplied && '(Filtered)'}</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <p className="text-sm text-gray-600">Total Transactions</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">{sales.length}</p>
+            </div>
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <p className="text-sm text-gray-600">Items Sold</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">{sales.reduce((sum, s) => sum + s.quantity, 0)}</p>
+            </div>
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <p className="text-sm text-gray-600">Avg Transaction Value</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">
+                ₹{sales.length > 0 ? (totalSalesRevenue / sales.length).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Main App Component
 function InventoryApp() {
+  const { showToast } = useToast();
   const [currentView, setCurrentView] = useState('dashboard');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [viewHistory, setViewHistory] = useState(['dashboard']);
@@ -4290,6 +5933,7 @@ function InventoryApp() {
       case 'products': return 'Products';
       case 'quick-sale': return 'Quick Sale';
       case 'party': return 'Party Purchases';
+      case 'reports': return 'Reports';
       default: return 'Dashboard';
     }
   };
@@ -4304,6 +5948,8 @@ function InventoryApp() {
         return <QuickSale onNavigate={handleNavigate} />;
       case 'party':
         return <PartyManagement onNavigate={handleNavigate} />;
+      case 'reports':
+        return <Reports onNavigate={handleNavigate} />;
       default:
         return <Dashboard onNavigate={handleNavigate} />;
     }
@@ -4375,6 +6021,13 @@ function InventoryApp() {
                     <Users className="h-4 w-4 mr-2" />
                     Party
                   </button>
+                  <button
+                    onClick={() => handleNavigate('reports')}
+                    className={`nav-link ${currentView === 'reports' ? 'nav-link-active' : ''}`}
+                  >
+                    <FileText className="h-4 w-4 mr-2" />
+                    Reports
+                  </button>
                 </div>
               </div>
             </div>
@@ -4423,6 +6076,13 @@ function InventoryApp() {
               >
                 <Users className="h-5 w-5 mr-3" />
                 Party Purchases
+              </button>
+              <button
+                onClick={() => handleNavigate('reports')}
+                className={`mobile-nav-link ${currentView === 'reports' ? 'mobile-nav-link-active' : ''}`}
+              >
+                <FileText className="h-5 w-5 mr-3" />
+                Reports
               </button>
             </div>
           </div>

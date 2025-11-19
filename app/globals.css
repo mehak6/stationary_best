@@ -318,12 +318,12 @@
 
 @keyframes slide-up {
   from {
-    transform: translateY(0);
-    opacity: 1;
+    transform: translateY(100%);
+    opacity: 0;
   }
   to {
-    transform: translateY(-100%);
-    opacity: 0;
+    transform: translateY(0);
+    opacity: 1;
   }
 }
 
@@ -332,7 +332,7 @@
 }
 
 .animate-slide-up {
-  animation: slide-up 0.3s ease-in forwards;
+  animation: slide-up 0.3s ease-out forwards;
 }
 
 /* PWA-specific styles */

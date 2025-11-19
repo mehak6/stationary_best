@@ -72,7 +72,13 @@
       "Bash(git remote set-url:*)",
       "Bash(npx vercel --prod)",
       "Bash(npx vercel login)",
-      "Bash(npx vercel:*)"
+      "Bash(npx vercel:*)",
+      "Bash(git reset:*)",
+      "Bash(start \"\" \"d:\\Projects\\stationery_business\\mockup-layout-a.html\")",
+      "Bash(start \"\" \"d:\\Projects\\stationery_business\\mockup-layout-b.html\")",
+      "Bash(start \"\" \"d:\\Projects\\stationery_business\\mockup-layout-c.html\")",
+      "Bash(start \"\" \"d:\\Projects\\stationery_business\\mockup-templates-demo.html\")",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []
