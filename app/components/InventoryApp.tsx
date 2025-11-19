@@ -1606,23 +1606,32 @@ function AddProductModal({ onClose, onProductAdded, showToast }) {
   };
 
   return (
-    <div 
+    <div
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999] overflow-y-auto"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="add-product-title"
     >
       <div className="bg-white rounded-xl max-w-md w-full max-h-[90vh] overflow-y-auto mx-4 my-8">
         <div className="p-4 sm:p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-gray-900">Add New Product</h2>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-              <X className="h-6 w-6" />
+            <h2 id="add-product-title" className="text-xl font-bold text-gray-900">Add New Product</h2>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600"
+              aria-label="Close dialog"
+              type="button"
+            >
+              <X className="h-6 w-6" aria-hidden="true" />
             </button>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="form-group">
-              <label className="form-label">Product Name *</label>
+              <label htmlFor="product-name" className="form-label">Product Name *</label>
               <input
+                id="product-name"
                 ref={productNameRef}
                 type="text"
                 required
@@ -1630,13 +1639,15 @@ function AddProductModal({ onClose, onProductAdded, showToast }) {
                 onChange={(e) => setFormData({...formData, name: e.target.value.toUpperCase()})}
                 className="input-field uppercase"
                 placeholder="Enter product name"
+                aria-required="true"
               />
             </div>
 
 
             <div className="form-group">
-              <label className="form-label">Barcode</label>
+              <label htmlFor="product-barcode" className="form-label">Barcode</label>
               <input
+                id="product-barcode"
                 type="text"
                 value={formData.barcode}
                 onChange={(e) => setFormData({...formData, barcode: e.target.value})}
@@ -1647,8 +1658,9 @@ function AddProductModal({ onClose, onProductAdded, showToast }) {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="form-group">
-                <label className="form-label">Purchase Price *</label>
+                <label htmlFor="purchase-price" className="form-label">Purchase Price *</label>
                 <input
+                  id="purchase-price"
                   type="number"
                   step="0.01"
                   required
@@ -1656,12 +1668,14 @@ function AddProductModal({ onClose, onProductAdded, showToast }) {
                   onChange={(e) => setFormData({...formData, purchase_price: e.target.value})}
                   className="input-field"
                   placeholder="0.00"
+                  aria-required="true"
                 />
               </div>
 
               <div className="form-group">
-                <label className="form-label">Selling Price *</label>
+                <label htmlFor="selling-price" className="form-label">Selling Price *</label>
                 <input
+                  id="selling-price"
                   type="number"
                   step="0.01"
                   required
@@ -1669,26 +1683,30 @@ function AddProductModal({ onClose, onProductAdded, showToast }) {
                   onChange={(e) => setFormData({...formData, selling_price: e.target.value})}
                   className="input-field"
                   placeholder="0.00"
+                  aria-required="true"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="form-group">
-                <label className="form-label">Stock Quantity *</label>
+                <label htmlFor="stock-quantity" className="form-label">Stock Quantity *</label>
                 <input
+                  id="stock-quantity"
                   type="number"
                   required
                   value={formData.stock_quantity}
                   onChange={(e) => setFormData({...formData, stock_quantity: e.target.value})}
                   className="input-field"
                   placeholder="0"
+                  aria-required="true"
                 />
               </div>
 
               <div className="form-group">
-                <label className="form-label">Min Stock Level</label>
+                <label htmlFor="min-stock-level" className="form-label">Min Stock Level</label>
                 <input
+                  id="min-stock-level"
                   type="number"
                   value={formData.min_stock_level}
                   onChange={(e) => setFormData({...formData, min_stock_level: e.target.value})}
@@ -5964,7 +5982,7 @@ function InventoryApp() {
       <OfflineIndicator />
 
       {/* Navigation */}
-      <nav className="bg-white shadow-sm border-b sticky top-0 z-40">
+      <nav className="bg-white shadow-sm border-b sticky top-0 z-40" role="navigation" aria-label="Main navigation">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
@@ -5974,58 +5992,76 @@ function InventoryApp() {
                   <button
                     onClick={handleBack}
                     className="p-2 rounded-md text-gray-600 hover:text-primary-600 hover:bg-primary-50 touch-target"
-                    aria-label="Go back"
+                    aria-label="Go back to previous page"
+                    type="button"
                   >
-                    <ArrowLeft className="h-5 w-5" />
+                    <ArrowLeft className="h-5 w-5" aria-hidden="true" />
                   </button>
                 ) : null}
               </div>
-              
+
               <div className="flex-shrink-0">
                 <button
                   onClick={() => handleNavigate('dashboard')}
                   className="text-xl font-bold text-primary-600 hover:text-primary-700"
+                  aria-label="Inventory Pro - Go to Dashboard"
+                  type="button"
                 >
                   Inventory Pro
                 </button>
               </div>
-              
+
               {/* Desktop Navigation */}
-              <div className="hidden md:block">
+              <div className="hidden md:block" role="menubar">
                 <div className="ml-10 flex items-baseline space-x-4">
                   <button
                     onClick={() => handleNavigate('dashboard')}
                     className={`nav-link ${currentView === 'dashboard' ? 'nav-link-active' : ''}`}
+                    role="menuitem"
+                    aria-current={currentView === 'dashboard' ? 'page' : undefined}
+                    type="button"
                   >
-                    <Home className="h-4 w-4 mr-2" />
+                    <Home className="h-4 w-4 mr-2" aria-hidden="true" />
                     Dashboard
                   </button>
                   <button
                     onClick={() => handleNavigate('products')}
                     className={`nav-link ${currentView === 'products' ? 'nav-link-active' : ''}`}
+                    role="menuitem"
+                    aria-current={currentView === 'products' ? 'page' : undefined}
+                    type="button"
                   >
-                    <Package className="h-4 w-4 mr-2" />
+                    <Package className="h-4 w-4 mr-2" aria-hidden="true" />
                     Products
                   </button>
                   <button
                     onClick={() => handleNavigate('quick-sale')}
                     className={`nav-link ${currentView === 'quick-sale' ? 'nav-link-active' : ''}`}
+                    role="menuitem"
+                    aria-current={currentView === 'quick-sale' ? 'page' : undefined}
+                    type="button"
                   >
-                    <ShoppingCart className="h-4 w-4 mr-2" />
+                    <ShoppingCart className="h-4 w-4 mr-2" aria-hidden="true" />
                     Quick Sale
                   </button>
                   <button
                     onClick={() => handleNavigate('party')}
                     className={`nav-link ${currentView === 'party' ? 'nav-link-active' : ''}`}
+                    role="menuitem"
+                    aria-current={currentView === 'party' ? 'page' : undefined}
+                    type="button"
                   >
-                    <Users className="h-4 w-4 mr-2" />
+                    <Users className="h-4 w-4 mr-2" aria-hidden="true" />
                     Party
                   </button>
                   <button
                     onClick={() => handleNavigate('reports')}
                     className={`nav-link ${currentView === 'reports' ? 'nav-link-active' : ''}`}
+                    role="menuitem"
+                    aria-current={currentView === 'reports' ? 'page' : undefined}
+                    type="button"
                   >
-                    <FileText className="h-4 w-4 mr-2" />
+                    <FileText className="h-4 w-4 mr-2" aria-hidden="true" />
                     Reports
                   </button>
                 </div>
@@ -6037,9 +6073,12 @@ function InventoryApp() {
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className="p-2 rounded-md text-gray-600 hover:text-primary-600 hover:bg-primary-50 touch-target"
-                aria-label="Open menu"
+                aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+                aria-expanded={mobileMenuOpen}
+                aria-controls="mobile-menu"
+                type="button"
               >
-                <Menu className="h-5 w-5" />
+                <Menu className="h-5 w-5" aria-hidden="true" />
               </button>
             </div>
           </div>
@@ -6047,41 +6086,56 @@ function InventoryApp() {
         
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden bg-white border-t border-gray-200 shadow-lg">
+          <div id="mobile-menu" className="md:hidden bg-white border-t border-gray-200 shadow-lg" role="menu">
             <div className="px-2 pt-2 pb-3 space-y-1">
               <button
                 onClick={() => handleNavigate('dashboard')}
                 className={`mobile-nav-link ${currentView === 'dashboard' ? 'mobile-nav-link-active' : ''}`}
+                role="menuitem"
+                aria-current={currentView === 'dashboard' ? 'page' : undefined}
+                type="button"
               >
-                <Home className="h-5 w-5 mr-3" />
+                <Home className="h-5 w-5 mr-3" aria-hidden="true" />
                 Dashboard
               </button>
               <button
                 onClick={() => handleNavigate('products')}
                 className={`mobile-nav-link ${currentView === 'products' ? 'mobile-nav-link-active' : ''}`}
+                role="menuitem"
+                aria-current={currentView === 'products' ? 'page' : undefined}
+                type="button"
               >
-                <Package className="h-5 w-5 mr-3" />
+                <Package className="h-5 w-5 mr-3" aria-hidden="true" />
                 Products
               </button>
               <button
                 onClick={() => handleNavigate('quick-sale')}
                 className={`mobile-nav-link ${currentView === 'quick-sale' ? 'mobile-nav-link-active' : ''}`}
+                role="menuitem"
+                aria-current={currentView === 'quick-sale' ? 'page' : undefined}
+                type="button"
               >
-                <ShoppingCart className="h-5 w-5 mr-3" />
+                <ShoppingCart className="h-5 w-5 mr-3" aria-hidden="true" />
                 Quick Sale
               </button>
               <button
                 onClick={() => handleNavigate('party')}
                 className={`mobile-nav-link ${currentView === 'party' ? 'mobile-nav-link-active' : ''}`}
+                role="menuitem"
+                aria-current={currentView === 'party' ? 'page' : undefined}
+                type="button"
               >
-                <Users className="h-5 w-5 mr-3" />
+                <Users className="h-5 w-5 mr-3" aria-hidden="true" />
                 Party Purchases
               </button>
               <button
                 onClick={() => handleNavigate('reports')}
                 className={`mobile-nav-link ${currentView === 'reports' ? 'mobile-nav-link-active' : ''}`}
+                role="menuitem"
+                aria-current={currentView === 'reports' ? 'page' : undefined}
+                type="button"
               >
-                <FileText className="h-5 w-5 mr-3" />
+                <FileText className="h-5 w-5 mr-3" aria-hidden="true" />
                 Reports
               </button>
             </div>

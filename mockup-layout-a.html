@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Sale - Layout Option A (Two-Column)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf3 100%);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .btn-templates {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-templates:hover {
+            background: white;
+            color: #667eea;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 20px;
+            padding: 20px;
+            min-height: 600px;
+        }
+
+        .left-panel {
+            border-right: 2px solid #e8ecf3;
+            padding-right: 20px;
+        }
+
+        .search-box {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 40px 12px 40px;
+            border: 2px solid #e8ecf3;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+        }
+
+        .shortcut-hint {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #f5f7fa;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .product-list {
+            max-height: 250px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+
+        .product-item {
+            padding: 12px;
+            border: 2px solid #e8ecf3;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .product-item:hover {
+            border-color: #667eea;
+            background: #f5f7fa;
+        }
+
+        .product-item.selected {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .product-name {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .product-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .divider {
+            border-top: 2px solid #e8ecf3;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .divider-text {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 0 10px;
+            color: #999;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .sale-form {
+            background: #f5f7fa;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .selected-product {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .quantity-control {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .btn-qty {
+            width: 40px;
+            height: 40px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 8px;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-qty:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .qty-input {
+            width: 80px;
+            padding: 10px;
+            border: 2px solid #e8ecf3;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .price-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e8ecf3;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .total-display {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .total-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .total-amount {
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        .btn-complete {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-complete:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .right-panel {
+            padding-left: 20px;
+        }
+
+        .summary-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e8ecf3;
+        }
+
+        .summary-header h2 {
+            font-size: 18px;
+            color: #333;
+        }
+
+        .stats-grid {
+            display: grid;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid;
+        }
+
+        .stat-card.products {
+            background: #fff3e0;
+            border-color: #ff9800;
+        }
+
+        .stat-card.revenue {
+            background: #e8f5e9;
+            border-color: #4caf50;
+        }
+
+        .stat-card.profit {
+            background: #e3f2fd;
+            border-color: #2196f3;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .sales-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .sales-list h3 {
+            font-size: 16px;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .sale-item {
+            padding: 12px;
+            background: #f5f7fa;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .sale-product {
+            font-weight: 600;
+        }
+
+        .sale-amount {
+            color: #4caf50;
+            font-weight: 700;
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .left-panel {
+                border-right: none;
+                border-bottom: 2px solid #e8ecf3;
+                padding-bottom: 20px;
+            }
+
+            .right-panel {
+                padding-left: 0;
+                padding-top: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛒 Quick Sale - Layout Option A</h1>
+            <button class="btn-templates">📋 Templates</button>
+        </div>
+
+        <div class="main-content">
+            <!-- LEFT PANEL: Product Selection & Sale Form -->
+            <div class="left-panel">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" placeholder="Search products or scan barcode..." autofocus>
+                    <span class="shortcut-hint">Press / to focus</span>
+                </div>
+
+                <div class="product-list">
+                    <div class="product-item selected">
+                        <div class="product-name">Pen - Classic Blue</div>
+                        <div class="product-meta">
+                            <span>₹10.00</span>
+                            <span>Stock: 50 units</span>
+                        </div>
+                    </div>
+                    <div class="product-item">
+                        <div class="product-name">Notebook - A4 Ruled</div>
+                        <div class="product-meta">
+                            <span>₹40.00</span>
+                            <span>Stock: 30 units</span>
+                        </div>
+                    </div>
+                    <div class="product-item">
+                        <div class="product-name">Eraser - White Large</div>
+                        <div class="product-meta">
+                            <span>₹5.00</span>
+                            <span>Stock: 100 units</span>
+                        </div>
+                    </div>
+                    <div class="product-item">
+                        <div class="product-name">Ruler - 30cm Steel</div>
+                        <div class="product-meta">
+                            <span>₹15.00</span>
+                            <span>Stock: 20 units</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="divider">
+                    <span class="divider-text">SALE DETAILS</span>
+                </div>
+
+                <div class="sale-form">
+                    <div class="selected-product">
+                        <div style="font-size: 18px; font-weight: 700;">Pen - Classic Blue</div>
+                        <div style="opacity: 0.9; margin-top: 5px;">₹10.00 per unit</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Quantity</label>
+                        <div class="quantity-control">
+                            <button class="btn-qty">−</button>
+                            <input type="number" value="5" class="qty-input">
+                            <button class="btn-qty">+</button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Sale Price (per unit)</label>
+                        <input type="number" value="10.00" class="price-input">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Sale Date</label>
+                        <input type="text" value="01/01/2025" class="price-input">
+                    </div>
+
+                    <div class="total-display">
+                        <div class="total-label">TOTAL AMOUNT</div>
+                        <div class="total-amount">₹50.00</div>
+                    </div>
+
+                    <button class="btn-complete">Complete Sale (Ctrl+Enter)</button>
+                </div>
+            </div>
+
+            <!-- RIGHT PANEL: Today's Sales Summary -->
+            <div class="right-panel">
+                <div class="summary-header">
+                    <h2>📅 Sales for 01/01/2025</h2>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card products">
+                        <div class="stat-label">Total Products Sold</div>
+                        <div class="stat-value">5</div>
+                    </div>
+                    <div class="stat-card revenue">
+                        <div class="stat-label">Total Revenue</div>
+                        <div class="stat-value">₹500.00</div>
+                    </div>
+                    <div class="stat-card profit">
+                        <div class="stat-label">Total Profit</div>
+                        <div class="stat-value">₹150.00</div>
+                    </div>
+                </div>
+
+                <div class="sales-list">
+                    <h3>📜 Recent Sales</h3>
+                    <div class="sale-item">
+                        <div>
+                            <div class="sale-product">Pen (5 units)</div>
+                            <div style="font-size: 12px; color: #666;">2 minutes ago</div>
+                        </div>
+                        <div class="sale-amount">₹50.00</div>
+                    </div>
+                    <div class="sale-item">
+                        <div>
+                            <div class="sale-product">Notebook (2 units)</div>
+                            <div style="font-size: 12px; color: #666;">5 minutes ago</div>
+                        </div>
+                        <div class="sale-amount">₹80.00</div>
+                    </div>
+                    <div class="sale-item">
+                        <div>
+                            <div class="sale-product">Eraser (10 units)</div>
+                            <div style="font-size: 12px; color: #666;">10 minutes ago</div>
+                        </div>
+                        <div class="sale-amount">₹50.00</div>
+                    </div>
+                    <div class="sale-item">
+                        <div>
+                            <div class="sale-product">Ruler (3 units)</div>
+                            <div style="font-size: 12px; color: #666;">15 minutes ago</div>
+                        </div>
+                        <div class="sale-amount">₹45.00</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 20px; color: #666;">
+        <p><strong>Layout Option A:</strong> Two-Column Design - Products & Sale on Left, Summary on Right</p>
+        <p style="font-size: 14px; margin-top: 10px;">✅ Pros: All info visible at once, efficient workflow | ⚠️ Cons: Requires wider screen</p>
+    </div>
+</body>
+</html>

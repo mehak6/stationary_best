@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Sale - Layout Option B (Single Column Expandable)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf3 100%);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-header {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .btn-header:hover {
+            background: white;
+            color: #667eea;
+        }
+
+        .content {
+            padding: 20px;
+        }
+
+        .search-box {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 15px 45px;
+            border: 2px solid #e8ecf3;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 20px;
+        }
+
+        .shortcut-hint {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #f5f7fa;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .product-grid {
+            display: grid;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .product-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border: 2px solid #e8ecf3;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .product-card:hover {
+            border-color: #667eea;
+            background: #f5f7fa;
+            transform: translateX(5px);
+        }
+
+        .product-card.selected {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .product-info {
+            flex: 1;
+        }
+
+        .product-name {
+            font-weight: 700;
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+
+        .product-price {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .product-stock {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .btn-select {
+            padding: 8px 20px;
+            background: white;
+            border: 2px solid #667eea;
+            color: #667eea;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-select:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .product-card.selected .btn-select {
+            background: white;
+            color: #667eea;
+        }
+
+        .section-divider {
+            border-top: 3px solid #e8ecf3;
+            margin: 30px 0 20px;
+            position: relative;
+        }
+
+        .section-title {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 0 15px;
+            font-size: 16px;
+            font-weight: 700;
+            color: #667eea;
+            letter-spacing: 1px;
+        }
+
+        .sale-details {
+            background: #f5f7fa;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .selected-product-banner {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .selected-product-name {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .quantity-control {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .btn-qty {
+            width: 45px;
+            height: 45px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 8px;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 700;
+        }
+
+        .btn-qty:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .qty-input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e8ecf3;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .price-input {
+            padding: 12px;
+            border: 2px solid #e8ecf3;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .date-input {
+            padding: 12px;
+            border: 2px solid #e8ecf3;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .total-display {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .total-label {
+            font-size: 14px;
+            opacity: 0.95;
+            margin-bottom: 5px;
+        }
+
+        .total-amount {
+            font-size: 40px;
+            font-weight: 700;
+        }
+
+        .btn-complete {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-complete:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .summary-section {
+            border: 2px solid #e8ecf3;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .summary-header {
+            background: #f5f7fa;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .summary-header:hover {
+            background: #e8ecf3;
+        }
+
+        .summary-title {
+            font-weight: 700;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .summary-stats {
+            display: flex;
+            gap: 20px;
+            font-size: 14px;
+        }
+
+        .summary-stat {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .summary-stat strong {
+            color: #667eea;
+        }
+
+        .toggle-icon {
+            transition: transform 0.3s;
+        }
+
+        .summary-content {
+            padding: 20px;
+            display: none;
+        }
+
+        .summary-content.expanded {
+            display: block;
+        }
+
+        .sales-list-item {
+            padding: 12px;
+            background: #f5f7fa;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .sale-info {
+            font-weight: 600;
+        }
+
+        .sale-time {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .sale-amount {
+            font-size: 18px;
+            font-weight: 700;
+            color: #4caf50;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .summary-stats {
+                flex-direction: column;
+                gap: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛒 Quick Sale - Layout Option B</h1>
+            <div class="header-actions">
+                <button class="btn-header">📋 Templates</button>
+                <button class="btn-header">📊 Summary ▼</button>
+            </div>
+        </div>
+
+        <div class="content">
+            <!-- SEARCH BOX -->
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" placeholder="Search products or scan barcode..." autofocus>
+                <span class="shortcut-hint">Press / to focus</span>
+            </div>
+
+            <!-- PRODUCT LIST -->
+            <div class="product-grid">
+                <div class="product-card selected">
+                    <div class="product-info">
+                        <div class="product-name">Pen - Classic Blue</div>
+                        <div class="product-price">₹10.00</div>
+                        <div class="product-stock">Stock: 50 units</div>
+                    </div>
+                    <button class="btn-select">✓ Selected</button>
+                </div>
+
+                <div class="product-card">
+                    <div class="product-info">
+                        <div class="product-name">Notebook - A4 Ruled</div>
+                        <div class="product-price">₹40.00</div>
+                        <div class="product-stock">Stock: 30 units</div>
+                    </div>
+                    <button class="btn-select">Select</button>
+                </div>
+
+                <div class="product-card">
+                    <div class="product-info">
+                        <div class="product-name">Eraser - White Large</div>
+                        <div class="product-price">₹5.00</div>
+                        <div class="product-stock">Stock: 100 units</div>
+                    </div>
+                    <button class="btn-select">Select</button>
+                </div>
+            </div>
+
+            <!-- SECTION DIVIDER -->
+            <div class="section-divider">
+                <span class="section-title">SALE DETAILS</span>
+            </div>
+
+            <!-- SALE DETAILS SECTION -->
+            <div class="sale-details">
+                <div class="selected-product-banner">
+                    <div class="selected-product-name">📦 Pen - Classic Blue</div>
+                    <div>₹10.00 per unit</div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Quantity</label>
+                        <div class="quantity-control">
+                            <button class="btn-qty">−</button>
+                            <input type="number" value="5" class="qty-input">
+                            <button class="btn-qty">+</button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Sale Price (per unit)</label>
+                        <input type="number" value="10.00" class="price-input">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Sale Date</label>
+                    <input type="text" value="01/01/2025" class="date-input">
+                </div>
+
+                <div class="total-display">
+                    <div class="total-label">TOTAL AMOUNT</div>
+                    <div class="total-amount">₹50.00</div>
+                </div>
+
+                <button class="btn-complete">Complete Sale (Ctrl+Enter)</button>
+            </div>
+
+            <!-- COLLAPSIBLE SUMMARY SECTION -->
+            <div class="summary-section">
+                <div class="summary-header" onclick="toggleSummary()">
+                    <div class="summary-title">
+                        📅 Today's Summary (01/01/2025)
+                    </div>
+                    <div class="summary-stats">
+                        <div class="summary-stat">
+                            <span>Products:</span>
+                            <strong>5</strong>
+                        </div>
+                        <div class="summary-stat">
+                            <span>Revenue:</span>
+                            <strong>₹500</strong>
+                        </div>
+                        <div class="summary-stat">
+                            <span>Profit:</span>
+                            <strong>₹150</strong>
+                        </div>
+                    </div>
+                    <span class="toggle-icon" id="toggleIcon">▼</span>
+                </div>
+
+                <div class="summary-content" id="summaryContent">
+                    <div class="sales-list-item">
+                        <div>
+                            <div class="sale-info">Pen (5 units)</div>
+                            <div class="sale-time">2 minutes ago</div>
+                        </div>
+                        <div class="sale-amount">₹50.00</div>
+                    </div>
+                    <div class="sales-list-item">
+                        <div>
+                            <div class="sale-info">Notebook (2 units)</div>
+                            <div class="sale-time">5 minutes ago</div>
+                        </div>
+                        <div class="sale-amount">₹80.00</div>
+                    </div>
+                    <div class="sales-list-item">
+                        <div>
+                            <div class="sale-info">Eraser (10 units)</div>
+                            <div class="sale-time">10 minutes ago</div>
+                        </div>
+                        <div class="sale-amount">₹50.00</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 20px; color: #666;">
+        <p><strong>Layout Option B:</strong> Single Column with Expandable Summary - Clean, Mobile-Friendly</p>
+        <p style="font-size: 14px; margin-top: 10px;">✅ Pros: Clean layout, works on any screen size, less overwhelming | ⚠️ Cons: Need to expand to see full summary</p>
+    </div>
+
+    <script>
+        function toggleSummary() {
+            const content = document.getElementById('summaryContent');
+            const icon = document.getElementById('toggleIcon');
+            content.classList.toggle('expanded');
+            icon.textContent = content.classList.contains('expanded') ? '▲' : '▼';
+        }
+    </script>
+</body>
+</html>

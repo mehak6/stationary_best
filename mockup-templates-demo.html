@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sale Templates Demo - How It Works</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf3 100%);
+            padding: 20px;
+        }
+
+        .intro {
+            max-width: 1200px;
+            margin: 0 auto 30px;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .intro h1 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 28px;
+        }
+
+        .intro p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .benefit-list {
+            list-style: none;
+            margin-top: 15px;
+        }
+
+        .benefit-list li {
+            padding: 8px 0;
+            color: #555;
+        }
+
+        .benefit-list li:before {
+            content: "✓";
+            color: #4caf50;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .demo-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .demo-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .step-number {
+            background: rgba(255,255,255,0.3);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        .template-modal {
+            border: 2px solid #e8ecf3;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .template-list {
+            display: grid;
+            gap: 12px;
+        }
+
+        .template-item {
+            border: 2px solid #e8ecf3;
+            border-radius: 8px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .template-item:hover {
+            border-color: #667eea;
+            background: #f5f7fa;
+            transform: translateX(5px);
+        }
+
+        .template-name {
+            font-weight: 700;
+            font-size: 16px;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .template-products {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .template-total {
+            font-weight: 700;
+            color: #4caf50;
+            font-size: 15px;
+        }
+
+        .btn-use {
+            margin-top: 10px;
+            padding: 8px 15px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            width: 100%;
+        }
+
+        .cart-view {
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            padding: 20px;
+            background: #f5f7fa;
+        }
+
+        .cart-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .cart-item {
+            background: white;
+            border: 1px solid #e8ecf3;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .item-name {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .item-qty {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .item-price {
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .cart-total {
+            border-top: 2px solid #667eea;
+            padding-top: 15px;
+            margin-top: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .cart-total-label {
+            font-weight: 700;
+            font-size: 18px;
+            color: #333;
+        }
+
+        .cart-total-amount {
+            font-weight: 700;
+            font-size: 24px;
+            color: #4caf50;
+        }
+
+        .btn-complete-cart {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+
+        .manage-templates {
+            border: 2px solid #e8ecf3;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .manage-title {
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #333;
+            font-size: 16px;
+        }
+
+        .template-manage-item {
+            background: #f5f7fa;
+            border: 1px solid #e8ecf3;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .template-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-edit {
+            padding: 6px 12px;
+            background: #2196f3;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .btn-delete {
+            padding: 6px 12px;
+            background: #ff5252;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .btn-create {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+
+        .usage-example {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        .usage-title {
+            font-weight: 700;
+            color: #ff9800;
+            margin-bottom: 10px;
+        }
+
+        .usage-text {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 768px) {
+            .demo-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- INTRODUCTION -->
+    <div class="intro">
+        <h1>📋 Sale Templates - Feature Demo</h1>
+        <p><strong>What are Sale Templates?</strong></p>
+        <p>Sale Templates let you save and reuse common product combinations that you frequently sell together. Instead of selecting products one by one, you can use a template to add multiple products to a sale instantly!</p>
+
+        <ul class="benefit-list">
+            <li><strong>Faster Checkout:</strong> Sell bundles with one click</li>
+            <li><strong>Reduce Errors:</strong> Pre-configured quantities and prices</li>
+            <li><strong>Track Bundles:</strong> Know which product combinations are popular</li>
+            <li><strong>Better Customer Service:</strong> Quick service for repeat customers</li>
+        </ul>
+    </div>
+
+    <!-- DEMO STEPS -->
+    <div class="demo-container">
+        <!-- STEP 1: View Templates -->
+        <div class="demo-card">
+            <div class="card-header">
+                <div class="step-number">1</div>
+                <div class="card-title">View Available Templates</div>
+            </div>
+            <div class="card-body">
+                <p style="margin-bottom: 15px; color: #666;">Click the "Templates" button to see saved bundles:</p>
+
+                <div class="template-modal">
+                    <h3 style="margin-bottom: 15px; color: #333;">📋 My Templates</h3>
+                    <div class="template-list">
+                        <div class="template-item">
+                            <div class="template-name">🎒 School Kit</div>
+                            <div class="template-products">1 Notebook + 2 Pens + 1 Eraser</div>
+                            <div class="template-total">Total: ₹60</div>
+                            <button class="btn-use">Use This Template</button>
+                        </div>
+
+                        <div class="template-item">
+                            <div class="template-name">🏢 Office Bundle</div>
+                            <div class="template-products">1 Stapler + 1 Box Staples + 2 Pens</div>
+                            <div class="template-total">Total: ₹75</div>
+                            <button class="btn-use">Use This Template</button>
+                        </div>
+
+                        <div class="template-item">
+                            <div class="template-name">🎨 Art Supplies</div>
+                            <div class="template-products">1 Drawing Book + 1 Color Set + 1 Pencil</div>
+                            <div class="template-total">Total: ₹120</div>
+                            <button class="btn-use">Use This Template</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 2: Select Template -->
+        <div class="demo-card">
+            <div class="card-header">
+                <div class="step-number">2</div>
+                <div class="card-title">Template Loads into Cart</div>
+            </div>
+            <div class="card-body">
+                <p style="margin-bottom: 15px; color: #666;">After clicking "Use", all products are added to your cart:</p>
+
+                <div class="cart-view">
+                    <div class="cart-header">🎒 School Kit Selected</div>
+
+                    <div class="cart-item">
+                        <div>
+                            <div class="item-name">Notebook - A4 Ruled</div>
+                            <div class="item-qty">Qty: 1 × ₹40</div>
+                        </div>
+                        <div class="item-price">₹40</div>
+                    </div>
+
+                    <div class="cart-item">
+                        <div>
+                            <div class="item-name">Pen - Classic Blue</div>
+                            <div class="item-qty">Qty: 2 × ₹10</div>
+                        </div>
+                        <div class="item-price">₹20</div>
+                    </div>
+
+                    <div class="cart-item">
+                        <div>
+                            <div class="item-name">Eraser - White Large</div>
+                            <div class="item-qty">Qty: 1 × ₹5</div>
+                        </div>
+                        <div class="item-price">₹5</div>
+                    </div>
+
+                    <div class="cart-total">
+                        <div class="cart-total-label">TOTAL</div>
+                        <div class="cart-total-amount">₹65</div>
+                    </div>
+
+                    <button class="btn-complete-cart">Complete Sale</button>
+                </div>
+
+                <div class="usage-example">
+                    <div class="usage-title">💡 You Can Still Adjust:</div>
+                    <div class="usage-text">
+                        • Change quantities<br>
+                        • Modify prices<br>
+                        • Add more products<br>
+                        • Remove items
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 3: Manage Templates -->
+        <div class="demo-card">
+            <div class="card-header">
+                <div class="step-number">3</div>
+                <div class="card-title">Manage Your Templates</div>
+            </div>
+            <div class="card-body">
+                <p style="margin-bottom: 15px; color: #666;">Create, edit, or delete templates anytime:</p>
+
+                <div class="manage-templates">
+                    <div class="manage-title">✏️ Template Management</div>
+
+                    <div class="template-manage-item">
+                        <div>
+                            <div style="font-weight: 600;">School Kit</div>
+                            <div style="font-size: 13px; color: #666;">3 items</div>
+                        </div>
+                        <div class="template-actions">
+                            <button class="btn-edit">Edit</button>
+                            <button class="btn-delete">Delete</button>
+                        </div>
+                    </div>
+
+                    <div class="template-manage-item">
+                        <div>
+                            <div style="font-weight: 600;">Office Bundle</div>
+                            <div style="font-size: 13px; color: #666;">3 items</div>
+                        </div>
+                        <div class="template-actions">
+                            <button class="btn-edit">Edit</button>
+                            <button class="btn-delete">Delete</button>
+                        </div>
+                    </div>
+
+                    <div class="template-manage-item">
+                        <div>
+                            <div style="font-weight: 600;">Art Supplies</div>
+                            <div style="font-size: 13px; color: #666;">3 items</div>
+                        </div>
+                        <div class="template-actions">
+                            <button class="btn-edit">Edit</button>
+                            <button class="btn-delete">Delete</button>
+                        </div>
+                    </div>
+
+                    <button class="btn-create">+ Create New Template</button>
+                </div>
+
+                <div class="usage-example" style="background: #e8f5e9; border-color: #4caf50;">
+                    <div class="usage-title" style="color: #4caf50;">💾 How to Create:</div>
+                    <div class="usage-text">
+                        1. Add products to cart in Quick Sale<br>
+                        2. Click "Save as Template"<br>
+                        3. Give it a name<br>
+                        4. Done! Use it anytime
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER INFO -->
+    <div style="max-width: 1200px; margin: 30px auto; text-align: center; color: #666;">
+        <p style="font-size: 18px; font-weight: 600; margin-bottom: 10px;">Perfect For:</p>
+        <p>• School supplies bundles for students</p>
+        <p>• Office starter kits for businesses</p>
+        <p>• Commonly bought together items</p>
+        <p>• Seasonal promotional packages</p>
+        <p style="margin-top: 20px; font-size: 14px; color: #999;">
+            Templates are stored locally and sync across your devices!
+        </p>
+    </div>
+</body>
+</html>
