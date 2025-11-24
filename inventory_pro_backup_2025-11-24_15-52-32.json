@@ -1,0 +1,3458 @@
+{
+  "version": "1.0.0",
+  "timestamp": "2025-11-24T10:22:32.042Z",
+  "products": [
+    {
+      "id": "b73c780b-a96f-400c-8e15-280fb9be340a",
+      "name": "BALL @50",
+      "category_id": null,
+      "barcode": null,
+      "purchase_price": 18,
+      "selling_price": 50,
+      "stock_quantity": 1,
+      "min_stock_level": 5,
+      "supplier_info": null,
+      "image_url": null,
+      "description": null,
+      "created_at": "2025-11-18T17:57:16.04316+00:00",
+      "updated_at": "2025-11-18T17:58:45.136537+00:00"
+    },
+    {
+      "id": "cb710dac-f2b2-42db-a66d-2e52c1467ddd",
+      "name": "SSUP GAME BOX",
+      "category_id": null,
+      "barcode": null,
+      "purchase_price": 300,
+      "selling_price": 500,
+      "stock_quantity": 1,
+      "min_stock_level": 5,
+      "supplier_info": null,
+      "image_url": null,
+      "description": null,
+      "created_at": "2025-11-18T17:36:33.8445+00:00",
+      "updated_at": "2025-11-18T17:39:43.243651+00:00"
+    },
+    {
+      "id": "430e6aec-5011-469d-b2bd-3e897e197a96",
+      "name": "WASHI TAPES",
+      "category_id": null,
+      "barcode": null,
+      "purchase_price": 6,
+      "selling_price": 20,
+      "stock_quantity": 59,
+      "min_stock_level": 5,
+      "supplier_info": null,
+      "image_url": null,
+      "description": null,
+      "created_at": "2025-11-18T17:33:22.363875+00:00",
+      "updated_at": "2025-11-24T10:13:57.928952+00:00"
+    },
+    {
+      "id": "4c470ac5-aab8-4037-a2af-6afdce12f3dd",
+      "name": "TORCH / FLASHLIGHT",
+      "category_id": null,
+      "barcode": null,
+      "purchase_price": 55,
+      "selling_price": 70,
+      "stock_quantity": 3,
+      "min_stock_level": 1,
+      "supplier_info": null,
+      "image_url": null,
+      "description": null,
+      "created_at": "2025-11-18T17:32:21.309329+00:00",
+      "updated_at": "2025-11-24T10:13:58.50348+00:00"
+    },
+    {
+      "id": "8a9302ed-84fe-481e-b910-d13f03fd8e10",
+      "name": "POP TUBES",
+      "category_id": null,
+      "barcode": null,
+      "purchase_price": 13,
+      "selling_price": 20,
+      "stock_quantity": 23,
+      "min_stock_level": 5,
+      "supplier_info": null,
+      "image_url": null,
+      "description": null,
+      "created_at": "2025-11-18T17:31:44.67793+00:00",
+      "updated_at": "2025-11-19T05:25:34.191278+00:00"
+    },
+    {
+      "id": "5ca8d2fd-1a26-4f1f-b620-f4e0fab12416",
+      "name": "STAMP",
+      "category_id": null,
+      "barcode": null,
+      "purchase_price": 4.5,
+      "selling_price": 10,
+      "stock_quantity": 14,
+      "min_stock_level": 5,
+      "supplier_info": null,
+      "image_url": null,
+      "description": null,
+      "created_at": "2025-11-18T17:19:35.522442+00:00",
+      "updated_at": "2025-11-24T10:13:59.181756+00:00"
+    },
+    {
+      "id": "a16880fc-92bd-4b43-8ec6-a0ee192faf6e",
+      "name": "LASER LIGHT",
+      "category_id": null,
+      "barcode": null,
+      "purchase_price": 25,
+      "selling_price": 50,
+      "stock_quantity": 8,
+      "min_stock_level": 5,
+      "supplier_info": null,
+      "image_url": null,
+      "description": null,
+      "created_at": "2025-11-18T10:52:55.631251+00:00",
+      "updated_at": "2025-11-18T17:39:43.07053+00:00"
+    },
+    {
+      "id": "e8c36264-83bb-43cf-9df9-7e3b9ff59fa6",
+      "name": "CUBE",
+      "category_id": null,
+      "barcode": null,
+      "purchase_price": 30,
+      "selling_price": 60,
+      "stock_quantity": 8,
+      "min_stock_level": 5,
+      "supplier_info": null,
+      "image_url": null,
+      "description": null,
+      "created_at": "2025-11-18T10:50:19.326152+00:00",
+      "updated_at": "2025-11-18T17:05:34.256473+00:00"
+    },
+    {
+      "id": "a794a6be-f485-4613-a075-c821bc638c2a",
+      "name": "MIRROR",
+      "category_id": null,
+      "barcode": null,
+      "purchase_price": 35,
+      "selling_price": 70,
+      "stock_quantity": 9,
+      "min_stock_level": 2,
+      "supplier_info": null,
+      "image_url": null,
+      "description": null,
+      "created_at": "2025-11-16T17:20:18.337944+00:00",
+      "updated_at": "2025-11-16T17:23:20.937472+00:00"
+    },
+    {
+      "id": "a1f60955-0dd3-4151-be70-b373fe419ad2",
+      "name": "YO YO SET",
+      "category_id": null,
+      "barcode": null,
+      "purchase_price": 48,
+      "selling_price": 100,
+      "stock_quantity": 3,
+      "min_stock_level": 1,
+      "supplier_info": null,
+      "image_url": null,
+      "description": null,
+      "created_at": "2025-11-16T17:20:03.416266+00:00",
+      "updated_at": "2025-11-16T17:23:20.731623+00:00"
+    },
+    {
+      "id": "fa4fa677-1a2b-4bac-a412-a58f0eba5947",
+      "name": "SLAP BAND",
+      "category_id": null,
+      "barcode": null,
+      "purchase_price": 25,
+      "selling_price": 50,
+      "stock_quantity": 8,
+      "min_stock_level": 5,
+      "supplier_info": null,
+      "image_url": null,
+      "description": null,
+      "created_at": "2025-11-16T17:14:26.004962+00:00",
+      "updated_at": "2025-11-16T17:23:21.756187+00:00"
+    },
+    {
+      "id": "4a5cc01f-56b1-4c27-be6b-d2875e0dd230",
+      "name": "COLORING BOOK",
+      "category_id": null,
+      "barcode": null,
+      "purchase_price": 30,
+      "selling_price": 50,
+      "stock_quantity": 9,
+      "min_stock_level": 5,
+      "supplier_info": null,
+      "image_url": null,
+      "description": null,
+      "created_at": "2025-11-15T18:32:09.190176+00:00",
+      "updated_at": "2025-11-24T10:13:58.125427+00:00"
+    },
+    {
+      "id": "3820c952-7738-4e0d-ba9d-b70a7824aa97",
+      "name": "STICKY NOTES",
+      "category_id": null,
+      "barcode": null,
+      "purchase_price": 15,
+      "selling_price": 30,
+      "stock_quantity": 4,
+      "min_stock_level": 5,
+      "supplier_info": null,
+      "image_url": null,
+      "description": null,
+      "created_at": "2025-11-15T18:31:25.97994+00:00",
+      "updated_at": "2025-11-24T10:13:57.719227+00:00"
+    },
+    {
+      "id": "97b77c22-1973-4800-b111-4db4385832cb",
+      "name": "SPINNER @60",
+      "category_id": null,
+      "barcode": null,
+      "purchase_price": 35,
+      "selling_price": 60,
+      "stock_quantity": 0,
+      "min_stock_level": 5,
+      "supplier_info": null,
+      "image_url": null,
+      "description": null,
+      "created_at": "2025-11-15T17:59:42.070677+00:00",
+      "updated_at": "2025-11-18T17:29:43.667871+00:00"
+    },
+    {
+      "id": "4b94df23-9a3f-4eff-826f-513ee8abd07f",
+      "name": "SPINNER @100",
+      "category_id": null,
+      "barcode": null,
+      "purchase_price": 48,
+      "selling_price": 100,
+      "stock_quantity": 6,
+      "min_stock_level": 5,
+      "supplier_info": null,
+      "image_url": null,
+      "description": null,
+      "created_at": "2025-11-15T17:59:28.854462+00:00",
+      "updated_at": "2025-11-24T10:13:58.305613+00:00"
+    },
+    {
+      "id": "2ea5d243-6741-4cb4-b18c-81fcf2aa8b8a",
+      "name": "STATIONARY SET",
+      "category_id": null,
+      "barcode": null,
+      "purchase_price": 48,
+      "selling_price": 100,
+      "stock_quantity": 10,
+      "min_stock_level": 5,
+      "supplier_info": null,
+      "image_url": null,
+      "description": null,
+      "created_at": "2025-11-15T17:51:48.345979+00:00",
+      "updated_at": "2025-11-24T10:13:57.110352+00:00"
+    },
+    {
+      "id": "d6a1df86-f967-4242-8681-081a4bc0d191",
+      "name": "LIPSTICK ERASER",
+      "category_id": null,
+      "barcode": null,
+      "purchase_price": 18,
+      "selling_price": 30,
+      "stock_quantity": 21,
+      "min_stock_level": 5,
+      "supplier_info": null,
+      "image_url": null,
+      "description": null,
+      "created_at": "2025-11-15T17:39:32.411697+00:00",
+      "updated_at": "2025-11-16T17:23:21.139215+00:00"
+    },
+    {
+      "id": "24b78ffa-66b7-4474-8315-282cbefd38ab",
+      "name": "MINI MAGNETIC GAME",
+      "category_id": null,
+      "barcode": null,
+      "purchase_price": 100,
+      "selling_price": 150,
+      "stock_quantity": 2,
+      "min_stock_level": 5,
+      "supplier_info": null,
+      "image_url": null,
+      "description": "Transferred from zee purchase",
+      "created_at": "2025-11-15T17:37:23.568927+00:00",
+      "updated_at": "2025-11-24T10:13:56.272302+00:00"
+    },
+    {
+      "id": "5de8f13f-5c25-42ed-95e4-0291fc74f845",
+      "name": "SHARPENER",
+      "category_id": null,
+      "barcode": null,
+      "purchase_price": 11,
+      "selling_price": 30,
+      "stock_quantity": 7,
+      "min_stock_level": 5,
+      "supplier_info": null,
+      "image_url": null,
+      "description": null,
+      "created_at": "2025-11-15T17:34:28.576859+00:00",
+      "updated_at": "2025-11-24T10:13:59.364449+00:00"
+    },
+    {
+      "id": "8656ee9b-4ceb-433d-9265-b4dd25f9188e",
+      "name": "FAN",
+      "category_id": null,
+      "barcode": null,
+      "purchase_price": 25,
+      "selling_price": 50,
+      "stock_quantity": 20,
+      "min_stock_level": 5,
+      "supplier_info": null,
+      "image_url": null,
+      "description": null,
+      "created_at": "2025-11-15T17:33:55.01815+00:00",
+      "updated_at": "2025-11-16T17:23:20.323701+00:00"
+    },
+    {
+      "id": "30b1d802-7a51-4e01-89ef-e9ea12d85fae",
+      "name": "HAIR PIN/ CLIPS",
+      "category_id": null,
+      "barcode": null,
+      "purchase_price": 5,
+      "selling_price": 10,
+      "stock_quantity": 47,
+      "min_stock_level": 5,
+      "supplier_info": null,
+      "image_url": null,
+      "description": null,
+      "created_at": "2025-11-15T17:27:46.650265+00:00",
+      "updated_at": "2025-11-24T10:13:57.322849+00:00"
+    },
+    {
+      "id": "7e26bcec-12b5-46cf-a8a4-693981870823",
+      "name": "CORRECTION TAPE",
+      "category_id": null,
+      "barcode": null,
+      "purchase_price": 25,
+      "selling_price": 50,
+      "stock_quantity": 1,
+      "min_stock_level": 2,
+      "supplier_info": null,
+      "image_url": null,
+      "description": null,
+      "created_at": "2025-11-15T17:26:52.214239+00:00",
+      "updated_at": "2025-11-15T18:23:30.165655+00:00"
+    },
+    {
+      "id": "055d28a5-0788-4617-9c9f-69fc536c595d",
+      "name": "WIPES",
+      "category_id": null,
+      "barcode": null,
+      "purchase_price": 35,
+      "selling_price": 70,
+      "stock_quantity": 10,
+      "min_stock_level": 5,
+      "supplier_info": null,
+      "image_url": null,
+      "description": null,
+      "created_at": "2025-11-15T17:26:33.378732+00:00",
+      "updated_at": "2025-11-24T10:13:55.088876+00:00"
+    },
+    {
+      "id": "132a85b8-a348-45a2-8a34-7d853228c00a",
+      "name": "GOGGLES",
+      "category_id": null,
+      "barcode": null,
+      "purchase_price": 48,
+      "selling_price": 100,
+      "stock_quantity": 18,
+      "min_stock_level": 5,
+      "supplier_info": null,
+      "image_url": null,
+      "description": null,
+      "created_at": "2025-11-15T17:26:02.060597+00:00",
+      "updated_at": "2025-11-24T10:13:55.693294+00:00"
+    },
+    {
+      "id": "d91222e1-b682-41a0-98c9-b7f5950eb456",
+      "name": "HIGHLIGHTER",
+      "category_id": null,
+      "barcode": null,
+      "purchase_price": 7,
+      "selling_price": 20,
+      "stock_quantity": 9,
+      "min_stock_level": 5,
+      "supplier_info": null,
+      "image_url": null,
+      "description": null,
+      "created_at": "2025-11-15T17:25:25.793819+00:00",
+      "updated_at": "2025-11-16T03:38:21.899595+00:00"
+    },
+    {
+      "id": "5723b03e-f323-4cb8-96de-9cdce4c0f86a",
+      "name": "PEN & DIARY ",
+      "category_id": null,
+      "barcode": null,
+      "purchase_price": 35,
+      "selling_price": 60,
+      "stock_quantity": 8,
+      "min_stock_level": 5,
+      "supplier_info": null,
+      "image_url": null,
+      "description": null,
+      "created_at": "2025-11-15T08:30:50.21877+00:00",
+      "updated_at": "2025-11-24T10:13:59.000345+00:00"
+    },
+    {
+      "id": "24ba1ee3-9c06-48c4-b577-78f986ffc117",
+      "name": "TORCH",
+      "category_id": null,
+      "barcode": null,
+      "purchase_price": 55,
+      "selling_price": 100,
+      "stock_quantity": 3,
+      "min_stock_level": 1,
+      "supplier_info": null,
+      "image_url": null,
+      "description": null,
+      "created_at": "2025-11-13T17:57:44.422952+00:00",
+      "updated_at": "2025-11-24T10:13:56.455539+00:00"
+    },
+    {
+      "id": "9dc689b1-f950-4805-aef7-dfb70ec4b504",
+      "name": "BUBBLES",
+      "category_id": null,
+      "barcode": null,
+      "purchase_price": 10,
+      "selling_price": 10,
+      "stock_quantity": 8,
+      "min_stock_level": 1,
+      "supplier_info": null,
+      "image_url": null,
+      "description": null,
+      "created_at": "2025-11-13T17:57:17.44983+00:00",
+      "updated_at": "2025-11-18T17:39:42.940724+00:00"
+    },
+    {
+      "id": "eb2f6c76-e7b9-4ccf-b981-a7b14565271b",
+      "name": "WAND",
+      "category_id": null,
+      "barcode": null,
+      "purchase_price": 35,
+      "selling_price": 50,
+      "stock_quantity": 7,
+      "min_stock_level": 2,
+      "supplier_info": null,
+      "image_url": null,
+      "description": null,
+      "created_at": "2025-11-13T17:56:43.328653+00:00",
+      "updated_at": "2025-11-15T08:50:01.587037+00:00"
+    },
+    {
+      "id": "67c45001-e08e-4923-85d8-41baefc1697b",
+      "name": "SUPER HERO",
+      "category_id": null,
+      "barcode": null,
+      "purchase_price": 30,
+      "selling_price": 50,
+      "stock_quantity": 9,
+      "min_stock_level": 3,
+      "supplier_info": null,
+      "image_url": null,
+      "description": null,
+      "created_at": "2025-11-13T17:55:20.544713+00:00",
+      "updated_at": "2025-11-18T10:49:54.396203+00:00"
+    },
+    {
+      "id": "1e0ba814-591a-4efa-8e95-06e6a3e127d1",
+      "name": "BLOW PEN",
+      "category_id": null,
+      "barcode": null,
+      "purchase_price": 35,
+      "selling_price": 70,
+      "stock_quantity": 7,
+      "min_stock_level": 5,
+      "supplier_info": null,
+      "image_url": null,
+      "description": null,
+      "created_at": "2025-11-13T17:54:14.841791+00:00",
+      "updated_at": "2025-11-24T10:13:56.065408+00:00"
+    },
+    {
+      "id": "5e582c6c-fd09-4c6b-9f3c-14e33bb15076",
+      "name": "ERASER",
+      "category_id": null,
+      "barcode": null,
+      "purchase_price": 10,
+      "selling_price": 20,
+      "stock_quantity": 14,
+      "min_stock_level": 5,
+      "supplier_info": null,
+      "image_url": null,
+      "description": null,
+      "created_at": "2025-11-13T17:37:36.758322+00:00",
+      "updated_at": "2025-11-18T17:39:42.525607+00:00"
+    },
+    {
+      "id": "12ab732a-706b-41c2-b2a9-0d04346648bf",
+      "name": "DIARY @30",
+      "category_id": null,
+      "barcode": null,
+      "purchase_price": 15,
+      "selling_price": 30,
+      "stock_quantity": 10,
+      "min_stock_level": 5,
+      "supplier_info": null,
+      "image_url": null,
+      "description": null,
+      "created_at": "2025-11-13T17:34:34.735906+00:00",
+      "updated_at": "2025-11-24T10:13:55.480783+00:00"
+    },
+    {
+      "id": "a42dc7e8-3e34-407e-aecb-d2c8899ec90e",
+      "name": "BALLS @ 20 SMILEY",
+      "category_id": null,
+      "barcode": null,
+      "purchase_price": 11,
+      "selling_price": 20,
+      "stock_quantity": 3,
+      "min_stock_level": 5,
+      "supplier_info": null,
+      "image_url": null,
+      "description": null,
+      "created_at": "2025-11-13T06:10:42.599+00:00",
+      "updated_at": "2025-11-18T17:29:43.806557+00:00"
+    },
+    {
+      "id": "bb8a208a-f10d-4b80-af0a-8285a14c5b9e",
+      "name": "DIARY @80",
+      "category_id": null,
+      "barcode": null,
+      "purchase_price": 35,
+      "selling_price": 80,
+      "stock_quantity": 0,
+      "min_stock_level": 1,
+      "supplier_info": null,
+      "image_url": null,
+      "description": null,
+      "created_at": "2025-10-26T11:38:05.384201+00:00",
+      "updated_at": "2025-11-18T17:05:34.093246+00:00"
+    },
+    {
+      "id": "c19710ba-7549-4089-8422-f157acc3f12b",
+      "name": "CAR",
+      "category_id": null,
+      "barcode": null,
+      "purchase_price": 25,
+      "selling_price": 50,
+      "stock_quantity": 2,
+      "min_stock_level": 1,
+      "supplier_info": null,
+      "image_url": null,
+      "description": null,
+      "created_at": "2025-10-26T11:37:52.088014+00:00",
+      "updated_at": "2025-11-18T17:29:43.977365+00:00"
+    },
+    {
+      "id": "0ea1711e-2f2b-4f22-835d-84095962c89b",
+      "name": "SLIME @ 20",
+      "category_id": null,
+      "barcode": null,
+      "purchase_price": 10,
+      "selling_price": 20,
+      "stock_quantity": 3,
+      "min_stock_level": 5,
+      "supplier_info": null,
+      "image_url": null,
+      "description": null,
+      "created_at": "2025-10-26T11:36:11.087114+00:00",
+      "updated_at": "2025-11-24T10:13:55.289048+00:00"
+    },
+    {
+      "id": "929f08a3-2f00-4913-bf97-e4b7895ad5a1",
+      "name": "DIARY @60",
+      "category_id": null,
+      "barcode": null,
+      "purchase_price": 35,
+      "selling_price": 60,
+      "stock_quantity": 5,
+      "min_stock_level": 5,
+      "supplier_info": null,
+      "image_url": null,
+      "description": null,
+      "created_at": "2025-10-26T11:35:47.076021+00:00",
+      "updated_at": "2025-11-18T17:44:42.796568+00:00"
+    },
+    {
+      "id": "28600da3-b886-411d-adf0-fb44d121e7bf",
+      "name": "PAPER SOAP",
+      "category_id": null,
+      "barcode": null,
+      "purchase_price": 18,
+      "selling_price": 50,
+      "stock_quantity": 10,
+      "min_stock_level": 5,
+      "supplier_info": null,
+      "image_url": null,
+      "description": null,
+      "created_at": "2025-10-26T11:34:28.630404+00:00",
+      "updated_at": "2025-11-24T10:13:56.87978+00:00"
+    },
+    {
+      "id": "55027088-12aa-4dd4-8123-4d20fb3e0ae0",
+      "name": "HAND FAN",
+      "category_id": null,
+      "barcode": null,
+      "purchase_price": 10,
+      "selling_price": 20,
+      "stock_quantity": 3,
+      "min_stock_level": 1,
+      "supplier_info": null,
+      "image_url": null,
+      "description": null,
+      "created_at": "2025-10-26T11:33:48.810682+00:00",
+      "updated_at": "2025-11-24T10:13:58.845096+00:00"
+    },
+    {
+      "id": "0515f6ae-5023-453d-a099-b13347cd46c3",
+      "name": "SPRING",
+      "category_id": null,
+      "barcode": null,
+      "purchase_price": 18,
+      "selling_price": 30,
+      "stock_quantity": 12,
+      "min_stock_level": 5,
+      "supplier_info": null,
+      "image_url": null,
+      "description": null,
+      "created_at": "2025-10-26T11:30:38.23859+00:00",
+      "updated_at": "2025-11-24T10:13:54.856082+00:00"
+    },
+    {
+      "id": "035c947d-2b35-4c90-8a6b-4889093ed6ca",
+      "name": "DIARY @70",
+      "category_id": null,
+      "barcode": null,
+      "purchase_price": 40,
+      "selling_price": 70,
+      "stock_quantity": 8,
+      "min_stock_level": 5,
+      "supplier_info": null,
+      "image_url": null,
+      "description": null,
+      "created_at": "2025-10-26T11:04:50.215363+00:00",
+      "updated_at": "2025-11-24T10:13:54.554781+00:00"
+    },
+    {
+      "id": "3136b9d7-2352-46b8-b04b-44d34fc1ab39",
+      "name": "LIGHT BANDS",
+      "category_id": null,
+      "barcode": null,
+      "purchase_price": 70,
+      "selling_price": 100,
+      "stock_quantity": 2,
+      "min_stock_level": 5,
+      "supplier_info": null,
+      "image_url": null,
+      "description": null,
+      "created_at": "2025-10-26T11:04:04.302441+00:00",
+      "updated_at": "2025-11-24T10:13:57.486436+00:00"
+    },
+    {
+      "id": "f7c1d66a-4a0d-4479-afe4-65a38a3e20c9",
+      "name": "DUAL MARKER",
+      "category_id": null,
+      "barcode": null,
+      "purchase_price": 6,
+      "selling_price": 20,
+      "stock_quantity": 6,
+      "min_stock_level": 5,
+      "supplier_info": null,
+      "image_url": null,
+      "description": null,
+      "created_at": "2025-10-26T11:01:54.723076+00:00",
+      "updated_at": "2025-11-18T17:29:44.328149+00:00"
+    },
+    {
+      "id": "c73b1018-9706-4f6c-9ef0-11820d198c52",
+      "name": "PAINT BOOKS",
+      "category_id": null,
+      "barcode": null,
+      "purchase_price": 20,
+      "selling_price": 50,
+      "stock_quantity": 2,
+      "min_stock_level": 5,
+      "supplier_info": null,
+      "image_url": null,
+      "description": null,
+      "created_at": "2025-10-26T11:01:16.531858+00:00",
+      "updated_at": "2025-11-15T08:50:01.376949+00:00"
+    },
+    {
+      "id": "1cf30b62-535a-4813-9e0a-7c2e5956f43d",
+      "name": "MOON BALL",
+      "category_id": null,
+      "barcode": null,
+      "purchase_price": 35,
+      "selling_price": 60,
+      "stock_quantity": 15,
+      "min_stock_level": 5,
+      "supplier_info": null,
+      "image_url": null,
+      "description": null,
+      "created_at": "2025-10-26T10:58:44.117078+00:00",
+      "updated_at": "2025-11-24T10:13:55.885617+00:00"
+    },
+    {
+      "id": "523fc4e4-3265-467d-a084-3a47095bb723",
+      "name": "BRACELET",
+      "category_id": null,
+      "barcode": null,
+      "purchase_price": 35,
+      "selling_price": 100,
+      "stock_quantity": 3,
+      "min_stock_level": 5,
+      "supplier_info": null,
+      "image_url": null,
+      "description": null,
+      "created_at": "2025-10-26T10:58:11.396086+00:00",
+      "updated_at": "2025-11-24T10:13:58.682527+00:00"
+    },
+    {
+      "id": "f479c968-b6bd-4b7c-b366-5a974d661166",
+      "name": "SCRATCH BOOK",
+      "category_id": null,
+      "barcode": null,
+      "purchase_price": 15,
+      "selling_price": 30,
+      "stock_quantity": 1,
+      "min_stock_level": 5,
+      "supplier_info": null,
+      "image_url": null,
+      "description": null,
+      "created_at": "2025-10-26T10:56:48.22929+00:00",
+      "updated_at": "2025-11-18T17:29:44.135648+00:00"
+    },
+    {
+      "id": "269d5281-bb15-49f0-b84e-ea7a8819c0ff",
+      "name": "PENS",
+      "category_id": null,
+      "barcode": null,
+      "purchase_price": 10,
+      "selling_price": 20,
+      "stock_quantity": 20,
+      "min_stock_level": 5,
+      "supplier_info": null,
+      "image_url": null,
+      "description": null,
+      "created_at": "2025-10-26T10:55:00.11804+00:00",
+      "updated_at": "2025-11-24T10:13:56.662361+00:00"
+    },
+    {
+      "id": "6cfb8504-2f7a-40c3-b5fa-1f85ae62da17",
+      "name": "PENCIL",
+      "category_id": null,
+      "barcode": null,
+      "purchase_price": 14,
+      "selling_price": 30,
+      "stock_quantity": 21,
+      "min_stock_level": 5,
+      "supplier_info": null,
+      "image_url": null,
+      "description": null,
+      "created_at": "2025-10-26T10:54:19.950665+00:00",
+      "updated_at": "2025-11-18T17:39:42.730218+00:00"
+    },
+    {
+      "id": "71fee0b2-b067-4ea1-b0e5-e9392359cc66",
+      "name": "MOBILE COVER",
+      "category_id": "2114d4c4-245b-4a03-a5dd-ffb040eb09eb",
+      "barcode": null,
+      "purchase_price": 15,
+      "selling_price": 100,
+      "stock_quantity": 49,
+      "min_stock_level": 5,
+      "supplier_info": null,
+      "image_url": null,
+      "description": "Transferred from ashima purchase",
+      "created_at": "2025-09-01T18:03:17.994728+00:00",
+      "updated_at": "2025-11-15T18:23:29.962736+00:00"
+    }
+  ],
+  "sales": [
+    {
+      "id": "0e5dc577-aab6-436b-b8a5-9ca26fe1e7ca",
+      "product_id": "a16880fc-92bd-4b43-8ec6-a0ee192faf6e",
+      "quantity": 1,
+      "unit_price": 50,
+      "total_amount": 50,
+      "profit": 25,
+      "customer_info": null,
+      "sale_date": "2025-11-17",
+      "notes": null,
+      "created_at": "2025-11-18T10:53:11.233402+00:00",
+      "products": {
+        "id": "a16880fc-92bd-4b43-8ec6-a0ee192faf6e",
+        "name": "LASER LIGHT",
+        "purchase_price": 25
+      }
+    },
+    {
+      "id": "4a8ed316-ae9d-4edf-90a9-b2cc4441b4fa",
+      "product_id": "5e582c6c-fd09-4c6b-9f3c-14e33bb15076",
+      "quantity": 2,
+      "unit_price": 20,
+      "total_amount": 40,
+      "profit": 20,
+      "customer_info": null,
+      "sale_date": "2025-11-17",
+      "notes": null,
+      "created_at": "2025-11-18T10:52:29.756235+00:00",
+      "products": {
+        "id": "5e582c6c-fd09-4c6b-9f3c-14e33bb15076",
+        "name": "ERASER",
+        "purchase_price": 10
+      }
+    },
+    {
+      "id": "1361ee94-9693-435e-8274-72fd99429b7a",
+      "product_id": "269d5281-bb15-49f0-b84e-ea7a8819c0ff",
+      "quantity": 1,
+      "unit_price": 30,
+      "total_amount": 30,
+      "profit": 20,
+      "customer_info": null,
+      "sale_date": "2025-11-17",
+      "notes": null,
+      "created_at": "2025-11-18T10:52:29.23464+00:00",
+      "products": {
+        "id": "269d5281-bb15-49f0-b84e-ea7a8819c0ff",
+        "name": "PENS",
+        "purchase_price": 10
+      }
+    },
+    {
+      "id": "d19a9ac1-25c6-42d7-b47b-606019cd44b7",
+      "product_id": "6cfb8504-2f7a-40c3-b5fa-1f85ae62da17",
+      "quantity": 3,
+      "unit_price": 20,
+      "total_amount": 60,
+      "profit": 18,
+      "customer_info": null,
+      "sale_date": "2025-11-17",
+      "notes": null,
+      "created_at": "2025-11-18T10:52:28.741029+00:00",
+      "products": {
+        "id": "6cfb8504-2f7a-40c3-b5fa-1f85ae62da17",
+        "name": "PENCIL",
+        "purchase_price": 14
+      }
+    },
+    {
+      "id": "15ee16c4-23f3-4092-9efa-989460c2812e",
+      "product_id": "132a85b8-a348-45a2-8a34-7d853228c00a",
+      "quantity": 1,
+      "unit_price": 100,
+      "total_amount": 100,
+      "profit": 52,
+      "customer_info": null,
+      "sale_date": "2025-11-17",
+      "notes": null,
+      "created_at": "2025-11-18T10:52:28.31661+00:00",
+      "products": {
+        "id": "132a85b8-a348-45a2-8a34-7d853228c00a",
+        "name": "GOGGLES",
+        "purchase_price": 48
+      }
+    },
+    {
+      "id": "e1d78fe9-43e0-479a-bc42-fbb4868253fa",
+      "product_id": "5723b03e-f323-4cb8-96de-9cdce4c0f86a",
+      "quantity": 1,
+      "unit_price": 60,
+      "total_amount": 60,
+      "profit": 25,
+      "customer_info": null,
+      "sale_date": "2025-11-17",
+      "notes": null,
+      "created_at": "2025-11-18T10:52:27.797508+00:00",
+      "products": {
+        "id": "5723b03e-f323-4cb8-96de-9cdce4c0f86a",
+        "name": "PEN & DIARY ",
+        "purchase_price": 35
+      }
+    },
+    {
+      "id": "e4eb4688-621d-4d8c-b145-b83191e18e30",
+      "product_id": "bb8a208a-f10d-4b80-af0a-8285a14c5b9e",
+      "quantity": 1,
+      "unit_price": 80,
+      "total_amount": 80,
+      "profit": 45,
+      "customer_info": null,
+      "sale_date": "2025-11-17",
+      "notes": null,
+      "created_at": "2025-11-18T10:52:27.28983+00:00",
+      "products": {
+        "id": "bb8a208a-f10d-4b80-af0a-8285a14c5b9e",
+        "name": "DIARY @80",
+        "purchase_price": 35
+      }
+    },
+    {
+      "id": "e9e8edd2-e348-4598-a13f-f8d4565c104a",
+      "product_id": "30b1d802-7a51-4e01-89ef-e9ea12d85fae",
+      "quantity": 4,
+      "unit_price": 10,
+      "total_amount": 40,
+      "profit": 20,
+      "customer_info": null,
+      "sale_date": "2025-11-17",
+      "notes": null,
+      "created_at": "2025-11-18T10:52:26.811821+00:00",
+      "products": {
+        "id": "30b1d802-7a51-4e01-89ef-e9ea12d85fae",
+        "name": "HAIR PIN/ CLIPS",
+        "purchase_price": 5
+      }
+    },
+    {
+      "id": "16f283dc-7f5c-4ef9-9ad8-762ee29a9472",
+      "product_id": "e8c36264-83bb-43cf-9df9-7e3b9ff59fa6",
+      "quantity": 2,
+      "unit_price": 60,
+      "total_amount": 120,
+      "profit": 60,
+      "customer_info": null,
+      "sale_date": "2025-11-17",
+      "notes": null,
+      "created_at": "2025-11-18T10:52:26.0433+00:00",
+      "products": {
+        "id": "e8c36264-83bb-43cf-9df9-7e3b9ff59fa6",
+        "name": "CUBE",
+        "purchase_price": 30
+      }
+    },
+    {
+      "id": "ac0edca3-3492-4506-8297-5e56425a5aef",
+      "product_id": "4b94df23-9a3f-4eff-826f-513ee8abd07f",
+      "quantity": 1,
+      "unit_price": 100,
+      "total_amount": 100,
+      "profit": 52,
+      "customer_info": null,
+      "sale_date": "2025-11-16",
+      "notes": null,
+      "created_at": "2025-11-18T17:20:28.843613+00:00",
+      "products": {
+        "id": "4b94df23-9a3f-4eff-826f-513ee8abd07f",
+        "name": "SPINNER @100",
+        "purchase_price": 48
+      }
+    },
+    {
+      "id": "a8b3bcdd-fff5-4b10-9f3b-ecc66b2d0022",
+      "product_id": "c19710ba-7549-4089-8422-f157acc3f12b",
+      "quantity": 1,
+      "unit_price": 50,
+      "total_amount": 50,
+      "profit": 25,
+      "customer_info": null,
+      "sale_date": "2025-11-16",
+      "notes": null,
+      "created_at": "2025-11-18T17:20:28.414894+00:00",
+      "products": {
+        "id": "c19710ba-7549-4089-8422-f157acc3f12b",
+        "name": "CAR",
+        "purchase_price": 25
+      }
+    },
+    {
+      "id": "1925726c-e0e2-45e8-9b2f-187b26e4c156",
+      "product_id": "a42dc7e8-3e34-407e-aecb-d2c8899ec90e",
+      "quantity": 2,
+      "unit_price": 20,
+      "total_amount": 40,
+      "profit": 18,
+      "customer_info": null,
+      "sale_date": "2025-11-16",
+      "notes": null,
+      "created_at": "2025-11-18T17:20:28.084466+00:00",
+      "products": {
+        "id": "a42dc7e8-3e34-407e-aecb-d2c8899ec90e",
+        "name": "BALLS @ 20 SMILEY",
+        "purchase_price": 11
+      }
+    },
+    {
+      "id": "81d441bd-d270-4ec9-9228-312209c0e3be",
+      "product_id": "1cf30b62-535a-4813-9e0a-7c2e5956f43d",
+      "quantity": 1,
+      "unit_price": 70,
+      "total_amount": 70,
+      "profit": 35,
+      "customer_info": null,
+      "sale_date": "2025-11-16",
+      "notes": null,
+      "created_at": "2025-11-18T17:20:27.677154+00:00",
+      "products": {
+        "id": "1cf30b62-535a-4813-9e0a-7c2e5956f43d",
+        "name": "MOON BALL",
+        "purchase_price": 35
+      }
+    },
+    {
+      "id": "25c0fd3f-2186-40c3-ab93-8c4dd8149f46",
+      "product_id": "5ca8d2fd-1a26-4f1f-b620-f4e0fab12416",
+      "quantity": 10,
+      "unit_price": 10,
+      "total_amount": 100,
+      "profit": 55,
+      "customer_info": null,
+      "sale_date": "2025-11-16",
+      "notes": null,
+      "created_at": "2025-11-18T17:20:27.194849+00:00",
+      "products": {
+        "id": "5ca8d2fd-1a26-4f1f-b620-f4e0fab12416",
+        "name": "STAMP",
+        "purchase_price": 4.5
+      }
+    },
+    {
+      "id": "b8cb9d12-1786-420a-9ba0-bd3665c4eb0c",
+      "product_id": "2ea5d243-6741-4cb4-b18c-81fcf2aa8b8a",
+      "quantity": 1,
+      "unit_price": 80,
+      "total_amount": 80,
+      "profit": 32,
+      "customer_info": null,
+      "sale_date": "2025-11-15",
+      "notes": null,
+      "created_at": "2025-11-15T18:00:29.166337+00:00",
+      "products": {
+        "id": "2ea5d243-6741-4cb4-b18c-81fcf2aa8b8a",
+        "name": "STATIONARY SET",
+        "purchase_price": 48
+      }
+    },
+    {
+      "id": "9405681f-2b44-4d24-b176-0500ccd311c5",
+      "product_id": "97b77c22-1973-4800-b111-4db4385832cb",
+      "quantity": 6,
+      "unit_price": 60,
+      "total_amount": 360,
+      "profit": 150,
+      "customer_info": null,
+      "sale_date": "2025-11-15",
+      "notes": null,
+      "created_at": "2025-11-15T18:00:08.610754+00:00",
+      "products": {
+        "id": "97b77c22-1973-4800-b111-4db4385832cb",
+        "name": "SPINNER @60",
+        "purchase_price": 35
+      }
+    },
+    {
+      "id": "98980ba5-6ff9-49c7-b866-37c919b96bee",
+      "product_id": "4b94df23-9a3f-4eff-826f-513ee8abd07f",
+      "quantity": 2,
+      "unit_price": 100,
+      "total_amount": 200,
+      "profit": 104,
+      "customer_info": null,
+      "sale_date": "2025-11-15",
+      "notes": null,
+      "created_at": "2025-11-15T17:59:54.0495+00:00",
+      "products": {
+        "id": "4b94df23-9a3f-4eff-826f-513ee8abd07f",
+        "name": "SPINNER @100",
+        "purchase_price": 48
+      }
+    },
+    {
+      "id": "8df2cfd9-4e23-48e1-b32e-1ecafd4d3899",
+      "product_id": "0ea1711e-2f2b-4f22-835d-84095962c89b",
+      "quantity": 2,
+      "unit_price": 20,
+      "total_amount": 40,
+      "profit": 20,
+      "customer_info": null,
+      "sale_date": "2025-11-15",
+      "notes": null,
+      "created_at": "2025-11-15T17:47:09.470891+00:00",
+      "products": {
+        "id": "0ea1711e-2f2b-4f22-835d-84095962c89b",
+        "name": "SLIME @ 20",
+        "purchase_price": 10
+      }
+    },
+    {
+      "id": "0f996d89-1832-4fca-9689-213fb0cd82fa",
+      "product_id": "d91222e1-b682-41a0-98c9-b7f5950eb456",
+      "quantity": 4,
+      "unit_price": 20,
+      "total_amount": 80,
+      "profit": 52,
+      "customer_info": null,
+      "sale_date": "2025-11-15",
+      "notes": null,
+      "created_at": "2025-11-15T17:46:56.489868+00:00",
+      "products": {
+        "id": "d91222e1-b682-41a0-98c9-b7f5950eb456",
+        "name": "HIGHLIGHTER",
+        "purchase_price": 7
+      }
+    },
+    {
+      "id": "d720bd42-04e0-4dd4-8c48-1b45cc1df7fb",
+      "product_id": "5de8f13f-5c25-42ed-95e4-0291fc74f845",
+      "quantity": 4,
+      "unit_price": 30,
+      "total_amount": 120,
+      "profit": 76,
+      "customer_info": null,
+      "sale_date": "2025-11-15",
+      "notes": null,
+      "created_at": "2025-11-15T17:46:47.444525+00:00",
+      "products": {
+        "id": "5de8f13f-5c25-42ed-95e4-0291fc74f845",
+        "name": "SHARPENER",
+        "purchase_price": 11
+      }
+    },
+    {
+      "id": "8fcc9407-f042-4a58-8192-d9fc35385102",
+      "product_id": "8656ee9b-4ceb-433d-9265-b4dd25f9188e",
+      "quantity": 2,
+      "unit_price": 50,
+      "total_amount": 100,
+      "profit": 50,
+      "customer_info": null,
+      "sale_date": "2025-11-15",
+      "notes": null,
+      "created_at": "2025-11-15T17:46:35.598054+00:00",
+      "products": {
+        "id": "8656ee9b-4ceb-433d-9265-b4dd25f9188e",
+        "name": "FAN",
+        "purchase_price": 25
+      }
+    },
+    {
+      "id": "ba4aafe0-254b-4a30-8f40-da9e42e94cdb",
+      "product_id": "6cfb8504-2f7a-40c3-b5fa-1f85ae62da17",
+      "quantity": 4,
+      "unit_price": 20,
+      "total_amount": 80,
+      "profit": 80,
+      "customer_info": null,
+      "sale_date": "2025-11-15",
+      "notes": null,
+      "created_at": "2025-11-15T17:46:19.679595+00:00",
+      "products": {
+        "id": "6cfb8504-2f7a-40c3-b5fa-1f85ae62da17",
+        "name": "PENCIL",
+        "purchase_price": 14
+      }
+    },
+    {
+      "id": "015466f6-fff2-488e-9893-b0504d712455",
+      "product_id": "269d5281-bb15-49f0-b84e-ea7a8819c0ff",
+      "quantity": 7,
+      "unit_price": 30,
+      "total_amount": 210,
+      "profit": 210,
+      "customer_info": null,
+      "sale_date": "2025-11-15",
+      "notes": null,
+      "created_at": "2025-11-15T17:45:41.668931+00:00",
+      "products": {
+        "id": "269d5281-bb15-49f0-b84e-ea7a8819c0ff",
+        "name": "PENS",
+        "purchase_price": 10
+      }
+    },
+    {
+      "id": "f0292bb0-c57b-4014-8461-83c28f40ec0e",
+      "product_id": "9dc689b1-f950-4805-aef7-dfb70ec4b504",
+      "quantity": 7,
+      "unit_price": 10,
+      "total_amount": 70,
+      "profit": 0,
+      "customer_info": null,
+      "sale_date": "2025-11-15",
+      "notes": null,
+      "created_at": "2025-11-15T17:45:24.688597+00:00",
+      "products": {
+        "id": "9dc689b1-f950-4805-aef7-dfb70ec4b504",
+        "name": "BUBBLES",
+        "purchase_price": 10
+      }
+    },
+    {
+      "id": "6962401f-b095-4439-b48b-83b3efc070e9",
+      "product_id": "5723b03e-f323-4cb8-96de-9cdce4c0f86a",
+      "quantity": 4,
+      "unit_price": 60,
+      "total_amount": 240,
+      "profit": 100,
+      "customer_info": null,
+      "sale_date": "2025-11-15",
+      "notes": null,
+      "created_at": "2025-11-15T17:45:15.754784+00:00",
+      "products": {
+        "id": "5723b03e-f323-4cb8-96de-9cdce4c0f86a",
+        "name": "PEN & DIARY ",
+        "purchase_price": 35
+      }
+    },
+    {
+      "id": "80e8166a-3e44-4343-af95-8193d0144d16",
+      "product_id": "bb8a208a-f10d-4b80-af0a-8285a14c5b9e",
+      "quantity": 1,
+      "unit_price": 99.99,
+      "total_amount": 99.99,
+      "profit": 64.99,
+      "customer_info": null,
+      "sale_date": "2025-11-15",
+      "notes": null,
+      "created_at": "2025-11-15T17:44:49.143912+00:00",
+      "products": {
+        "id": "bb8a208a-f10d-4b80-af0a-8285a14c5b9e",
+        "name": "DIARY @80",
+        "purchase_price": 35
+      }
+    },
+    {
+      "id": "f67fa5f0-061e-45ef-ae99-9357cd1c0e0e",
+      "product_id": "f479c968-b6bd-4b7c-b366-5a974d661166",
+      "quantity": 2,
+      "unit_price": 50,
+      "total_amount": 100,
+      "profit": 70,
+      "customer_info": null,
+      "sale_date": "2025-11-15",
+      "notes": null,
+      "created_at": "2025-11-15T17:43:56.999201+00:00",
+      "products": {
+        "id": "f479c968-b6bd-4b7c-b366-5a974d661166",
+        "name": "SCRATCH BOOK",
+        "purchase_price": 15
+      }
+    },
+    {
+      "id": "bc3061b8-fd13-4204-bd74-cb245e08a2ab",
+      "product_id": "929f08a3-2f00-4913-bf97-e4b7895ad5a1",
+      "quantity": 3,
+      "unit_price": 60,
+      "total_amount": 180,
+      "profit": 75,
+      "customer_info": null,
+      "sale_date": "2025-11-15",
+      "notes": null,
+      "created_at": "2025-11-15T17:43:39.043437+00:00",
+      "products": {
+        "id": "929f08a3-2f00-4913-bf97-e4b7895ad5a1",
+        "name": "DIARY @60",
+        "purchase_price": 35
+      }
+    },
+    {
+      "id": "61d5cd16-0510-4452-9307-d8f98942634b",
+      "product_id": "a42dc7e8-3e34-407e-aecb-d2c8899ec90e",
+      "quantity": 3,
+      "unit_price": 20,
+      "total_amount": 60,
+      "profit": 27,
+      "customer_info": null,
+      "sale_date": "2025-11-15",
+      "notes": null,
+      "created_at": "2025-11-15T17:41:49.780375+00:00",
+      "products": {
+        "id": "a42dc7e8-3e34-407e-aecb-d2c8899ec90e",
+        "name": "BALLS @ 20 SMILEY",
+        "purchase_price": 11
+      }
+    },
+    {
+      "id": "87a64d77-046e-4fa0-937e-4985fd88242b",
+      "product_id": "30b1d802-7a51-4e01-89ef-e9ea12d85fae",
+      "quantity": 5,
+      "unit_price": 10,
+      "total_amount": 50,
+      "profit": 25,
+      "customer_info": null,
+      "sale_date": "2025-11-15",
+      "notes": null,
+      "created_at": "2025-11-15T17:41:36.773279+00:00",
+      "products": {
+        "id": "30b1d802-7a51-4e01-89ef-e9ea12d85fae",
+        "name": "HAIR PIN/ CLIPS",
+        "purchase_price": 5
+      }
+    },
+    {
+      "id": "63a4f31e-34f5-4326-967c-edfe1026e2a8",
+      "product_id": "1cf30b62-535a-4813-9e0a-7c2e5956f43d",
+      "quantity": 4,
+      "unit_price": 69.97,
+      "total_amount": 279.88,
+      "profit": 139.88,
+      "customer_info": null,
+      "sale_date": "2025-11-15",
+      "notes": null,
+      "created_at": "2025-11-15T17:41:26.78914+00:00",
+      "products": {
+        "id": "1cf30b62-535a-4813-9e0a-7c2e5956f43d",
+        "name": "MOON BALL",
+        "purchase_price": 35
+      }
+    },
+    {
+      "id": "ee74d558-06ef-42dc-b5f6-c0db116750d8",
+      "product_id": "f7c1d66a-4a0d-4479-afe4-65a38a3e20c9",
+      "quantity": 5,
+      "unit_price": 20,
+      "total_amount": 100,
+      "profit": 70,
+      "customer_info": null,
+      "sale_date": "2025-11-15",
+      "notes": null,
+      "created_at": "2025-11-15T17:41:10.80472+00:00",
+      "products": {
+        "id": "f7c1d66a-4a0d-4479-afe4-65a38a3e20c9",
+        "name": "DUAL MARKER",
+        "purchase_price": 6
+      }
+    },
+    {
+      "id": "661620a1-47b4-41aa-bffe-c7a6ccca4fee",
+      "product_id": "24b78ffa-66b7-4474-8315-282cbefd38ab",
+      "quantity": 2,
+      "unit_price": 99.99,
+      "total_amount": 199.98,
+      "profit": -0.02,
+      "customer_info": null,
+      "sale_date": "2025-11-15",
+      "notes": null,
+      "created_at": "2025-11-15T17:40:55.28443+00:00",
+      "products": {
+        "id": "24b78ffa-66b7-4474-8315-282cbefd38ab",
+        "name": "MINI MAGNETIC GAME",
+        "purchase_price": 100
+      }
+    },
+    {
+      "id": "9d3c73d9-7a11-45f9-bdb9-b70f66aa10b7",
+      "product_id": "d6a1df86-f967-4242-8681-081a4bc0d191",
+      "quantity": 4,
+      "unit_price": 20,
+      "total_amount": 80,
+      "profit": 80,
+      "customer_info": null,
+      "sale_date": "2025-11-15",
+      "notes": null,
+      "created_at": "2025-11-15T17:39:58.270506+00:00",
+      "products": {
+        "id": "d6a1df86-f967-4242-8681-081a4bc0d191",
+        "name": "LIPSTICK ERASER",
+        "purchase_price": 18
+      }
+    },
+    {
+      "id": "de5b366c-a054-4480-932e-8bc951504e90",
+      "product_id": "c19710ba-7549-4089-8422-f157acc3f12b",
+      "quantity": 4,
+      "unit_price": 50,
+      "total_amount": 200,
+      "profit": 100,
+      "customer_info": null,
+      "sale_date": "2025-11-15",
+      "notes": null,
+      "created_at": "2025-11-15T17:36:39.619885+00:00",
+      "products": {
+        "id": "c19710ba-7549-4089-8422-f157acc3f12b",
+        "name": "CAR",
+        "purchase_price": 25
+      }
+    },
+    {
+      "id": "655fe179-59bf-4248-9531-9e910ad104e9",
+      "product_id": "7e26bcec-12b5-46cf-a8a4-693981870823",
+      "quantity": 3,
+      "unit_price": 50,
+      "total_amount": 150,
+      "profit": 75,
+      "customer_info": null,
+      "sale_date": "2025-11-15",
+      "notes": null,
+      "created_at": "2025-11-15T17:36:25.317793+00:00",
+      "products": {
+        "id": "7e26bcec-12b5-46cf-a8a4-693981870823",
+        "name": "CORRECTION TAPE",
+        "purchase_price": 25
+      }
+    },
+    {
+      "id": "f7cbc630-e6c6-4987-b83a-7ef93de2d14d",
+      "product_id": "055d28a5-0788-4617-9c9f-69fc536c595d",
+      "quantity": 1,
+      "unit_price": 70,
+      "total_amount": 70,
+      "profit": 35,
+      "customer_info": null,
+      "sale_date": "2025-11-15",
+      "notes": null,
+      "created_at": "2025-11-15T17:36:13.195017+00:00",
+      "products": {
+        "id": "055d28a5-0788-4617-9c9f-69fc536c595d",
+        "name": "WIPES",
+        "purchase_price": 35
+      }
+    },
+    {
+      "id": "5a4c748e-745c-4044-aba0-8ca3ed03541a",
+      "product_id": "5e582c6c-fd09-4c6b-9f3c-14e33bb15076",
+      "quantity": 8,
+      "unit_price": 20,
+      "total_amount": 160,
+      "profit": 80,
+      "customer_info": null,
+      "sale_date": "2025-11-15",
+      "notes": null,
+      "created_at": "2025-11-15T17:35:35.647985+00:00",
+      "products": {
+        "id": "5e582c6c-fd09-4c6b-9f3c-14e33bb15076",
+        "name": "ERASER",
+        "purchase_price": 10
+      }
+    },
+    {
+      "id": "70febe42-36a2-47fb-a2d7-ebd517dd733d",
+      "product_id": "132a85b8-a348-45a2-8a34-7d853228c00a",
+      "quantity": 3,
+      "unit_price": 100,
+      "total_amount": 300,
+      "profit": 156,
+      "customer_info": null,
+      "sale_date": "2025-11-15",
+      "notes": null,
+      "created_at": "2025-11-15T17:35:17.336423+00:00",
+      "products": {
+        "id": "132a85b8-a348-45a2-8a34-7d853228c00a",
+        "name": "GOGGLES",
+        "purchase_price": 48
+      }
+    },
+    {
+      "id": "95f6031f-499c-4527-a3e1-4c6daaad92d5",
+      "product_id": "d91222e1-b682-41a0-98c9-b7f5950eb456",
+      "quantity": 6,
+      "unit_price": 20,
+      "total_amount": 120,
+      "profit": 78,
+      "customer_info": null,
+      "sale_date": "2025-11-15",
+      "notes": null,
+      "created_at": "2025-11-15T17:35:06.055839+00:00",
+      "products": {
+        "id": "d91222e1-b682-41a0-98c9-b7f5950eb456",
+        "name": "HIGHLIGHTER",
+        "purchase_price": 7
+      }
+    },
+    {
+      "id": "206c08a7-a42a-4b52-99f7-ab3cb3822c76",
+      "product_id": "a1f60955-0dd3-4151-be70-b373fe419ad2",
+      "quantity": 1,
+      "unit_price": 100,
+      "total_amount": 100,
+      "profit": 52,
+      "customer_info": null,
+      "sale_date": "2025-11-14",
+      "notes": null,
+      "created_at": "2025-11-16T17:20:47.957137+00:00",
+      "products": {
+        "id": "a1f60955-0dd3-4151-be70-b373fe419ad2",
+        "name": "YO YO SET",
+        "purchase_price": 48
+      }
+    },
+    {
+      "id": "723d646d-cff0-4357-b3a8-082d5ba1d3a1",
+      "product_id": "a794a6be-f485-4613-a075-c821bc638c2a",
+      "quantity": 1,
+      "unit_price": 80,
+      "total_amount": 80,
+      "profit": 45,
+      "customer_info": null,
+      "sale_date": "2025-11-14",
+      "notes": null,
+      "created_at": "2025-11-16T17:20:47.389455+00:00",
+      "products": {
+        "id": "a794a6be-f485-4613-a075-c821bc638c2a",
+        "name": "MIRROR",
+        "purchase_price": 35
+      }
+    },
+    {
+      "id": "1a95543b-1558-44eb-b2f7-62df2090487c",
+      "product_id": "5723b03e-f323-4cb8-96de-9cdce4c0f86a",
+      "quantity": 11,
+      "unit_price": 60,
+      "total_amount": 660,
+      "profit": 275,
+      "customer_info": null,
+      "sale_date": "2025-11-14",
+      "notes": null,
+      "created_at": "2025-11-16T17:19:19.905541+00:00",
+      "products": {
+        "id": "5723b03e-f323-4cb8-96de-9cdce4c0f86a",
+        "name": "PEN & DIARY ",
+        "purchase_price": 35
+      }
+    },
+    {
+      "id": "be1563cb-1153-4e6c-b7a5-6481f527d112",
+      "product_id": "929f08a3-2f00-4913-bf97-e4b7895ad5a1",
+      "quantity": 6,
+      "unit_price": 60,
+      "total_amount": 360,
+      "profit": 150,
+      "customer_info": null,
+      "sale_date": "2025-11-14",
+      "notes": null,
+      "created_at": "2025-11-16T17:18:41.899565+00:00",
+      "products": {
+        "id": "929f08a3-2f00-4913-bf97-e4b7895ad5a1",
+        "name": "DIARY @60",
+        "purchase_price": 35
+      }
+    },
+    {
+      "id": "a5afff03-9b45-4765-b322-85aa91a382ec",
+      "product_id": "055d28a5-0788-4617-9c9f-69fc536c595d",
+      "quantity": 1,
+      "unit_price": 70,
+      "total_amount": 70,
+      "profit": 35,
+      "customer_info": null,
+      "sale_date": "2025-11-14",
+      "notes": null,
+      "created_at": "2025-11-16T17:18:41.383571+00:00",
+      "products": {
+        "id": "055d28a5-0788-4617-9c9f-69fc536c595d",
+        "name": "WIPES",
+        "purchase_price": 35
+      }
+    },
+    {
+      "id": "8386fa24-213b-4372-b4b0-d6e31fa55ed1",
+      "product_id": "8656ee9b-4ceb-433d-9265-b4dd25f9188e",
+      "quantity": 2,
+      "unit_price": 50,
+      "total_amount": 100,
+      "profit": 50,
+      "customer_info": null,
+      "sale_date": "2025-11-14",
+      "notes": null,
+      "created_at": "2025-11-16T17:18:40.86093+00:00",
+      "products": {
+        "id": "8656ee9b-4ceb-433d-9265-b4dd25f9188e",
+        "name": "FAN",
+        "purchase_price": 25
+      }
+    },
+    {
+      "id": "1d172dc9-42c8-46dc-852b-142d531a1651",
+      "product_id": "d6a1df86-f967-4242-8681-081a4bc0d191",
+      "quantity": 11,
+      "unit_price": 20,
+      "total_amount": 220,
+      "profit": 22,
+      "customer_info": null,
+      "sale_date": "2025-11-14",
+      "notes": null,
+      "created_at": "2025-11-16T17:18:40.359421+00:00",
+      "products": {
+        "id": "d6a1df86-f967-4242-8681-081a4bc0d191",
+        "name": "LIPSTICK ERASER",
+        "purchase_price": 18
+      }
+    },
+    {
+      "id": "a09720d1-939c-4e29-aad9-5f9fa0e8ebb4",
+      "product_id": "523fc4e4-3265-467d-a084-3a47095bb723",
+      "quantity": 6,
+      "unit_price": 70,
+      "total_amount": 420,
+      "profit": 210,
+      "customer_info": null,
+      "sale_date": "2025-11-14",
+      "notes": null,
+      "created_at": "2025-11-16T17:18:39.96177+00:00",
+      "products": {
+        "id": "523fc4e4-3265-467d-a084-3a47095bb723",
+        "name": "BRACELET",
+        "purchase_price": 35
+      }
+    },
+    {
+      "id": "7150728e-b129-4bb4-b7ed-0ca4f7d3dc04",
+      "product_id": "28600da3-b886-411d-adf0-fb44d121e7bf",
+      "quantity": 5,
+      "unit_price": 50,
+      "total_amount": 250,
+      "profit": 160,
+      "customer_info": null,
+      "sale_date": "2025-11-14",
+      "notes": null,
+      "created_at": "2025-11-16T17:18:39.444929+00:00",
+      "products": {
+        "id": "28600da3-b886-411d-adf0-fb44d121e7bf",
+        "name": "PAPER SOAP",
+        "purchase_price": 18
+      }
+    },
+    {
+      "id": "ff3fcd9f-9659-4fe7-9dc2-c3de66ce4b77",
+      "product_id": "f7c1d66a-4a0d-4479-afe4-65a38a3e20c9",
+      "quantity": 7,
+      "unit_price": 20,
+      "total_amount": 140,
+      "profit": 98,
+      "customer_info": null,
+      "sale_date": "2025-11-14",
+      "notes": null,
+      "created_at": "2025-11-16T17:18:39.029664+00:00",
+      "products": {
+        "id": "f7c1d66a-4a0d-4479-afe4-65a38a3e20c9",
+        "name": "DUAL MARKER",
+        "purchase_price": 6
+      }
+    },
+    {
+      "id": "94015da7-3a99-4c07-82f6-caaefce43875",
+      "product_id": "1e0ba814-591a-4efa-8e95-06e6a3e127d1",
+      "quantity": 1,
+      "unit_price": 80,
+      "total_amount": 80,
+      "profit": 45,
+      "customer_info": null,
+      "sale_date": "2025-11-14",
+      "notes": null,
+      "created_at": "2025-11-16T17:18:38.627664+00:00",
+      "products": {
+        "id": "1e0ba814-591a-4efa-8e95-06e6a3e127d1",
+        "name": "BLOW PEN",
+        "purchase_price": 35
+      }
+    },
+    {
+      "id": "0a85c925-2222-4e91-aa9f-2499ed459e01",
+      "product_id": "1cf30b62-535a-4813-9e0a-7c2e5956f43d",
+      "quantity": 6,
+      "unit_price": 70,
+      "total_amount": 420,
+      "profit": 210,
+      "customer_info": null,
+      "sale_date": "2025-11-14",
+      "notes": null,
+      "created_at": "2025-11-16T17:18:38.221874+00:00",
+      "products": {
+        "id": "1cf30b62-535a-4813-9e0a-7c2e5956f43d",
+        "name": "MOON BALL",
+        "purchase_price": 35
+      }
+    },
+    {
+      "id": "aeb10353-eca8-4d86-a66a-51deeff6e561",
+      "product_id": "f479c968-b6bd-4b7c-b366-5a974d661166",
+      "quantity": 12,
+      "unit_price": 50,
+      "total_amount": 600,
+      "profit": 420,
+      "customer_info": null,
+      "sale_date": "2025-11-14",
+      "notes": null,
+      "created_at": "2025-11-16T17:18:37.806034+00:00",
+      "products": {
+        "id": "f479c968-b6bd-4b7c-b366-5a974d661166",
+        "name": "SCRATCH BOOK",
+        "purchase_price": 15
+      }
+    },
+    {
+      "id": "0340b094-e819-40ce-aff9-0e25e980ab3e",
+      "product_id": "fa4fa677-1a2b-4bac-a412-a58f0eba5947",
+      "quantity": 4,
+      "unit_price": 50,
+      "total_amount": 200,
+      "profit": 100,
+      "customer_info": null,
+      "sale_date": "2025-11-14",
+      "notes": null,
+      "created_at": "2025-11-16T17:18:37.379479+00:00",
+      "products": {
+        "id": "fa4fa677-1a2b-4bac-a412-a58f0eba5947",
+        "name": "SLAP BAND",
+        "purchase_price": 25
+      }
+    },
+    {
+      "id": "c55c8830-6dbe-4dd2-947f-2a83c393e7ce",
+      "product_id": "269d5281-bb15-49f0-b84e-ea7a8819c0ff",
+      "quantity": 5,
+      "unit_price": 30,
+      "total_amount": 150,
+      "profit": 100,
+      "customer_info": null,
+      "sale_date": "2025-11-14",
+      "notes": null,
+      "created_at": "2025-11-16T07:24:09.88259+00:00",
+      "products": {
+        "id": "269d5281-bb15-49f0-b84e-ea7a8819c0ff",
+        "name": "PENS",
+        "purchase_price": 10
+      }
+    },
+    {
+      "id": "43f5234a-5ddb-4b6a-9bde-988c86e80cb8",
+      "product_id": "a42dc7e8-3e34-407e-aecb-d2c8899ec90e",
+      "quantity": 5,
+      "unit_price": 20,
+      "total_amount": 100,
+      "profit": 45,
+      "customer_info": null,
+      "sale_date": "2025-11-14",
+      "notes": null,
+      "created_at": "2025-11-16T07:24:09.539241+00:00",
+      "products": {
+        "id": "a42dc7e8-3e34-407e-aecb-d2c8899ec90e",
+        "name": "BALLS @ 20 SMILEY",
+        "purchase_price": 11
+      }
+    },
+    {
+      "id": "1a6fd3cb-a57a-4d11-9674-f5bfec213a12",
+      "product_id": "132a85b8-a348-45a2-8a34-7d853228c00a",
+      "quantity": 4,
+      "unit_price": 100,
+      "total_amount": 400,
+      "profit": 208,
+      "customer_info": null,
+      "sale_date": "2025-11-14",
+      "notes": null,
+      "created_at": "2025-11-16T07:24:09.18772+00:00",
+      "products": {
+        "id": "132a85b8-a348-45a2-8a34-7d853228c00a",
+        "name": "GOGGLES",
+        "purchase_price": 48
+      }
+    },
+    {
+      "id": "be18b618-4f3f-486c-a18b-6218e155ef49",
+      "product_id": "c19710ba-7549-4089-8422-f157acc3f12b",
+      "quantity": 1,
+      "unit_price": 50,
+      "total_amount": 50,
+      "profit": 25,
+      "customer_info": null,
+      "sale_date": "2025-11-14",
+      "notes": null,
+      "created_at": "2025-11-16T07:24:08.699061+00:00",
+      "products": {
+        "id": "c19710ba-7549-4089-8422-f157acc3f12b",
+        "name": "CAR",
+        "purchase_price": 25
+      }
+    },
+    {
+      "id": "2a78e71c-60d6-411a-aaa5-6713344142ba",
+      "product_id": "a42dc7e8-3e34-407e-aecb-d2c8899ec90e",
+      "quantity": 5,
+      "unit_price": 20,
+      "total_amount": 100,
+      "profit": 100,
+      "customer_info": null,
+      "sale_date": "2025-11-14",
+      "notes": null,
+      "created_at": "2025-11-16T07:13:32.168576+00:00",
+      "products": {
+        "id": "a42dc7e8-3e34-407e-aecb-d2c8899ec90e",
+        "name": "BALLS @ 20 SMILEY",
+        "purchase_price": 11
+      }
+    },
+    {
+      "id": "55b803db-305c-42e2-a33f-1a6dc137dcc7",
+      "product_id": "97b77c22-1973-4800-b111-4db4385832cb",
+      "quantity": 2,
+      "unit_price": 60,
+      "total_amount": 120,
+      "profit": 50,
+      "customer_info": null,
+      "sale_date": "2025-11-14",
+      "notes": null,
+      "created_at": "2025-11-16T07:13:31.085942+00:00",
+      "products": {
+        "id": "97b77c22-1973-4800-b111-4db4385832cb",
+        "name": "SPINNER @60",
+        "purchase_price": 35
+      }
+    },
+    {
+      "id": "225b6a85-b716-4175-8e59-625bbf7d94e3",
+      "product_id": "4b94df23-9a3f-4eff-826f-513ee8abd07f",
+      "quantity": 4,
+      "unit_price": 100,
+      "total_amount": 400,
+      "profit": 208,
+      "customer_info": null,
+      "sale_date": "2025-11-14",
+      "notes": null,
+      "created_at": "2025-11-16T07:13:31.05729+00:00",
+      "products": {
+        "id": "4b94df23-9a3f-4eff-826f-513ee8abd07f",
+        "name": "SPINNER @100",
+        "purchase_price": 48
+      }
+    },
+    {
+      "id": "85237cdd-3fe5-4fd9-b0d3-9063e44671f9",
+      "product_id": "6cfb8504-2f7a-40c3-b5fa-1f85ae62da17",
+      "quantity": 7,
+      "unit_price": 30,
+      "total_amount": 210,
+      "profit": 112,
+      "customer_info": null,
+      "sale_date": "2025-11-14",
+      "notes": null,
+      "created_at": "2025-11-16T07:13:29.708925+00:00",
+      "products": {
+        "id": "6cfb8504-2f7a-40c3-b5fa-1f85ae62da17",
+        "name": "PENCIL",
+        "purchase_price": 14
+      }
+    },
+    {
+      "id": "001c6deb-19da-4fff-936d-aaa51263449a",
+      "product_id": "4a5cc01f-56b1-4c27-be6b-d2875e0dd230",
+      "quantity": 1,
+      "unit_price": 50,
+      "total_amount": 50,
+      "profit": 20,
+      "customer_info": null,
+      "sale_date": "2025-11-13",
+      "notes": null,
+      "created_at": "2025-11-15T18:32:22.257385+00:00",
+      "products": {
+        "id": "4a5cc01f-56b1-4c27-be6b-d2875e0dd230",
+        "name": "COLORING BOOK",
+        "purchase_price": 30
+      }
+    },
+    {
+      "id": "84d1151c-700f-436a-ac79-7dce33eb2293",
+      "product_id": "3820c952-7738-4e0d-ba9d-b70a7824aa97",
+      "quantity": 1,
+      "unit_price": 30,
+      "total_amount": 30,
+      "profit": 15,
+      "customer_info": null,
+      "sale_date": "2025-11-13",
+      "notes": null,
+      "created_at": "2025-11-15T18:31:38.076379+00:00",
+      "products": {
+        "id": "3820c952-7738-4e0d-ba9d-b70a7824aa97",
+        "name": "STICKY NOTES",
+        "purchase_price": 15
+      }
+    },
+    {
+      "id": "917140b6-b9f5-4e3f-9a95-2426f8f79be7",
+      "product_id": "d91222e1-b682-41a0-98c9-b7f5950eb456",
+      "quantity": 3,
+      "unit_price": 20,
+      "total_amount": 60,
+      "profit": 39,
+      "customer_info": null,
+      "sale_date": "2025-11-13",
+      "notes": null,
+      "created_at": "2025-11-15T18:31:07.201903+00:00",
+      "products": {
+        "id": "d91222e1-b682-41a0-98c9-b7f5950eb456",
+        "name": "HIGHLIGHTER",
+        "purchase_price": 7
+      }
+    },
+    {
+      "id": "25a02e17-6e2d-46e0-8953-3ed46d9b3400",
+      "product_id": "a42dc7e8-3e34-407e-aecb-d2c8899ec90e",
+      "quantity": 4,
+      "unit_price": 20,
+      "total_amount": 80,
+      "profit": 36,
+      "customer_info": null,
+      "sale_date": "2025-11-13",
+      "notes": null,
+      "created_at": "2025-11-15T18:31:00.046243+00:00",
+      "products": {
+        "id": "a42dc7e8-3e34-407e-aecb-d2c8899ec90e",
+        "name": "BALLS @ 20 SMILEY",
+        "purchase_price": 11
+      }
+    },
+    {
+      "id": "01470805-5bae-4aa0-9f5c-9d3eca174767",
+      "product_id": "2ea5d243-6741-4cb4-b18c-81fcf2aa8b8a",
+      "quantity": 1,
+      "unit_price": 100,
+      "total_amount": 100,
+      "profit": 52,
+      "customer_info": null,
+      "sale_date": "2025-11-13",
+      "notes": null,
+      "created_at": "2025-11-15T18:30:47.730444+00:00",
+      "products": {
+        "id": "2ea5d243-6741-4cb4-b18c-81fcf2aa8b8a",
+        "name": "STATIONARY SET",
+        "purchase_price": 48
+      }
+    },
+    {
+      "id": "8fcf9514-7f94-4050-8647-1150c13493b2",
+      "product_id": "5e582c6c-fd09-4c6b-9f3c-14e33bb15076",
+      "quantity": 4,
+      "unit_price": 20,
+      "total_amount": 80,
+      "profit": 40,
+      "customer_info": null,
+      "sale_date": "2025-11-13",
+      "notes": null,
+      "created_at": "2025-11-15T18:30:40.843556+00:00",
+      "products": {
+        "id": "5e582c6c-fd09-4c6b-9f3c-14e33bb15076",
+        "name": "ERASER",
+        "purchase_price": 10
+      }
+    },
+    {
+      "id": "a6a8f696-b4e8-41bc-9c27-70c984bc4684",
+      "product_id": "929f08a3-2f00-4913-bf97-e4b7895ad5a1",
+      "quantity": 5,
+      "unit_price": 60,
+      "total_amount": 300,
+      "profit": 125,
+      "customer_info": null,
+      "sale_date": "2025-11-13",
+      "notes": null,
+      "created_at": "2025-11-15T18:30:28.320915+00:00",
+      "products": {
+        "id": "929f08a3-2f00-4913-bf97-e4b7895ad5a1",
+        "name": "DIARY @60",
+        "purchase_price": 35
+      }
+    },
+    {
+      "id": "7d12b0c7-6bc1-4f85-801d-216ca831030d",
+      "product_id": "d91222e1-b682-41a0-98c9-b7f5950eb456",
+      "quantity": 2,
+      "unit_price": 20,
+      "total_amount": 40,
+      "profit": 26,
+      "customer_info": null,
+      "sale_date": "2025-11-13",
+      "notes": null,
+      "created_at": "2025-11-15T18:30:15.554868+00:00",
+      "products": {
+        "id": "d91222e1-b682-41a0-98c9-b7f5950eb456",
+        "name": "HIGHLIGHTER",
+        "purchase_price": 7
+      }
+    },
+    {
+      "id": "7ba8620d-6be6-4a96-a7be-0ab9a62ed8a5",
+      "product_id": "f479c968-b6bd-4b7c-b366-5a974d661166",
+      "quantity": 4,
+      "unit_price": 50,
+      "total_amount": 200,
+      "profit": 140,
+      "customer_info": null,
+      "sale_date": "2025-11-13",
+      "notes": null,
+      "created_at": "2025-11-15T18:30:05.227946+00:00",
+      "products": {
+        "id": "f479c968-b6bd-4b7c-b366-5a974d661166",
+        "name": "SCRATCH BOOK",
+        "purchase_price": 15
+      }
+    },
+    {
+      "id": "92b85f42-3ebe-41d5-ba9e-0ae829e1218e",
+      "product_id": "f7c1d66a-4a0d-4479-afe4-65a38a3e20c9",
+      "quantity": 11,
+      "unit_price": 20,
+      "total_amount": 220,
+      "profit": 154,
+      "customer_info": null,
+      "sale_date": "2025-11-13",
+      "notes": null,
+      "created_at": "2025-11-15T18:29:18.622236+00:00",
+      "products": {
+        "id": "f7c1d66a-4a0d-4479-afe4-65a38a3e20c9",
+        "name": "DUAL MARKER",
+        "purchase_price": 6
+      }
+    },
+    {
+      "id": "77702ab5-a34a-48e7-9e72-f2bad93069f1",
+      "product_id": "5e582c6c-fd09-4c6b-9f3c-14e33bb15076",
+      "quantity": 5,
+      "unit_price": 20,
+      "total_amount": 100,
+      "profit": 50,
+      "customer_info": null,
+      "sale_date": "2025-11-13",
+      "notes": null,
+      "created_at": "2025-11-15T18:21:04.102779+00:00",
+      "products": {
+        "id": "5e582c6c-fd09-4c6b-9f3c-14e33bb15076",
+        "name": "ERASER",
+        "purchase_price": 10
+      }
+    },
+    {
+      "id": "02db9901-dff7-4385-ac01-b8002abced44",
+      "product_id": "929f08a3-2f00-4913-bf97-e4b7895ad5a1",
+      "quantity": 1,
+      "unit_price": 60,
+      "total_amount": 60,
+      "profit": 25,
+      "customer_info": null,
+      "sale_date": "2025-11-13",
+      "notes": null,
+      "created_at": "2025-11-15T18:20:03.21422+00:00",
+      "products": {
+        "id": "929f08a3-2f00-4913-bf97-e4b7895ad5a1",
+        "name": "DIARY @60",
+        "purchase_price": 35
+      }
+    },
+    {
+      "id": "1c4ea762-9ed2-438e-8ca7-03261f45b8ef",
+      "product_id": "929f08a3-2f00-4913-bf97-e4b7895ad5a1",
+      "quantity": 4,
+      "unit_price": 60,
+      "total_amount": 240,
+      "profit": 100,
+      "customer_info": null,
+      "sale_date": "2025-11-13",
+      "notes": null,
+      "created_at": "2025-11-15T18:19:25.537873+00:00",
+      "products": {
+        "id": "929f08a3-2f00-4913-bf97-e4b7895ad5a1",
+        "name": "DIARY @60",
+        "purchase_price": 35
+      }
+    },
+    {
+      "id": "c5377956-cc5a-4617-93a7-d810db37047c",
+      "product_id": "bb8a208a-f10d-4b80-af0a-8285a14c5b9e",
+      "quantity": 2,
+      "unit_price": 80,
+      "total_amount": 160,
+      "profit": 90,
+      "customer_info": null,
+      "sale_date": "2025-11-13",
+      "notes": null,
+      "created_at": "2025-11-15T18:18:36.588853+00:00",
+      "products": {
+        "id": "bb8a208a-f10d-4b80-af0a-8285a14c5b9e",
+        "name": "DIARY @80",
+        "purchase_price": 35
+      }
+    },
+    {
+      "id": "6078c002-7e19-4a50-bec7-c28578c78630",
+      "product_id": "1cf30b62-535a-4813-9e0a-7c2e5956f43d",
+      "quantity": 8,
+      "unit_price": 70,
+      "total_amount": 560,
+      "profit": 280,
+      "customer_info": null,
+      "sale_date": "2025-11-13",
+      "notes": null,
+      "created_at": "2025-11-15T18:18:25.678146+00:00",
+      "products": {
+        "id": "1cf30b62-535a-4813-9e0a-7c2e5956f43d",
+        "name": "MOON BALL",
+        "purchase_price": 35
+      }
+    },
+    {
+      "id": "0b5d5bff-66b4-4cc8-bc8b-ed2982a4466e",
+      "product_id": "a42dc7e8-3e34-407e-aecb-d2c8899ec90e",
+      "quantity": 6,
+      "unit_price": 20,
+      "total_amount": 120,
+      "profit": 54,
+      "customer_info": null,
+      "sale_date": "2025-11-13",
+      "notes": null,
+      "created_at": "2025-11-15T18:18:10.013171+00:00",
+      "products": {
+        "id": "a42dc7e8-3e34-407e-aecb-d2c8899ec90e",
+        "name": "BALLS @ 20 SMILEY",
+        "purchase_price": 11
+      }
+    },
+    {
+      "id": "859057af-45e0-4378-b162-42a46e286b0c",
+      "product_id": "6cfb8504-2f7a-40c3-b5fa-1f85ae62da17",
+      "quantity": 12,
+      "unit_price": 20,
+      "total_amount": 240,
+      "profit": 72,
+      "customer_info": null,
+      "sale_date": "2025-11-13",
+      "notes": null,
+      "created_at": "2025-11-15T18:16:33.585546+00:00",
+      "products": {
+        "id": "6cfb8504-2f7a-40c3-b5fa-1f85ae62da17",
+        "name": "PENCIL",
+        "purchase_price": 14
+      }
+    },
+    {
+      "id": "4ff96016-a7d8-4943-99e5-fde0a164559f",
+      "product_id": "28600da3-b886-411d-adf0-fb44d121e7bf",
+      "quantity": 5,
+      "unit_price": 50,
+      "total_amount": 250,
+      "profit": 160,
+      "customer_info": null,
+      "sale_date": "2025-11-13",
+      "notes": null,
+      "created_at": "2025-11-15T18:10:06.209456+00:00",
+      "products": {
+        "id": "28600da3-b886-411d-adf0-fb44d121e7bf",
+        "name": "PAPER SOAP",
+        "purchase_price": 18
+      }
+    },
+    {
+      "id": "29c396a9-1b3d-4406-90a9-8afa0a773375",
+      "product_id": "269d5281-bb15-49f0-b84e-ea7a8819c0ff",
+      "quantity": 1,
+      "unit_price": 30,
+      "total_amount": 30,
+      "profit": 20,
+      "customer_info": null,
+      "sale_date": "2025-11-13",
+      "notes": null,
+      "created_at": "2025-11-15T18:09:27.2424+00:00",
+      "products": {
+        "id": "269d5281-bb15-49f0-b84e-ea7a8819c0ff",
+        "name": "PENS",
+        "purchase_price": 10
+      }
+    },
+    {
+      "id": "821adef7-996e-4886-86b1-149c4b88cfc7",
+      "product_id": "0ea1711e-2f2b-4f22-835d-84095962c89b",
+      "quantity": 1,
+      "unit_price": 30,
+      "total_amount": 30,
+      "profit": 20,
+      "customer_info": null,
+      "sale_date": "2025-11-13",
+      "notes": null,
+      "created_at": "2025-11-15T18:09:05.602754+00:00",
+      "products": {
+        "id": "0ea1711e-2f2b-4f22-835d-84095962c89b",
+        "name": "SLIME @ 20",
+        "purchase_price": 10
+      }
+    },
+    {
+      "id": "f3e5754c-97e1-416d-b8e6-af8327e39598",
+      "product_id": "9dc689b1-f950-4805-aef7-dfb70ec4b504",
+      "quantity": 8,
+      "unit_price": 10,
+      "total_amount": 80,
+      "profit": 0,
+      "customer_info": null,
+      "sale_date": "2025-11-13",
+      "notes": null,
+      "created_at": "2025-11-15T18:08:32.445918+00:00",
+      "products": {
+        "id": "9dc689b1-f950-4805-aef7-dfb70ec4b504",
+        "name": "BUBBLES",
+        "purchase_price": 10
+      }
+    },
+    {
+      "id": "95137dc7-192a-4532-a05e-edcda2025b8f",
+      "product_id": "4b94df23-9a3f-4eff-826f-513ee8abd07f",
+      "quantity": 1,
+      "unit_price": 100,
+      "total_amount": 100,
+      "profit": 52,
+      "customer_info": null,
+      "sale_date": "2025-11-13",
+      "notes": null,
+      "created_at": "2025-11-15T18:06:59.642891+00:00",
+      "products": {
+        "id": "4b94df23-9a3f-4eff-826f-513ee8abd07f",
+        "name": "SPINNER @100",
+        "purchase_price": 48
+      }
+    },
+    {
+      "id": "cc8f4b4f-fb59-4a3e-9ed7-d2bfd9139bce",
+      "product_id": "8a9302ed-84fe-481e-b910-d13f03fd8e10",
+      "quantity": 1,
+      "unit_price": 20,
+      "total_amount": 20,
+      "profit": 7,
+      "customer_info": null,
+      "sale_date": "2025-11-08",
+      "notes": null,
+      "created_at": "2025-11-18T17:33:51.926064+00:00",
+      "products": {
+        "id": "8a9302ed-84fe-481e-b910-d13f03fd8e10",
+        "name": "POP TUBES",
+        "purchase_price": 13
+      }
+    },
+    {
+      "id": "4e0c055c-760b-4bcb-bfad-e4a3000923f1",
+      "product_id": "4c470ac5-aab8-4037-a2af-6afdce12f3dd",
+      "quantity": 1,
+      "unit_price": 60,
+      "total_amount": 60,
+      "profit": 5,
+      "customer_info": null,
+      "sale_date": "2025-11-08",
+      "notes": null,
+      "created_at": "2025-11-18T17:33:51.511358+00:00",
+      "products": {
+        "id": "4c470ac5-aab8-4037-a2af-6afdce12f3dd",
+        "name": "TORCH / FLASHLIGHT",
+        "purchase_price": 55
+      }
+    },
+    {
+      "id": "2522a8f0-2b19-48d8-bae7-f3455e2f08a3",
+      "product_id": "430e6aec-5011-469d-b2bd-3e897e197a96",
+      "quantity": 1,
+      "unit_price": 20,
+      "total_amount": 20,
+      "profit": 14,
+      "customer_info": null,
+      "sale_date": "2025-11-08",
+      "notes": null,
+      "created_at": "2025-11-18T17:33:51.147762+00:00",
+      "products": {
+        "id": "430e6aec-5011-469d-b2bd-3e897e197a96",
+        "name": "WASHI TAPES",
+        "purchase_price": 6
+      }
+    },
+    {
+      "id": "e85760d5-f2c6-4873-8e5d-51837f58b87b",
+      "product_id": "f7c1d66a-4a0d-4479-afe4-65a38a3e20c9",
+      "quantity": 7,
+      "unit_price": 20,
+      "total_amount": 140,
+      "profit": 98,
+      "customer_info": null,
+      "sale_date": "2025-11-08",
+      "notes": null,
+      "created_at": "2025-11-18T17:29:30.804051+00:00",
+      "products": {
+        "id": "f7c1d66a-4a0d-4479-afe4-65a38a3e20c9",
+        "name": "DUAL MARKER",
+        "purchase_price": 6
+      }
+    },
+    {
+      "id": "11ee4739-10c9-4bc8-a491-bb53b668b7cd",
+      "product_id": "5de8f13f-5c25-42ed-95e4-0291fc74f845",
+      "quantity": 1,
+      "unit_price": 20,
+      "total_amount": 20,
+      "profit": 9,
+      "customer_info": null,
+      "sale_date": "2025-11-08",
+      "notes": null,
+      "created_at": "2025-11-18T17:29:30.317627+00:00",
+      "products": {
+        "id": "5de8f13f-5c25-42ed-95e4-0291fc74f845",
+        "name": "SHARPENER",
+        "purchase_price": 11
+      }
+    },
+    {
+      "id": "aba8cc51-bcbc-4d75-bfdc-49b33e6d2fd4",
+      "product_id": "28600da3-b886-411d-adf0-fb44d121e7bf",
+      "quantity": 3,
+      "unit_price": 50,
+      "total_amount": 150,
+      "profit": 96,
+      "customer_info": null,
+      "sale_date": "2025-11-08",
+      "notes": null,
+      "created_at": "2025-11-18T17:28:44.723974+00:00",
+      "products": {
+        "id": "28600da3-b886-411d-adf0-fb44d121e7bf",
+        "name": "PAPER SOAP",
+        "purchase_price": 18
+      }
+    },
+    {
+      "id": "608d3461-2e68-4fb4-8175-29287f3e241c",
+      "product_id": "929f08a3-2f00-4913-bf97-e4b7895ad5a1",
+      "quantity": 1,
+      "unit_price": 60,
+      "total_amount": 60,
+      "profit": 25,
+      "customer_info": null,
+      "sale_date": "2025-11-08",
+      "notes": null,
+      "created_at": "2025-11-18T17:28:44.261455+00:00",
+      "products": {
+        "id": "929f08a3-2f00-4913-bf97-e4b7895ad5a1",
+        "name": "DIARY @60",
+        "purchase_price": 35
+      }
+    },
+    {
+      "id": "15c61a61-0520-40df-85f8-a164f320629c",
+      "product_id": "523fc4e4-3265-467d-a084-3a47095bb723",
+      "quantity": 2,
+      "unit_price": 70,
+      "total_amount": 140,
+      "profit": 70,
+      "customer_info": null,
+      "sale_date": "2025-11-08",
+      "notes": null,
+      "created_at": "2025-11-18T17:28:43.803217+00:00",
+      "products": {
+        "id": "523fc4e4-3265-467d-a084-3a47095bb723",
+        "name": "BRACELET",
+        "purchase_price": 35
+      }
+    },
+    {
+      "id": "5fc55690-0ef1-40ad-aa40-54413bc7b2a0",
+      "product_id": "4b94df23-9a3f-4eff-826f-513ee8abd07f",
+      "quantity": 1,
+      "unit_price": 100,
+      "total_amount": 100,
+      "profit": 52,
+      "customer_info": null,
+      "sale_date": "2025-11-08",
+      "notes": null,
+      "created_at": "2025-11-18T17:28:43.383337+00:00",
+      "products": {
+        "id": "4b94df23-9a3f-4eff-826f-513ee8abd07f",
+        "name": "SPINNER @100",
+        "purchase_price": 48
+      }
+    },
+    {
+      "id": "f756ef27-6d7a-417e-b0af-77af38052361",
+      "product_id": "97b77c22-1973-4800-b111-4db4385832cb",
+      "quantity": 6,
+      "unit_price": 60,
+      "total_amount": 360,
+      "profit": 150,
+      "customer_info": null,
+      "sale_date": "2025-11-08",
+      "notes": null,
+      "created_at": "2025-11-18T17:28:42.886822+00:00",
+      "products": {
+        "id": "97b77c22-1973-4800-b111-4db4385832cb",
+        "name": "SPINNER @60",
+        "purchase_price": 35
+      }
+    },
+    {
+      "id": "7e643b83-ad82-49da-855c-74fc064d4377",
+      "product_id": "c19710ba-7549-4089-8422-f157acc3f12b",
+      "quantity": 1,
+      "unit_price": 50,
+      "total_amount": 50,
+      "profit": 25,
+      "customer_info": null,
+      "sale_date": "2025-11-08",
+      "notes": null,
+      "created_at": "2025-11-18T17:28:42.474219+00:00",
+      "products": {
+        "id": "c19710ba-7549-4089-8422-f157acc3f12b",
+        "name": "CAR",
+        "purchase_price": 25
+      }
+    },
+    {
+      "id": "ca99618e-bc32-4e5a-b941-72f04c322d5a",
+      "product_id": "269d5281-bb15-49f0-b84e-ea7a8819c0ff",
+      "quantity": 2,
+      "unit_price": 20,
+      "total_amount": 40,
+      "profit": 20,
+      "customer_info": null,
+      "sale_date": "2025-11-08",
+      "notes": null,
+      "created_at": "2025-11-18T17:28:42.156442+00:00",
+      "products": {
+        "id": "269d5281-bb15-49f0-b84e-ea7a8819c0ff",
+        "name": "PENS",
+        "purchase_price": 10
+      }
+    },
+    {
+      "id": "12720e0c-3bf4-4208-a80a-06ebebf27621",
+      "product_id": "3820c952-7738-4e0d-ba9d-b70a7824aa97",
+      "quantity": 1,
+      "unit_price": 50,
+      "total_amount": 50,
+      "profit": 35,
+      "customer_info": null,
+      "sale_date": "2025-11-08",
+      "notes": null,
+      "created_at": "2025-11-18T17:28:41.757719+00:00",
+      "products": {
+        "id": "3820c952-7738-4e0d-ba9d-b70a7824aa97",
+        "name": "STICKY NOTES",
+        "purchase_price": 15
+      }
+    },
+    {
+      "id": "a14a3c2d-a40b-43e4-ac77-eeb49c0bc589",
+      "product_id": "6cfb8504-2f7a-40c3-b5fa-1f85ae62da17",
+      "quantity": 4,
+      "unit_price": 20,
+      "total_amount": 80,
+      "profit": 24,
+      "customer_info": null,
+      "sale_date": "2025-11-08",
+      "notes": null,
+      "created_at": "2025-11-18T17:26:33.651881+00:00",
+      "products": {
+        "id": "6cfb8504-2f7a-40c3-b5fa-1f85ae62da17",
+        "name": "PENCIL",
+        "purchase_price": 14
+      }
+    },
+    {
+      "id": "f9d29976-05cf-435d-b120-d18c08d85821",
+      "product_id": "a42dc7e8-3e34-407e-aecb-d2c8899ec90e",
+      "quantity": 8,
+      "unit_price": 20,
+      "total_amount": 160,
+      "profit": 72,
+      "customer_info": null,
+      "sale_date": "2025-11-08",
+      "notes": null,
+      "created_at": "2025-11-18T17:26:33.233264+00:00",
+      "products": {
+        "id": "a42dc7e8-3e34-407e-aecb-d2c8899ec90e",
+        "name": "BALLS @ 20 SMILEY",
+        "purchase_price": 11
+      }
+    },
+    {
+      "id": "3a375024-dcf8-418c-8d00-fc1ad2135af8",
+      "product_id": "132a85b8-a348-45a2-8a34-7d853228c00a",
+      "quantity": 2,
+      "unit_price": 100,
+      "total_amount": 200,
+      "profit": 104,
+      "customer_info": null,
+      "sale_date": "2025-11-08",
+      "notes": null,
+      "created_at": "2025-11-18T17:26:32.723258+00:00",
+      "products": {
+        "id": "132a85b8-a348-45a2-8a34-7d853228c00a",
+        "name": "GOGGLES",
+        "purchase_price": 48
+      }
+    },
+    {
+      "id": "1d864dc6-ac6d-4eac-ab9e-c03b22e551cc",
+      "product_id": "269d5281-bb15-49f0-b84e-ea7a8819c0ff",
+      "quantity": 2,
+      "unit_price": 30,
+      "total_amount": 60,
+      "profit": 40,
+      "customer_info": null,
+      "sale_date": "2025-11-08",
+      "notes": null,
+      "created_at": "2025-11-18T17:26:32.210764+00:00",
+      "products": {
+        "id": "269d5281-bb15-49f0-b84e-ea7a8819c0ff",
+        "name": "PENS",
+        "purchase_price": 10
+      }
+    },
+    {
+      "id": "b4a33796-c49f-4fab-b747-31fb0c849c63",
+      "product_id": "1cf30b62-535a-4813-9e0a-7c2e5956f43d",
+      "quantity": 8,
+      "unit_price": 70,
+      "total_amount": 560,
+      "profit": 280,
+      "customer_info": null,
+      "sale_date": "2025-11-08",
+      "notes": null,
+      "created_at": "2025-11-18T17:26:31.803195+00:00",
+      "products": {
+        "id": "1cf30b62-535a-4813-9e0a-7c2e5956f43d",
+        "name": "MOON BALL",
+        "purchase_price": 35
+      }
+    },
+    {
+      "id": "27ab9352-3bf2-466b-afea-f345cf77bd11",
+      "product_id": "3820c952-7738-4e0d-ba9d-b70a7824aa97",
+      "quantity": 1,
+      "unit_price": 30,
+      "total_amount": 30,
+      "profit": 15,
+      "customer_info": null,
+      "sale_date": "2025-11-08",
+      "notes": null,
+      "created_at": "2025-11-18T17:26:31.390617+00:00",
+      "products": {
+        "id": "3820c952-7738-4e0d-ba9d-b70a7824aa97",
+        "name": "STICKY NOTES",
+        "purchase_price": 15
+      }
+    },
+    {
+      "id": "2cf31b0f-36a3-4641-94db-a54afc599c87",
+      "product_id": "f479c968-b6bd-4b7c-b366-5a974d661166",
+      "quantity": 2,
+      "unit_price": 50,
+      "total_amount": 100,
+      "profit": 70,
+      "customer_info": null,
+      "sale_date": "2025-11-08",
+      "notes": null,
+      "created_at": "2025-11-18T17:26:30.965498+00:00",
+      "products": {
+        "id": "f479c968-b6bd-4b7c-b366-5a974d661166",
+        "name": "SCRATCH BOOK",
+        "purchase_price": 15
+      }
+    },
+    {
+      "id": "a47e5a0c-a619-43e4-a8f3-c50068585346",
+      "product_id": "cb710dac-f2b2-42db-a66d-2e52c1467ddd",
+      "quantity": 1,
+      "unit_price": 500,
+      "total_amount": 500,
+      "profit": 200,
+      "customer_info": null,
+      "sale_date": "2025-11-07",
+      "notes": null,
+      "created_at": "2025-11-18T17:36:49.443597+00:00",
+      "products": {
+        "id": "cb710dac-f2b2-42db-a66d-2e52c1467ddd",
+        "name": "SSUP GAME BOX",
+        "purchase_price": 300
+      }
+    },
+    {
+      "id": "9972f4d3-8841-46a3-9daa-ac921feef48f",
+      "product_id": "3820c952-7738-4e0d-ba9d-b70a7824aa97",
+      "quantity": 1,
+      "unit_price": 30,
+      "total_amount": 30,
+      "profit": 15,
+      "customer_info": null,
+      "sale_date": "2025-11-07",
+      "notes": null,
+      "created_at": "2025-11-18T17:34:59.942696+00:00",
+      "products": {
+        "id": "3820c952-7738-4e0d-ba9d-b70a7824aa97",
+        "name": "STICKY NOTES",
+        "purchase_price": 15
+      }
+    },
+    {
+      "id": "86067c28-6abf-4dc8-85bf-4a2a3d03ded9",
+      "product_id": "9dc689b1-f950-4805-aef7-dfb70ec4b504",
+      "quantity": 1,
+      "unit_price": 30,
+      "total_amount": 30,
+      "profit": 20,
+      "customer_info": null,
+      "sale_date": "2025-11-07",
+      "notes": null,
+      "created_at": "2025-11-18T17:34:59.356613+00:00",
+      "products": {
+        "id": "9dc689b1-f950-4805-aef7-dfb70ec4b504",
+        "name": "BUBBLES",
+        "purchase_price": 10
+      }
+    },
+    {
+      "id": "7fa7483d-4666-4d5e-b548-5fb1e9eb6d63",
+      "product_id": "269d5281-bb15-49f0-b84e-ea7a8819c0ff",
+      "quantity": 1,
+      "unit_price": 30,
+      "total_amount": 30,
+      "profit": 20,
+      "customer_info": null,
+      "sale_date": "2025-11-07",
+      "notes": null,
+      "created_at": "2025-11-18T17:34:58.895692+00:00",
+      "products": {
+        "id": "269d5281-bb15-49f0-b84e-ea7a8819c0ff",
+        "name": "PENS",
+        "purchase_price": 10
+      }
+    },
+    {
+      "id": "44089060-d5a3-444f-9932-682efa63827a",
+      "product_id": "4b94df23-9a3f-4eff-826f-513ee8abd07f",
+      "quantity": 1,
+      "unit_price": 100,
+      "total_amount": 100,
+      "profit": 52,
+      "customer_info": null,
+      "sale_date": "2025-11-07",
+      "notes": null,
+      "created_at": "2025-11-18T17:34:58.495491+00:00",
+      "products": {
+        "id": "4b94df23-9a3f-4eff-826f-513ee8abd07f",
+        "name": "SPINNER @100",
+        "purchase_price": 48
+      }
+    },
+    {
+      "id": "ec7f6e75-0c97-4dfa-b77c-3583bb7b483e",
+      "product_id": "5e582c6c-fd09-4c6b-9f3c-14e33bb15076",
+      "quantity": 1,
+      "unit_price": 20,
+      "total_amount": 20,
+      "profit": 10,
+      "customer_info": null,
+      "sale_date": "2025-11-06",
+      "notes": null,
+      "created_at": "2025-11-18T17:38:23.799347+00:00",
+      "products": {
+        "id": "5e582c6c-fd09-4c6b-9f3c-14e33bb15076",
+        "name": "ERASER",
+        "purchase_price": 10
+      }
+    },
+    {
+      "id": "7dcfd32b-ba2e-4460-a76b-cb6b962659cc",
+      "product_id": "28600da3-b886-411d-adf0-fb44d121e7bf",
+      "quantity": 1,
+      "unit_price": 50,
+      "total_amount": 50,
+      "profit": 32,
+      "customer_info": null,
+      "sale_date": "2025-11-06",
+      "notes": null,
+      "created_at": "2025-11-18T17:38:23.375377+00:00",
+      "products": {
+        "id": "28600da3-b886-411d-adf0-fb44d121e7bf",
+        "name": "PAPER SOAP",
+        "purchase_price": 18
+      }
+    },
+    {
+      "id": "ad98fbb5-5186-49de-bd7b-b00372602829",
+      "product_id": "a16880fc-92bd-4b43-8ec6-a0ee192faf6e",
+      "quantity": 1,
+      "unit_price": 50,
+      "total_amount": 50,
+      "profit": 25,
+      "customer_info": null,
+      "sale_date": "2025-11-06",
+      "notes": null,
+      "created_at": "2025-11-18T17:38:22.864294+00:00",
+      "products": {
+        "id": "a16880fc-92bd-4b43-8ec6-a0ee192faf6e",
+        "name": "LASER LIGHT",
+        "purchase_price": 25
+      }
+    },
+    {
+      "id": "3c25432d-6730-41c4-b239-efd0ce92c485",
+      "product_id": "6cfb8504-2f7a-40c3-b5fa-1f85ae62da17",
+      "quantity": 1,
+      "unit_price": 20,
+      "total_amount": 20,
+      "profit": 6,
+      "customer_info": null,
+      "sale_date": "2025-11-06",
+      "notes": null,
+      "created_at": "2025-11-18T17:38:22.51609+00:00",
+      "products": {
+        "id": "6cfb8504-2f7a-40c3-b5fa-1f85ae62da17",
+        "name": "PENCIL",
+        "purchase_price": 14
+      }
+    },
+    {
+      "id": "ac7dd8e7-32fb-4040-8f39-7761fca07593",
+      "product_id": "b73c780b-a96f-400c-8e15-280fb9be340a",
+      "quantity": 1,
+      "unit_price": 50,
+      "total_amount": 50,
+      "profit": 32,
+      "customer_info": null,
+      "sale_date": "2025-11-02",
+      "notes": null,
+      "created_at": "2025-11-18T17:57:21.214618+00:00",
+      "products": {
+        "id": "b73c780b-a96f-400c-8e15-280fb9be340a",
+        "name": "BALL @50",
+        "purchase_price": 18
+      }
+    },
+    {
+      "id": "1d182e71-1d76-4a81-8e0e-9d32ddf2f6b8",
+      "product_id": "929f08a3-2f00-4913-bf97-e4b7895ad5a1",
+      "quantity": 2,
+      "unit_price": 60,
+      "total_amount": 120,
+      "profit": 50,
+      "customer_info": null,
+      "sale_date": "2025-11-02",
+      "notes": null,
+      "created_at": "2025-11-18T17:42:00.776064+00:00",
+      "products": {
+        "id": "929f08a3-2f00-4913-bf97-e4b7895ad5a1",
+        "name": "DIARY @60",
+        "purchase_price": 35
+      }
+    },
+    {
+      "id": "fd9dc9f4-3b04-4d07-984d-f8d63f4fd3fd",
+      "product_id": "12ab732a-706b-41c2-b2a9-0d04346648bf",
+      "quantity": 3,
+      "unit_price": 30,
+      "total_amount": 90,
+      "profit": 45,
+      "customer_info": null,
+      "sale_date": "2025-11-02",
+      "notes": null,
+      "created_at": "2025-11-18T17:42:00.277876+00:00",
+      "products": {
+        "id": "12ab732a-706b-41c2-b2a9-0d04346648bf",
+        "name": "DIARY @30",
+        "purchase_price": 15
+      }
+    },
+    {
+      "id": "b754c10f-d015-4377-bdb1-1f751b3e55e0",
+      "product_id": "28600da3-b886-411d-adf0-fb44d121e7bf",
+      "quantity": 2,
+      "unit_price": 50,
+      "total_amount": 100,
+      "profit": 64,
+      "customer_info": null,
+      "sale_date": "2025-11-02",
+      "notes": null,
+      "created_at": "2025-11-13T17:36:06.360521+00:00",
+      "products": {
+        "id": "28600da3-b886-411d-adf0-fb44d121e7bf",
+        "name": "PAPER SOAP",
+        "purchase_price": 18
+      }
+    },
+    {
+      "id": "13fe40a1-8bb9-439c-9980-7b3b47bd4707",
+      "product_id": "c19710ba-7549-4089-8422-f157acc3f12b",
+      "quantity": 1,
+      "unit_price": 50,
+      "total_amount": 50,
+      "profit": 25,
+      "customer_info": null,
+      "sale_date": "2025-10-25",
+      "notes": null,
+      "created_at": "2025-10-26T11:38:18.612121+00:00",
+      "products": {
+        "id": "c19710ba-7549-4089-8422-f157acc3f12b",
+        "name": "CAR",
+        "purchase_price": 25
+      }
+    },
+    {
+      "id": "14372815-fdda-4859-9026-488348a72e87",
+      "product_id": "bb8a208a-f10d-4b80-af0a-8285a14c5b9e",
+      "quantity": 1,
+      "unit_price": 80,
+      "total_amount": 80,
+      "profit": 45,
+      "customer_info": null,
+      "sale_date": "2025-10-25",
+      "notes": null,
+      "created_at": "2025-10-26T11:38:13.36087+00:00",
+      "products": {
+        "id": "bb8a208a-f10d-4b80-af0a-8285a14c5b9e",
+        "name": "DIARY @80",
+        "purchase_price": 35
+      }
+    },
+    {
+      "id": "4fcf2df2-1ac1-4baf-9639-c4816eb26014",
+      "product_id": "f479c968-b6bd-4b7c-b366-5a974d661166",
+      "quantity": 1,
+      "unit_price": 50,
+      "total_amount": 50,
+      "profit": 35,
+      "customer_info": null,
+      "sale_date": "2025-10-25",
+      "notes": null,
+      "created_at": "2025-10-26T11:37:34.698349+00:00",
+      "products": {
+        "id": "f479c968-b6bd-4b7c-b366-5a974d661166",
+        "name": "SCRATCH BOOK",
+        "purchase_price": 15
+      }
+    },
+    {
+      "id": "db8e1ae8-94d5-456f-ae1a-420d54eff240",
+      "product_id": "269d5281-bb15-49f0-b84e-ea7a8819c0ff",
+      "quantity": 2,
+      "unit_price": 20,
+      "total_amount": 40,
+      "profit": 20,
+      "customer_info": null,
+      "sale_date": "2025-10-25",
+      "notes": null,
+      "created_at": "2025-10-26T11:37:24.94633+00:00",
+      "products": {
+        "id": "269d5281-bb15-49f0-b84e-ea7a8819c0ff",
+        "name": "PENS",
+        "purchase_price": 10
+      }
+    },
+    {
+      "id": "54752837-b2de-41ca-a3b9-af818a0e27dc",
+      "product_id": "6cfb8504-2f7a-40c3-b5fa-1f85ae62da17",
+      "quantity": 3,
+      "unit_price": 30,
+      "total_amount": 90,
+      "profit": 48,
+      "customer_info": null,
+      "sale_date": "2025-10-25",
+      "notes": null,
+      "created_at": "2025-10-26T11:37:20.308587+00:00",
+      "products": {
+        "id": "6cfb8504-2f7a-40c3-b5fa-1f85ae62da17",
+        "name": "PENCIL",
+        "purchase_price": 14
+      }
+    },
+    {
+      "id": "930dd954-1347-45df-b915-5d39a87e268c",
+      "product_id": "1cf30b62-535a-4813-9e0a-7c2e5956f43d",
+      "quantity": 2,
+      "unit_price": 60,
+      "total_amount": 120,
+      "profit": 50,
+      "customer_info": null,
+      "sale_date": "2025-10-25",
+      "notes": null,
+      "created_at": "2025-10-26T11:37:01.154385+00:00",
+      "products": {
+        "id": "1cf30b62-535a-4813-9e0a-7c2e5956f43d",
+        "name": "MOON BALL",
+        "purchase_price": 35
+      }
+    },
+    {
+      "id": "f79c761a-3394-421c-8965-4c6a7e0a9ead",
+      "product_id": "28600da3-b886-411d-adf0-fb44d121e7bf",
+      "quantity": 3,
+      "unit_price": 50,
+      "total_amount": 150,
+      "profit": 96,
+      "customer_info": null,
+      "sale_date": "2025-10-25",
+      "notes": null,
+      "created_at": "2025-10-26T11:36:50.135439+00:00",
+      "products": {
+        "id": "28600da3-b886-411d-adf0-fb44d121e7bf",
+        "name": "PAPER SOAP",
+        "purchase_price": 18
+      }
+    },
+    {
+      "id": "84813cee-307c-49f5-814e-f28da7bcbef9",
+      "product_id": "929f08a3-2f00-4913-bf97-e4b7895ad5a1",
+      "quantity": 3,
+      "unit_price": 60,
+      "total_amount": 180,
+      "profit": 75,
+      "customer_info": null,
+      "sale_date": "2025-10-25",
+      "notes": null,
+      "created_at": "2025-10-26T11:36:43.524822+00:00",
+      "products": {
+        "id": "929f08a3-2f00-4913-bf97-e4b7895ad5a1",
+        "name": "DIARY @60",
+        "purchase_price": 35
+      }
+    },
+    {
+      "id": "50b5a4ea-124e-44ea-a6ea-d7d0066ffd5e",
+      "product_id": "0ea1711e-2f2b-4f22-835d-84095962c89b",
+      "quantity": 4,
+      "unit_price": 20,
+      "total_amount": 80,
+      "profit": 40,
+      "customer_info": null,
+      "sale_date": "2025-10-25",
+      "notes": null,
+      "created_at": "2025-10-26T11:36:31.355212+00:00",
+      "products": {
+        "id": "0ea1711e-2f2b-4f22-835d-84095962c89b",
+        "name": "SLIME @ 20",
+        "purchase_price": 10
+      }
+    },
+    {
+      "id": "2d094a4c-ce6b-4d31-ad82-3a494cc229bd",
+      "product_id": "71fee0b2-b067-4ea1-b0e5-e9392359cc66",
+      "quantity": 1,
+      "unit_price": 100,
+      "total_amount": 100,
+      "profit": 85,
+      "customer_info": null,
+      "sale_date": "2025-09-01",
+      "notes": null,
+      "created_at": "2025-09-01T18:37:18.723167+00:00",
+      "products": {
+        "id": "71fee0b2-b067-4ea1-b0e5-e9392359cc66",
+        "name": "MOBILE COVER",
+        "purchase_price": 15
+      }
+    }
+  ],
+  "partyPurchases": [
+    {
+      "id": "83704687-6600-4bc7-8f28-011c742bd5bd",
+      "party_name": "bajaj",
+      "item_name": "MINION SKETCH PENS",
+      "barcode": null,
+      "purchase_price": 40,
+      "selling_price": 80,
+      "purchased_quantity": 24,
+      "remaining_quantity": 24,
+      "purchase_date": "2025-11-17",
+      "notes": null,
+      "created_at": "2025-11-16T17:25:39.976857+00:00",
+      "updated_at": "2025-11-24T10:14:15.458634+00:00"
+    },
+    {
+      "id": "553182a4-db90-4804-8f2c-d58373f20eeb",
+      "party_name": "bajaj",
+      "item_name": "DIARY @60 ",
+      "barcode": null,
+      "purchase_price": 32,
+      "selling_price": 60,
+      "purchased_quantity": 42,
+      "remaining_quantity": 42,
+      "purchase_date": "2025-11-17",
+      "notes": null,
+      "created_at": "2025-11-16T17:29:15.028929+00:00",
+      "updated_at": "2025-11-24T10:14:12.702192+00:00"
+    },
+    {
+      "id": "59d22ce7-34ae-49f8-a888-a0f96ce16ce2",
+      "party_name": "bajaj",
+      "item_name": "STAMP",
+      "barcode": null,
+      "purchase_price": 40,
+      "selling_price": 100,
+      "purchased_quantity": 36,
+      "remaining_quantity": 36,
+      "purchase_date": "2025-11-17",
+      "notes": null,
+      "created_at": "2025-11-16T17:27:28.03978+00:00",
+      "updated_at": "2025-11-24T10:14:13.144622+00:00"
+    },
+    {
+      "id": "ff60355a-e0d3-4a44-8bbf-3b6c3a5aafda",
+      "party_name": "bajaj",
+      "item_name": "ERASER",
+      "barcode": null,
+      "purchase_price": 6,
+      "selling_price": 20,
+      "purchased_quantity": 48,
+      "remaining_quantity": 48,
+      "purchase_date": "2025-11-17",
+      "notes": null,
+      "created_at": "2025-11-16T17:32:52.251581+00:00",
+      "updated_at": "2025-11-17T08:59:03.768792+00:00"
+    },
+    {
+      "id": "4e46e51b-892c-4f92-a791-ac3858642d23",
+      "party_name": "bajaj",
+      "item_name": "DIARY @60",
+      "barcode": null,
+      "purchase_price": 24,
+      "selling_price": 60,
+      "purchased_quantity": 72,
+      "remaining_quantity": 72,
+      "purchase_date": "2025-11-17",
+      "notes": null,
+      "created_at": "2025-11-16T17:28:29.367733+00:00",
+      "updated_at": "2025-11-24T10:14:11.9886+00:00"
+    },
+    {
+      "id": "66d3932e-1318-4f2f-87ff-477ea72cdbce",
+      "party_name": "bajaj",
+      "item_name": "SCRATCH BOOK",
+      "barcode": null,
+      "purchase_price": 14,
+      "selling_price": 30,
+      "purchased_quantity": 48,
+      "remaining_quantity": 48,
+      "purchase_date": "2025-11-17",
+      "notes": "",
+      "created_at": "2025-11-16T17:24:37.531984+00:00",
+      "updated_at": "2025-11-24T10:14:14.586316+00:00"
+    },
+    {
+      "id": "ec0a6093-fab5-4874-ac26-22405a13b228",
+      "party_name": "bajaj",
+      "item_name": "DUAL MARKER @10",
+      "barcode": null,
+      "purchase_price": 5.4,
+      "selling_price": 10,
+      "purchased_quantity": 120,
+      "remaining_quantity": 120,
+      "purchase_date": "2025-11-17",
+      "notes": "10 box - 12 pc each",
+      "created_at": "2025-11-16T17:24:02.591444+00:00",
+      "updated_at": "2025-11-17T08:57:03.770579+00:00"
+    },
+    {
+      "id": "3b6f0446-0688-4f54-b5d6-198537b53589",
+      "party_name": "bajaj",
+      "item_name": "ERASER",
+      "barcode": null,
+      "purchase_price": 6,
+      "selling_price": 20,
+      "purchased_quantity": 36,
+      "remaining_quantity": 36,
+      "purchase_date": "2025-11-17",
+      "notes": null,
+      "created_at": "2025-11-16T17:32:36.658238+00:00",
+      "updated_at": "2025-11-24T10:14:10.348375+00:00"
+    },
+    {
+      "id": "f1769b48-6422-4b01-8c3f-1ef0025c32c4",
+      "party_name": "bajaj",
+      "item_name": "COLORING BOOK",
+      "barcode": null,
+      "purchase_price": 20,
+      "selling_price": 50,
+      "purchased_quantity": 9,
+      "remaining_quantity": 9,
+      "purchase_date": "2025-11-17",
+      "notes": null,
+      "created_at": "2025-11-16T17:25:18.78624+00:00",
+      "updated_at": "2025-11-17T08:50:42.067802+00:00"
+    },
+    {
+      "id": "1bc21ea6-6db6-4227-ad0f-01c42af0d096",
+      "party_name": "bajaj",
+      "item_name": "LIPSTICK ERASER",
+      "barcode": null,
+      "purchase_price": 6,
+      "selling_price": 30,
+      "purchased_quantity": 36,
+      "remaining_quantity": 36,
+      "purchase_date": "2025-11-17",
+      "notes": null,
+      "created_at": "2025-11-16T17:33:16.341604+00:00",
+      "updated_at": "2025-11-24T10:14:09.372345+00:00"
+    },
+    {
+      "id": "c37e9092-3ddb-4b5b-965b-3936c3a4b480",
+      "party_name": "bajaj",
+      "item_name": "BALL @50",
+      "barcode": null,
+      "purchase_price": 17,
+      "selling_price": 50,
+      "purchased_quantity": 30,
+      "remaining_quantity": 30,
+      "purchase_date": "2025-11-17",
+      "notes": null,
+      "created_at": "2025-11-16T17:33:35.854882+00:00",
+      "updated_at": "2025-11-17T08:59:37.148589+00:00"
+    },
+    {
+      "id": "e51f5f81-4461-49cd-ad6d-67cb2fb55ffb",
+      "party_name": "bajaj",
+      "item_name": "BALLS @ 20 SMILEY",
+      "barcode": null,
+      "purchase_price": 9,
+      "selling_price": 20,
+      "purchased_quantity": 96,
+      "remaining_quantity": 96,
+      "purchase_date": "2025-11-17",
+      "notes": null,
+      "created_at": "2025-11-16T17:33:52.36098+00:00",
+      "updated_at": "2025-11-17T08:59:48.094985+00:00"
+    },
+    {
+      "id": "0b3de415-7667-4996-838a-be63bfcdc04f",
+      "party_name": "bajaj",
+      "item_name": "DIARY @60",
+      "barcode": null,
+      "purchase_price": 28,
+      "selling_price": 60,
+      "purchased_quantity": 32,
+      "remaining_quantity": 32,
+      "purchase_date": "2025-11-17",
+      "notes": null,
+      "created_at": "2025-11-16T17:29:53.337453+00:00",
+      "updated_at": "2025-11-24T10:14:08.810787+00:00"
+    },
+    {
+      "id": "a009aa19-87bf-4e21-92ba-c7678186d5fb",
+      "party_name": "zee",
+      "item_name": "BRACELET",
+      "barcode": null,
+      "purchase_price": 35,
+      "selling_price": 70,
+      "purchased_quantity": 12,
+      "remaining_quantity": 12,
+      "purchase_date": "2025-11-14",
+      "notes": null,
+      "created_at": "2025-11-15T07:37:24.308513+00:00",
+      "updated_at": "2025-11-24T10:14:16.8439+00:00"
+    },
+    {
+      "id": "5113c606-7146-4a40-b0ff-6623f87f9361",
+      "party_name": "zee",
+      "item_name": "WRIST BALL",
+      "barcode": null,
+      "purchase_price": 48,
+      "selling_price": 100,
+      "purchased_quantity": 24,
+      "remaining_quantity": 24,
+      "purchase_date": "2025-11-14",
+      "notes": "2 box",
+      "created_at": "2025-11-15T07:37:58.356984+00:00",
+      "updated_at": "2025-11-24T10:14:12.447837+00:00"
+    },
+    {
+      "id": "5d7c4c71-60d4-4e2a-aab1-79a870d5ea99",
+      "party_name": "zee",
+      "item_name": "SMALL SLIME",
+      "barcode": null,
+      "purchase_price": 12,
+      "selling_price": 20,
+      "purchased_quantity": 48,
+      "remaining_quantity": 48,
+      "purchase_date": "2025-11-14",
+      "notes": "2 box",
+      "created_at": "2025-11-15T07:24:29.136199+00:00",
+      "updated_at": "2025-11-24T10:14:13.444455+00:00"
+    },
+    {
+      "id": "61a74ea1-3c5e-4ed5-9fac-c14a9263e826",
+      "party_name": "zee",
+      "item_name": "SPRING",
+      "barcode": null,
+      "purchase_price": 16,
+      "selling_price": 30,
+      "purchased_quantity": 48,
+      "remaining_quantity": 48,
+      "purchase_date": "2025-11-14",
+      "notes": "4 BOX",
+      "created_at": "2025-11-15T07:45:43.456712+00:00",
+      "updated_at": "2025-11-24T10:14:13.860942+00:00"
+    },
+    {
+      "id": "63da8ed8-4fef-4883-bfe4-ac86694136ef",
+      "party_name": "zee",
+      "item_name": "BUBBLE TOWER",
+      "barcode": null,
+      "purchase_price": 280,
+      "selling_price": 400,
+      "purchased_quantity": 3,
+      "remaining_quantity": 3,
+      "purchase_date": "2025-11-14",
+      "notes": null,
+      "created_at": "2025-11-15T07:44:39.770691+00:00",
+      "updated_at": "2025-11-24T10:14:14.192795+00:00"
+    },
+    {
+      "id": "69e30da3-b737-4233-9280-1940fd229013",
+      "party_name": "zee",
+      "item_name": "MOON BALL",
+      "barcode": null,
+      "purchase_price": 30,
+      "selling_price": 60,
+      "purchased_quantity": 72,
+      "remaining_quantity": 72,
+      "purchase_date": "2025-11-14",
+      "notes": "6 box",
+      "created_at": "2025-11-15T07:36:28.749612+00:00",
+      "updated_at": "2025-11-24T10:14:14.914168+00:00"
+    },
+    {
+      "id": "79e1d578-80c9-4044-9428-bca6fd02b706",
+      "party_name": "zee",
+      "item_name": "STRAWBERRY SPINNING TOP",
+      "barcode": null,
+      "purchase_price": 30,
+      "selling_price": 50,
+      "purchased_quantity": 24,
+      "remaining_quantity": 24,
+      "purchase_date": "2025-11-14",
+      "notes": "1 box",
+      "created_at": "2025-11-15T07:22:12.598243+00:00",
+      "updated_at": "2025-11-24T10:14:15.157782+00:00"
+    },
+    {
+      "id": "ded28b20-f4ef-4240-9ccb-af39cab02c86",
+      "party_name": "zee",
+      "item_name": "SPINNER @ 100",
+      "barcode": null,
+      "purchase_price": 48,
+      "selling_price": 100,
+      "purchased_quantity": 24,
+      "remaining_quantity": 24,
+      "purchase_date": "2025-11-14",
+      "notes": "2 box",
+      "created_at": "2025-11-15T07:43:00.658982+00:00",
+      "updated_at": "2025-11-16T17:18:33.695765+00:00"
+    },
+    {
+      "id": "e819b3f5-ecf2-4c66-a415-464f2ee1a3d7",
+      "party_name": "zee",
+      "item_name": "BALL BOUNCY",
+      "barcode": null,
+      "purchase_price": 45,
+      "selling_price": 100,
+      "purchased_quantity": 48,
+      "remaining_quantity": 48,
+      "purchase_date": "2025-11-14",
+      "notes": "2 box",
+      "created_at": "2025-11-15T07:43:24.541948+00:00",
+      "updated_at": "2025-11-16T17:18:33.907499+00:00"
+    },
+    {
+      "id": "f38d6ff4-d61e-4e56-997b-a6999d1190ff",
+      "party_name": "zee",
+      "item_name": "STICKY SPIDERMAN",
+      "barcode": null,
+      "purchase_price": 48,
+      "selling_price": 100,
+      "purchased_quantity": 24,
+      "remaining_quantity": 24,
+      "purchase_date": "2025-11-14",
+      "notes": null,
+      "created_at": "2025-11-15T07:44:10.413814+00:00",
+      "updated_at": "2025-11-16T17:18:34.105787+00:00"
+    },
+    {
+      "id": "fffe1141-4b16-4441-9cb8-472f0900e687",
+      "party_name": "zee",
+      "item_name": "LED GLOW BRACELET",
+      "barcode": null,
+      "purchase_price": 12,
+      "selling_price": 30,
+      "purchased_quantity": 40,
+      "remaining_quantity": 40,
+      "purchase_date": "2025-11-14",
+      "notes": "1 box",
+      "created_at": "2025-11-15T07:21:29.087382+00:00",
+      "updated_at": "2025-11-16T17:18:34.309948+00:00"
+    },
+    {
+      "id": "89821d7b-a28e-41bf-852c-92e07346b837",
+      "party_name": "zee",
+      "item_name": "FACE CHANGING KEYCHAIN",
+      "barcode": null,
+      "purchase_price": 35,
+      "selling_price": 60,
+      "purchased_quantity": 24,
+      "remaining_quantity": 24,
+      "purchase_date": "2025-11-14",
+      "notes": "2 box",
+      "created_at": "2025-11-15T07:20:45.100072+00:00",
+      "updated_at": "2025-11-24T10:14:15.859249+00:00"
+    },
+    {
+      "id": "8e0388a7-6bdc-4e74-9b95-5e8c4084fd01",
+      "party_name": "zee",
+      "item_name": "SLIME @ 50",
+      "barcode": null,
+      "purchase_price": 23,
+      "selling_price": 50,
+      "purchased_quantity": 24,
+      "remaining_quantity": 24,
+      "purchase_date": "2025-11-14",
+      "notes": "2 box",
+      "created_at": "2025-11-15T07:33:53.902691+00:00",
+      "updated_at": "2025-11-24T10:14:16.020332+00:00"
+    },
+    {
+      "id": "99218994-85d6-40b4-aa80-8eb4fa1b0587",
+      "party_name": "zee",
+      "item_name": "WHISTLE GUN",
+      "barcode": null,
+      "purchase_price": 75,
+      "selling_price": 120,
+      "purchased_quantity": 48,
+      "remaining_quantity": 48,
+      "purchase_date": "2025-11-14",
+      "notes": "2 boxes",
+      "created_at": "2025-11-15T07:22:35.476876+00:00",
+      "updated_at": "2025-11-24T10:14:16.581575+00:00"
+    },
+    {
+      "id": "c12b905b-e3b7-4b2a-bbdb-a7c10495018c",
+      "party_name": "zee",
+      "item_name": "PAPER SOAP",
+      "barcode": null,
+      "purchase_price": 18,
+      "selling_price": 50,
+      "purchased_quantity": 23,
+      "remaining_quantity": 23,
+      "purchase_date": "2025-11-14",
+      "notes": null,
+      "created_at": "2025-11-15T07:37:42.781233+00:00",
+      "updated_at": "2025-11-16T17:32:21.507502+00:00"
+    },
+    {
+      "id": "48e81532-c769-4f5e-b926-2c1441447cfe",
+      "party_name": "zee",
+      "item_name": "FLOWER SOAP BOX",
+      "barcode": null,
+      "purchase_price": 10,
+      "selling_price": 30,
+      "purchased_quantity": 60,
+      "remaining_quantity": 60,
+      "purchase_date": "2025-11-14",
+      "notes": "2 box",
+      "created_at": "2025-11-15T07:23:40.247135+00:00",
+      "updated_at": "2025-11-24T10:14:11.568695+00:00"
+    },
+    {
+      "id": "3de2582b-3a4a-474c-aa64-09acaa737244",
+      "party_name": "zee",
+      "item_name": "MINI MAGNETIC GAME",
+      "barcode": null,
+      "purchase_price": 100,
+      "selling_price": 150,
+      "purchased_quantity": 18,
+      "remaining_quantity": 14,
+      "purchase_date": "2025-11-13",
+      "notes": null,
+      "created_at": "2025-11-13T17:39:41.653935+00:00",
+      "updated_at": "2025-11-24T10:14:10.809257+00:00"
+    },
+    {
+      "id": "344b470e-cc86-4dc1-a107-f93c3eb2c80a",
+      "party_name": "zee",
+      "item_name": "BUBBLES FAN",
+      "barcode": null,
+      "purchase_price": 30,
+      "selling_price": 50,
+      "purchased_quantity": 48,
+      "remaining_quantity": 48,
+      "purchase_date": "2025-05-22",
+      "notes": null,
+      "created_at": "2025-11-13T17:42:25.679886+00:00",
+      "updated_at": "2025-11-24T10:14:09.738612+00:00"
+    },
+    {
+      "id": "aa4f27ee-1299-4f4a-9111-88502fbaaebf",
+      "party_name": "zee",
+      "item_name": "LED SPINNER",
+      "barcode": null,
+      "purchase_price": 60,
+      "selling_price": 100,
+      "purchased_quantity": 48,
+      "remaining_quantity": 48,
+      "purchase_date": "2025-05-22",
+      "notes": null,
+      "created_at": "2025-11-13T17:40:38.513674+00:00",
+      "updated_at": "2025-11-24T10:14:17.139972+00:00"
+    },
+    {
+      "id": "476182eb-cbe1-4921-a30a-ac1ea12d0d86",
+      "party_name": "zee",
+      "item_name": "AVENGERS SPINNER",
+      "barcode": null,
+      "purchase_price": 60,
+      "selling_price": 100,
+      "purchased_quantity": 48,
+      "remaining_quantity": 48,
+      "purchase_date": "2025-05-22",
+      "notes": "3 box - 12 pc each",
+      "created_at": "2025-11-13T17:42:51.497825+00:00",
+      "updated_at": "2025-11-24T10:14:11.319768+00:00"
+    },
+    {
+      "id": "d47d8224-5f38-4e7e-b910-7127d5e05bcb",
+      "party_name": "zee",
+      "item_name": "SLIME @30",
+      "barcode": null,
+      "purchase_price": 15,
+      "selling_price": 30,
+      "purchased_quantity": 4,
+      "remaining_quantity": 4,
+      "purchase_date": "2025-05-22",
+      "notes": "24 pc box - 4box",
+      "created_at": "2025-11-13T17:46:46.459231+00:00",
+      "updated_at": "2025-11-16T17:18:33.430933+00:00"
+    },
+    {
+      "id": "bb5872a3-5bea-4389-8417-6618f0ea6c36",
+      "party_name": "zee",
+      "item_name": "BRACELET",
+      "barcode": null,
+      "purchase_price": 35,
+      "selling_price": 50,
+      "purchased_quantity": 60,
+      "remaining_quantity": 60,
+      "purchase_date": "2025-05-22",
+      "notes": null,
+      "created_at": "2025-11-13T17:43:20.578688+00:00",
+      "updated_at": "2025-11-24T10:14:17.502516+00:00"
+    },
+    {
+      "id": "c2b02792-abc0-4fc8-8f08-4b6b791d4af7",
+      "party_name": "zee",
+      "item_name": "SPINNER @60",
+      "barcode": null,
+      "purchase_price": 30,
+      "selling_price": 60,
+      "purchased_quantity": 48,
+      "remaining_quantity": 48,
+      "purchase_date": "2025-05-22",
+      "notes": null,
+      "created_at": "2025-11-13T17:48:44.324956+00:00",
+      "updated_at": "2025-11-16T17:32:21.67418+00:00"
+    },
+    {
+      "id": "92e1ffea-f24a-46c4-a7a5-ed76cde27fa1",
+      "party_name": "zee",
+      "item_name": "MOON BALL",
+      "barcode": null,
+      "purchase_price": 35,
+      "selling_price": 60,
+      "purchased_quantity": 72,
+      "remaining_quantity": 72,
+      "purchase_date": "2025-05-22",
+      "notes": null,
+      "created_at": "2025-11-13T17:43:47.802147+00:00",
+      "updated_at": "2025-11-24T10:14:16.34782+00:00"
+    }
+  ],
+  "metadata": {
+    "totalProducts": 51,
+    "totalSales": 127,
+    "totalPartyPurchases": 37,
+    "backupType": "manual"
+  }
+}

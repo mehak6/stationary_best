@@ -2905,6 +2905,7 @@ function QuickAddProductModal({ onClose, onProductAdded, prefillName }) {
 
 // Party Management Component
 function PartyManagement({ onNavigate }) {
+  const { showToast } = useToast();
   const [partyPurchases, setPartyPurchases] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
