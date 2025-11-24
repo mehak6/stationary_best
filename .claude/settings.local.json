@@ -78,7 +78,10 @@
       "Bash(start \"\" \"d:\\Projects\\stationery_business\\mockup-layout-b.html\")",
       "Bash(start \"\" \"d:\\Projects\\stationery_business\\mockup-layout-c.html\")",
       "Bash(start \"\" \"d:\\Projects\\stationery_business\\mockup-templates-demo.html\")",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(git rm:*)",
+      "Bash(.gitignore)",
+      "Bash(start \"\" \"d:\\Projects\\stationery_business\\src-tauri\\target\\release\\bundle\\nsis\")"
     ],
     "deny": [],
     "ask": []

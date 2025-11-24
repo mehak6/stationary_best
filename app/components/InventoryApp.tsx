@@ -19,7 +19,8 @@ import {
   Home,
   History,
   Undo2,
-  FileText
+  FileText,
+  Database
 } from 'lucide-react';
 
 // Import offline-aware database functions
@@ -63,6 +64,10 @@ import InstallPrompt from './InstallPrompt';
 import SyncIndicator from './SyncIndicator';
 import SyncSettingsModal from './SyncSettingsModal';
 import OfflineIndicator from './OfflineIndicator';
+import BackupRestore from './BackupRestore';
+
+// Import backup utilities
+import { isBackupDue } from '../../lib/backup-utils';
 
 // No more mock data - using real Supabase data throughout the application
 
@@ -5886,6 +5891,16 @@ function InventoryApp() {
   const [currentView, setCurrentView] = useState('dashboard');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [viewHistory, setViewHistory] = useState(['dashboard']);
+  const [showBackupModal, setShowBackupModal] = useState(false);
+
+  // Check if backup is due on mount
+  useEffect(() => {
+    if (isBackupDue()) {
+      setTimeout(() => {
+        showToast('Backup is overdue! Click the database icon to create a backup.', 'warning');
+      }, 3000);
+    }
+  }, []);
 
   // Initialize offline database on mount
   useEffect(() => {
@@ -6068,18 +6083,32 @@ function InventoryApp() {
               </div>
             </div>
             
-            {/* Mobile Menu Button */}
-            <div className="flex md:hidden">
+            {/* Right side buttons */}
+            <div className="flex items-center gap-2">
+              {/* Backup Button */}
               <button
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                onClick={() => setShowBackupModal(true)}
                 className="p-2 rounded-md text-gray-600 hover:text-primary-600 hover:bg-primary-50 touch-target"
-                aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
-                aria-expanded={mobileMenuOpen}
-                aria-controls="mobile-menu"
+                aria-label="Backup & Restore"
                 type="button"
+                title="Backup & Restore"
               >
-                <Menu className="h-5 w-5" aria-hidden="true" />
+                <Database className="h-5 w-5" aria-hidden="true" />
               </button>
+
+              {/* Mobile Menu Button */}
+              <div className="flex md:hidden">
+                <button
+                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                  className="p-2 rounded-md text-gray-600 hover:text-primary-600 hover:bg-primary-50 touch-target"
+                  aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+                  aria-expanded={mobileMenuOpen}
+                  aria-controls="mobile-menu"
+                  type="button"
+                >
+                  <Menu className="h-5 w-5" aria-hidden="true" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -6155,6 +6184,14 @@ function InventoryApp() {
 
       {/* Sync Indicator */}
       <SyncIndicator />
+
+      {/* Backup & Restore Modal */}
+      {showBackupModal && (
+        <BackupRestore
+          onClose={() => setShowBackupModal(false)}
+          showToast={showToast}
+        />
+      )}
     </div>
   );
 }
