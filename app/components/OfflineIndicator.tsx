@@ -47,8 +47,8 @@ export default function OfflineIndicator() {
 
   return (
     <>
-      {/* Online/Offline Badge - compact on mobile to not overlap with Install button */}
-      <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
+      {/* Online/Offline Badge - positioned to avoid overlapping with hamburger menu */}
+      <div className="fixed top-20 right-4 z-30 flex items-center gap-2">
         {isOnline ? (
           <div className="flex items-center gap-1 sm:gap-2 bg-green-100 text-green-800 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full shadow-sm">
             <Wifi className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
