@@ -2,6 +2,7 @@
 
 import React, { Suspense, Component, ReactNode } from 'react';
 import InventoryApp from './components/InventoryApp';
+import PasswordProtection from './components/PasswordProtection';
 import { ToastProvider } from './context/ToastContext';
 import { ToastContainer } from './components/Toast';
 
@@ -120,17 +121,19 @@ function InventoryErrorFallback({ error, resetError }: { error: Error; resetErro
  */
 export default function Home() {
   return (
-    <ErrorBoundary
-      fallbackRender={({ error, resetError }) => (
-        <InventoryErrorFallback error={error} resetError={resetError} />
-      )}
-    >
-      <ToastProvider>
-        <Suspense fallback={<InventoryLoadingFallback />}>
-          <InventoryApp />
-        </Suspense>
-        <ToastContainer />
-      </ToastProvider>
-    </ErrorBoundary>
+    <PasswordProtection>
+      <ErrorBoundary
+        fallbackRender={({ error, resetError }) => (
+          <InventoryErrorFallback error={error} resetError={resetError} />
+        )}
+      >
+        <ToastProvider>
+          <Suspense fallback={<InventoryLoadingFallback />}>
+            <InventoryApp />
+          </Suspense>
+          <ToastContainer />
+        </ToastProvider>
+      </ErrorBoundary>
+    </PasswordProtection>
   );
 }
