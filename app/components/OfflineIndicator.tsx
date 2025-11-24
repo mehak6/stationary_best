@@ -47,29 +47,30 @@ export default function OfflineIndicator() {
 
   return (
     <>
-      {/* Online/Offline Badge */}
+      {/* Online/Offline Badge - compact on mobile to not overlap with Install button */}
       <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
         {isOnline ? (
-          <div className="flex items-center gap-2 bg-green-100 text-green-800 px-3 py-1.5 rounded-full shadow-sm">
-            <Wifi className="h-4 w-4" />
-            <span className="text-sm font-medium">Online</span>
+          <div className="flex items-center gap-1 sm:gap-2 bg-green-100 text-green-800 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full shadow-sm">
+            <Wifi className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <span className="hidden sm:inline text-sm font-medium">Online</span>
             {!isSyncing && (
               <button
                 onClick={handleSync}
-                className="ml-1 p-1 hover:bg-green-200 rounded-full transition-colors"
+                className="p-0.5 sm:p-1 hover:bg-green-200 rounded-full transition-colors"
                 title="Sync now"
+                aria-label="Sync data"
               >
-                <RefreshCw className="h-3.5 w-3.5" />
+                <RefreshCw className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
               </button>
             )}
             {isSyncing && (
-              <RefreshCw className="h-3.5 w-3.5 animate-spin ml-1" />
+              <RefreshCw className="h-3 w-3 sm:h-3.5 sm:w-3.5 animate-spin" />
             )}
           </div>
         ) : (
-          <div className="flex items-center gap-2 bg-orange-100 text-orange-800 px-3 py-1.5 rounded-full shadow-sm">
-            <WifiOff className="h-4 w-4" />
-            <span className="text-sm font-medium">Offline Mode</span>
+          <div className="flex items-center gap-1 sm:gap-2 bg-orange-100 text-orange-800 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full shadow-sm">
+            <WifiOff className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <span className="hidden sm:inline text-sm font-medium">Offline</span>
           </div>
         )}
 
