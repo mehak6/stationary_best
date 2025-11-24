@@ -27,51 +27,87 @@ let categoriesDB: PouchDB.Database | null = null;
 let partyPurchasesDB: PouchDB.Database | null = null;
 let syncMetaDB: PouchDB.Database | null = null;
 
+// Initialization state tracking
+let isInitialized = false;
+let initializationPromise: Promise<void> | null = null;
+
 // Initialize databases only on client side
 export const initializeDatabases = async () => {
   if (typeof window === 'undefined') return;
 
-  // Load PouchDB first
-  await loadPouchDB();
-  if (!PouchDB) return;
+  // If already initialized, return immediately
+  if (isInitialized) return;
 
-  if (!productsDB) {
-    productsDB = new PouchDB('inventory_products', {
-      auto_compaction: true,
-      revs_limit: 10
-    });
+  // If initialization is in progress, wait for it
+  if (initializationPromise) {
+    await initializationPromise;
+    return;
   }
 
-  if (!salesDB) {
-    salesDB = new PouchDB('inventory_sales', {
-      auto_compaction: true,
-      revs_limit: 10
-    });
-  }
+  // Start initialization
+  initializationPromise = (async () => {
+    // Load PouchDB first
+    await loadPouchDB();
+    if (!PouchDB) return;
 
-  if (!categoriesDB) {
-    categoriesDB = new PouchDB('inventory_categories', {
-      auto_compaction: true,
-      revs_limit: 10
-    });
-  }
+    if (!productsDB) {
+      productsDB = new PouchDB('inventory_products', {
+        auto_compaction: true,
+        revs_limit: 10
+      });
+    }
 
-  if (!partyPurchasesDB) {
-    partyPurchasesDB = new PouchDB('inventory_party_purchases', {
-      auto_compaction: true,
-      revs_limit: 10
-    });
-  }
+    if (!salesDB) {
+      salesDB = new PouchDB('inventory_sales', {
+        auto_compaction: true,
+        revs_limit: 10
+      });
+    }
 
-  if (!syncMetaDB) {
-    syncMetaDB = new PouchDB('inventory_sync_meta', {
-      auto_compaction: true,
-      revs_limit: 5
-    });
-  }
+    if (!categoriesDB) {
+      categoriesDB = new PouchDB('inventory_categories', {
+        auto_compaction: true,
+        revs_limit: 10
+      });
+    }
 
-  // Create indexes for better query performance
-  createIndexes();
+    if (!partyPurchasesDB) {
+      partyPurchasesDB = new PouchDB('inventory_party_purchases', {
+        auto_compaction: true,
+        revs_limit: 10
+      });
+    }
+
+    if (!syncMetaDB) {
+      syncMetaDB = new PouchDB('inventory_sync_meta', {
+        auto_compaction: true,
+        revs_limit: 5
+      });
+    }
+
+    // Create indexes for better query performance
+    await createIndexes();
+
+    isInitialized = true;
+    console.log('✅ PouchDB databases initialized successfully');
+  })();
+
+  await initializationPromise;
+};
+
+// Check if databases are initialized
+export const isDatabaseInitialized = (): boolean => {
+  return isInitialized;
+};
+
+// Wait for database initialization
+export const waitForDatabaseInit = async (): Promise<void> => {
+  if (isInitialized) return;
+  if (initializationPromise) {
+    await initializationPromise;
+    return;
+  }
+  await initializeDatabases();
 };
 
 // Create indexes for each database
@@ -135,30 +171,45 @@ const createIndexes = async () => {
   }
 };
 
-// Get database instances
-export const getProductsDB = () => {
-  if (!productsDB) initializeDatabases();
-  return productsDB!;
+// Get database instances (async to ensure initialization)
+export const getProductsDB = async (): Promise<PouchDB.Database> => {
+  await waitForDatabaseInit();
+  if (!productsDB) {
+    throw new Error('Products database not initialized');
+  }
+  return productsDB;
 };
 
-export const getSalesDB = () => {
-  if (!salesDB) initializeDatabases();
-  return salesDB!;
+export const getSalesDB = async (): Promise<PouchDB.Database> => {
+  await waitForDatabaseInit();
+  if (!salesDB) {
+    throw new Error('Sales database not initialized');
+  }
+  return salesDB;
 };
 
-export const getCategoriesDB = () => {
-  if (!categoriesDB) initializeDatabases();
-  return categoriesDB!;
+export const getCategoriesDB = async (): Promise<PouchDB.Database> => {
+  await waitForDatabaseInit();
+  if (!categoriesDB) {
+    throw new Error('Categories database not initialized');
+  }
+  return categoriesDB;
 };
 
-export const getPartyPurchasesDB = () => {
-  if (!partyPurchasesDB) initializeDatabases();
-  return partyPurchasesDB!;
+export const getPartyPurchasesDB = async (): Promise<PouchDB.Database> => {
+  await waitForDatabaseInit();
+  if (!partyPurchasesDB) {
+    throw new Error('Party purchases database not initialized');
+  }
+  return partyPurchasesDB;
 };
 
-export const getSyncMetaDB = () => {
-  if (!syncMetaDB) initializeDatabases();
-  return syncMetaDB!;
+export const getSyncMetaDB = async (): Promise<PouchDB.Database> => {
+  await waitForDatabaseInit();
+  if (!syncMetaDB) {
+    throw new Error('Sync meta database not initialized');
+  }
+  return syncMetaDB;
 };
 
 // Utility: Generate UUID for document IDs

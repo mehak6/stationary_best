@@ -1,6 +1,6 @@
 'use client';
 
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { supabase } from '../supabase_client';
 import {
   getProductsDB,
   getSalesDB,
@@ -10,22 +10,15 @@ import {
 } from './pouchdb-client';
 import type { Product, Sale, Category, PartyPurchase } from './offline-db';
 
-// Supabase client
-let supabaseClient: ReturnType<typeof createClientComponentClient> | null = null;
-
+// Use the singleton Supabase client to avoid multiple GoTrueClient instances
 export const getSupabaseClient = () => {
-  if (!supabaseClient && typeof window !== 'undefined') {
-    supabaseClient = createClientComponentClient();
-  }
-  return supabaseClient;
+  return supabase;
 };
 
 // Sync metadata helpers
 const getSyncMeta = async (key: string): Promise<any> => {
-  const db = getSyncMetaDB();
-  if (!db) return null;
-
   try {
+    const db = await getSyncMetaDB();
     const doc = await db.get(`sync_${key}`);
     return doc.value;
   } catch (err) {
@@ -34,10 +27,9 @@ const getSyncMeta = async (key: string): Promise<any> => {
 };
 
 const setSyncMeta = async (key: string, value: any): Promise<void> => {
-  const db = getSyncMetaDB();
-  if (!db) return;
-
   try {
+    const db = await getSyncMetaDB();
+
     const docId = `sync_${key}`;
     let doc: any;
 
@@ -85,11 +77,11 @@ export const syncProductsToSupabase = async (): Promise<{
   errors: number;
 }> => {
   const supabase = getSupabaseClient();
-  const db = getProductsDB();
-
-  if (!supabase || !db) {
-    throw new Error('Supabase or PouchDB not initialized');
+  if (!supabase) {
+    throw new Error('Supabase not initialized');
   }
+
+  const db = await getProductsDB();
 
   let synced = 0;
   let errors = 0;
@@ -145,11 +137,11 @@ export const syncProductsFromSupabase = async (): Promise<{
   errors: number;
 }> => {
   const supabase = getSupabaseClient();
-  const db = getProductsDB();
-
-  if (!supabase || !db) {
-    throw new Error('Supabase or PouchDB not initialized');
+  if (!supabase) {
+    throw new Error('Supabase not initialized');
   }
+
+  const db = await getProductsDB();
 
   let synced = 0;
   let errors = 0;
@@ -214,11 +206,11 @@ export const syncSalesToSupabase = async (): Promise<{
   errors: number;
 }> => {
   const supabase = getSupabaseClient();
-  const db = getSalesDB();
-
-  if (!supabase || !db) {
-    throw new Error('Supabase or PouchDB not initialized');
+  if (!supabase) {
+    throw new Error('Supabase not initialized');
   }
+
+  const db = await getSalesDB();
 
   let synced = 0;
   let errors = 0;
@@ -269,11 +261,11 @@ export const syncSalesFromSupabase = async (): Promise<{
   errors: number;
 }> => {
   const supabase = getSupabaseClient();
-  const db = getSalesDB();
-
-  if (!supabase || !db) {
-    throw new Error('Supabase or PouchDB not initialized');
+  if (!supabase) {
+    throw new Error('Supabase not initialized');
   }
+
+  const db = await getSalesDB();
 
   let synced = 0;
   let errors = 0;
@@ -333,11 +325,11 @@ export const syncCategoriesToSupabase = async (): Promise<{
   errors: number;
 }> => {
   const supabase = getSupabaseClient();
-  const db = getCategoriesDB();
-
-  if (!supabase || !db) {
-    throw new Error('Supabase or PouchDB not initialized');
+  if (!supabase) {
+    throw new Error('Supabase not initialized');
   }
+
+  const db = await getCategoriesDB();
 
   let synced = 0;
   let errors = 0;
@@ -388,11 +380,11 @@ export const syncCategoriesFromSupabase = async (): Promise<{
   errors: number;
 }> => {
   const supabase = getSupabaseClient();
-  const db = getCategoriesDB();
-
-  if (!supabase || !db) {
-    throw new Error('Supabase or PouchDB not initialized');
+  if (!supabase) {
+    throw new Error('Supabase not initialized');
   }
+
+  const db = await getCategoriesDB();
 
   let synced = 0;
   let errors = 0;
@@ -452,11 +444,11 @@ export const syncPartyPurchasesToSupabase = async (): Promise<{
   errors: number;
 }> => {
   const supabase = getSupabaseClient();
-  const db = getPartyPurchasesDB();
-
-  if (!supabase || !db) {
-    throw new Error('Supabase or PouchDB not initialized');
+  if (!supabase) {
+    throw new Error('Supabase not initialized');
   }
+
+  const db = await getPartyPurchasesDB();
 
   let synced = 0;
   let errors = 0;
@@ -507,11 +499,11 @@ export const syncPartyPurchasesFromSupabase = async (): Promise<{
   errors: number;
 }> => {
   const supabase = getSupabaseClient();
-  const db = getPartyPurchasesDB();
-
-  if (!supabase || !db) {
-    throw new Error('Supabase or PouchDB not initialized');
+  if (!supabase) {
+    throw new Error('Supabase not initialized');
   }
+
+  const db = await getPartyPurchasesDB();
 
   let synced = 0;
   let errors = 0;

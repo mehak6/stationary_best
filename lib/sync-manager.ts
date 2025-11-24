@@ -66,10 +66,9 @@ export const updateSyncConfig = (config: Partial<SyncConfig>): void => {
 
 // Save config to IndexedDB
 const saveSyncConfig = async (config: SyncConfig): Promise<void> => {
-  const db = getSyncMetaDB();
-  if (!db) return;
-
   try {
+    const db = await getSyncMetaDB();
+
     const docId = 'sync_config';
     let doc: any;
 
@@ -94,10 +93,8 @@ const saveSyncConfig = async (config: SyncConfig): Promise<void> => {
 
 // Load config from IndexedDB
 export const loadSyncConfig = async (): Promise<SyncConfig> => {
-  const db = getSyncMetaDB();
-  if (!db) return DEFAULT_CONFIG;
-
   try {
+    const db = await getSyncMetaDB();
     const doc = await db.get('sync_config');
     return doc.config || DEFAULT_CONFIG;
   } catch {
@@ -205,10 +202,9 @@ const syncWithRetry = async (
 
 // Save last sync result to IndexedDB
 const saveLastSyncResult = async (result: SyncResult): Promise<void> => {
-  const db = getSyncMetaDB();
-  if (!db) return;
-
   try {
+    const db = await getSyncMetaDB();
+
     const docId = 'last_sync_result';
     let doc: any;
 
@@ -238,10 +234,8 @@ export const getLastSyncResult = async (): Promise<SyncResult | null> => {
     return lastSyncResult;
   }
 
-  const db = getSyncMetaDB();
-  if (!db) return null;
-
   try {
+    const db = await getSyncMetaDB();
     const doc = await db.get('last_sync_result');
     lastSyncResult = doc.result;
     return doc.result;
@@ -383,10 +377,9 @@ export const registerBackgroundSync = async (): Promise<void> => {
 
 // Queue sync for later (when offline)
 export const queueSync = async (): Promise<void> => {
-  const db = getSyncMetaDB();
-  if (!db) return;
-
   try {
+    const db = await getSyncMetaDB();
+
     const docId = 'sync_queue';
     let doc: any;
 
@@ -414,10 +407,8 @@ export const queueSync = async (): Promise<void> => {
 
 // Check if sync is queued
 export const isSyncQueued = async (): Promise<boolean> => {
-  const db = getSyncMetaDB();
-  if (!db) return false;
-
   try {
+    const db = await getSyncMetaDB();
     const doc = await db.get('sync_queue');
     return doc.queued || false;
   } catch {
@@ -427,10 +418,8 @@ export const isSyncQueued = async (): Promise<boolean> => {
 
 // Clear sync queue
 export const clearSyncQueue = async (): Promise<void> => {
-  const db = getSyncMetaDB();
-  if (!db) return;
-
   try {
+    const db = await getSyncMetaDB();
     const doc = await db.get('sync_queue');
     doc.queued = false;
     doc.cleared_at = new Date().toISOString();

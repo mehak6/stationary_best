@@ -67,7 +67,7 @@ export interface PartyPurchase {
 
 export const getAllProducts = async (): Promise<Product[]> => {
   try {
-    const db = getProductsDB();
+    const db = await getProductsDB();
     const result = await db.allDocs({
       include_docs: true,
       startkey: 'product_',
@@ -100,7 +100,7 @@ export const getAllProducts = async (): Promise<Product[]> => {
 
 export const getProductById = async (id: string): Promise<Product | null> => {
   try {
-    const db = getProductsDB();
+    const db = await getProductsDB();
     const doc: any = await db.get(toPouchID('product', id));
 
     return {
@@ -126,7 +126,7 @@ export const getProductById = async (id: string): Promise<Product | null> => {
 
 export const saveProduct = async (product: Product): Promise<Product> => {
   try {
-    const db = getProductsDB();
+    const db = await getProductsDB();
     const docId = toPouchID('product', product.id);
 
     let doc: any;
@@ -152,7 +152,7 @@ export const saveProduct = async (product: Product): Promise<Product> => {
 };
 
 export const createProduct = async (product: Omit<Product, 'id' | 'created_at' | 'updated_at'>): Promise<Product> => {
-  const db = getProductsDB();
+  const db = await getProductsDB();
   const id = generateUUID();
   const now = getCurrentTimestamp();
 
@@ -175,7 +175,7 @@ export const createProduct = async (product: Omit<Product, 'id' | 'created_at' |
 
 export const updateProduct = async (id: string, updates: Partial<Product>): Promise<Product | null> => {
   try {
-    const db = getProductsDB();
+    const db = await getProductsDB();
     const docId = toPouchID('product', id);
     const doc: any = await db.get(docId);
 
@@ -212,7 +212,7 @@ export const updateProduct = async (id: string, updates: Partial<Product>): Prom
 
 export const deleteProduct = async (id: string): Promise<boolean> => {
   try {
-    const db = getProductsDB();
+    const db = await getProductsDB();
     const docId = toPouchID('product', id);
     const doc = await db.get(docId);
     await db.remove(doc);
@@ -227,7 +227,7 @@ export const deleteProduct = async (id: string): Promise<boolean> => {
 
 export const getAllSales = async (limit?: number): Promise<Sale[]> => {
   try {
-    const db = getSalesDB();
+    const db = await getSalesDB();
     const result = await db.allDocs({
       include_docs: true,
       startkey: 'sale_',
@@ -259,7 +259,7 @@ export const getAllSales = async (limit?: number): Promise<Sale[]> => {
 
 export const saveSale = async (sale: Sale): Promise<Sale> => {
   try {
-    const db = getSalesDB();
+    const db = await getSalesDB();
     const docId = toPouchID('sale', sale.id);
 
     let doc: any;
@@ -285,7 +285,7 @@ export const saveSale = async (sale: Sale): Promise<Sale> => {
 };
 
 export const createSale = async (sale: Omit<Sale, 'id' | 'created_at'>): Promise<Sale> => {
-  const db = getSalesDB();
+  const db = await getSalesDB();
   const id = generateUUID();
   const now = getCurrentTimestamp();
 
@@ -309,7 +309,7 @@ export const createSale = async (sale: Omit<Sale, 'id' | 'created_at'>): Promise
 
 export const updateSale = async (id: string, updates: Partial<Sale>): Promise<Sale> => {
   try {
-    const db = getSalesDB();
+    const db = await getSalesDB();
     const docId = toPouchID('sale', id);
     const doc: any = await db.get(docId);
 
@@ -336,7 +336,7 @@ export const updateSale = async (id: string, updates: Partial<Sale>): Promise<Sa
 
 export const deleteSale = async (id: string): Promise<boolean> => {
   try {
-    const db = getSalesDB();
+    const db = await getSalesDB();
     const docId = toPouchID('sale', id);
     const doc: any = await db.get(docId);
 
@@ -353,7 +353,7 @@ export const deleteSale = async (id: string): Promise<boolean> => {
 
 export const getSalesByDate = async (date: string): Promise<Sale[]> => {
   try {
-    const db = getSalesDB();
+    const db = await getSalesDB();
     const result = await db.find({
       selector: {
         _id: { $gte: 'sale_', $lt: 'sale_\ufff0' },
@@ -381,7 +381,7 @@ export const getSalesByDate = async (date: string): Promise<Sale[]> => {
 
 export const getSalesByDateRange = async (startDate: string, endDate: string): Promise<Sale[]> => {
   try {
-    const db = getSalesDB();
+    const db = await getSalesDB();
     const result = await db.find({
       selector: {
         _id: { $gte: 'sale_', $lt: 'sale_\ufff0' },
@@ -425,7 +425,7 @@ const updateProductStock = async (productId: string, quantityChange: number) => 
 
 export const getAllCategories = async (): Promise<Category[]> => {
   try {
-    const db = getCategoriesDB();
+    const db = await getCategoriesDB();
     const result = await db.allDocs({
       include_docs: true,
       startkey: 'category_',
@@ -448,7 +448,7 @@ export const getAllCategories = async (): Promise<Category[]> => {
 };
 
 export const createCategory = async (category: Omit<Category, 'id' | 'created_at'>): Promise<Category> => {
-  const db = getCategoriesDB();
+  const db = await getCategoriesDB();
   const id = generateUUID();
   const now = getCurrentTimestamp();
 
@@ -471,7 +471,7 @@ export const createCategory = async (category: Omit<Category, 'id' | 'created_at
 
 export const getAllPartyPurchases = async (): Promise<PartyPurchase[]> => {
   try {
-    const db = getPartyPurchasesDB();
+    const db = await getPartyPurchasesDB();
     const result = await db.allDocs({
       include_docs: true,
       startkey: 'party_',
@@ -503,7 +503,7 @@ export const getAllPartyPurchases = async (): Promise<PartyPurchase[]> => {
 
 export const savePartyPurchase = async (purchase: PartyPurchase): Promise<PartyPurchase> => {
   try {
-    const db = getPartyPurchasesDB();
+    const db = await getPartyPurchasesDB();
     const docId = toPouchID('party', purchase.id);
 
     let doc: any;
@@ -529,7 +529,7 @@ export const savePartyPurchase = async (purchase: PartyPurchase): Promise<PartyP
 };
 
 export const createPartyPurchase = async (purchase: Omit<PartyPurchase, 'id' | 'created_at' | 'updated_at'>): Promise<PartyPurchase> => {
-  const db = getPartyPurchasesDB();
+  const db = await getPartyPurchasesDB();
   const id = generateUUID();
   const now = getCurrentTimestamp();
 
@@ -552,7 +552,7 @@ export const createPartyPurchase = async (purchase: Omit<PartyPurchase, 'id' | '
 
 export const updatePartyPurchase = async (id: string, updates: Partial<PartyPurchase>): Promise<PartyPurchase | null> => {
   try {
-    const db = getPartyPurchasesDB();
+    const db = await getPartyPurchasesDB();
     const docId = toPouchID('party', id);
     const doc: any = await db.get(docId);
 
@@ -588,7 +588,7 @@ export const updatePartyPurchase = async (id: string, updates: Partial<PartyPurc
 
 export const deletePartyPurchase = async (id: string): Promise<boolean> => {
   try {
-    const db = getPartyPurchasesDB();
+    const db = await getPartyPurchasesDB();
     const docId = toPouchID('party', id);
     const doc = await db.get(docId);
     await db.remove(doc);
