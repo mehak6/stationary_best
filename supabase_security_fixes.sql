@@ -47,8 +47,13 @@ CREATE POLICY "Allow all on customers" ON public.customers
   USING (true)
   WITH CHECK (true);
 
--- Party purchases policies
+-- Party purchases policies - Drop all old policies first
 DROP POLICY IF EXISTS "Allow all on party_purchases" ON public.party_purchases;
+DROP POLICY IF EXISTS "Anyone can view party purchases" ON public.party_purchases;
+DROP POLICY IF EXISTS "Anyone can create party purchases" ON public.party_purchases;
+DROP POLICY IF EXISTS "Anyone can update party purchases" ON public.party_purchases;
+DROP POLICY IF EXISTS "Anyone can delete party purchases" ON public.party_purchases;
+
 CREATE POLICY "Allow all on party_purchases" ON public.party_purchases
   FOR ALL
   USING (true)
