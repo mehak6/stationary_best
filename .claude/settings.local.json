@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git remote:*)"
+      "Bash(git remote:*)",
+      "Bash(powershell -Command:*)"
     ],
     "deny": [],
     "ask": []

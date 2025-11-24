@@ -20,8 +20,12 @@ import {
   History,
   Undo2,
   FileText,
-  Database
+  Database,
+  LogOut
 } from 'lucide-react';
+
+// Import auth context
+import { useAuth } from '../context/AuthContext';
 
 // Import offline-aware database functions
 import {
@@ -5919,10 +5923,20 @@ function Reports({ onNavigate }) {
 // Main App Component
 function InventoryApp() {
   const { showToast } = useToast();
+  const { signOut, user } = useAuth();
   const [currentView, setCurrentView] = useState('dashboard');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [viewHistory, setViewHistory] = useState(['dashboard']);
   const [showBackupModal, setShowBackupModal] = useState(false);
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      showToast('Signed out successfully', 'success');
+    } catch (error) {
+      showToast('Error signing out', 'error');
+    }
+  };
 
   // Check if backup is due on mount
   useEffect(() => {
@@ -6116,6 +6130,11 @@ function InventoryApp() {
             
             {/* Right side buttons */}
             <div className="flex items-center gap-2">
+              {/* User Email (Desktop only) */}
+              <div className="hidden md:flex items-center gap-2 text-sm text-gray-600 mr-2">
+                <span className="font-medium">{user?.email}</span>
+              </div>
+
               {/* Backup Button */}
               <button
                 onClick={() => setShowBackupModal(true)}
@@ -6125,6 +6144,17 @@ function InventoryApp() {
                 title="Backup & Restore"
               >
                 <Database className="h-5 w-5" aria-hidden="true" />
+              </button>
+
+              {/* Sign Out Button */}
+              <button
+                onClick={handleSignOut}
+                className="hidden md:flex p-2 rounded-md text-gray-600 hover:text-red-600 hover:bg-red-50 touch-target"
+                aria-label="Sign out"
+                type="button"
+                title="Sign out"
+              >
+                <LogOut className="h-5 w-5" aria-hidden="true" />
               </button>
 
               {/* Mobile Menu Button */}
@@ -6198,6 +6228,22 @@ function InventoryApp() {
                 <FileText className="h-5 w-5 mr-3" aria-hidden="true" />
                 Reports
               </button>
+
+              {/* Sign Out Button (Mobile) */}
+              <div className="border-t border-gray-200 pt-2 mt-2">
+                <div className="px-3 py-2 text-sm text-gray-600">
+                  Signed in as: <span className="font-medium">{user?.email}</span>
+                </div>
+                <button
+                  onClick={handleSignOut}
+                  className="mobile-nav-link text-red-600 hover:bg-red-50"
+                  role="menuitem"
+                  type="button"
+                >
+                  <LogOut className="h-5 w-5 mr-3" aria-hidden="true" />
+                  Sign Out
+                </button>
+              </div>
             </div>
           </div>
         )}

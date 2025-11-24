@@ -2,7 +2,8 @@
 
 import React, { Suspense, Component, ReactNode } from 'react';
 import InventoryApp from './components/InventoryApp';
-import PasswordProtection from './components/PasswordProtection';
+import AuthScreen from './components/AuthScreen';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import { ToastContainer } from './components/Toast';
 
@@ -110,10 +111,41 @@ function InventoryErrorFallback({ error, resetError }: { error: Error; resetErro
 }
 
 /**
+ * Protected app wrapper that shows auth screen if not logged in
+ */
+function ProtectedApp() {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return <InventoryLoadingFallback />;
+  }
+
+  if (!user) {
+    return <AuthScreen />;
+  }
+
+  return (
+    <ErrorBoundary
+      fallbackRender={({ error, resetError }) => (
+        <InventoryErrorFallback error={error} resetError={resetError} />
+      )}
+    >
+      <ToastProvider>
+        <Suspense fallback={<InventoryLoadingFallback />}>
+          <InventoryApp />
+        </Suspense>
+        <ToastContainer />
+      </ToastProvider>
+    </ErrorBoundary>
+  );
+}
+
+/**
  * Main page component for the inventory management system
  * This serves as the entry point for the Next.js application
  *
  * Features:
+ * - Real authentication with Supabase Auth
  * - Error boundary for graceful error handling
  * - Suspense for lazy loading support
  * - Loading states for better UX
@@ -121,19 +153,8 @@ function InventoryErrorFallback({ error, resetError }: { error: Error; resetErro
  */
 export default function Home() {
   return (
-    <PasswordProtection>
-      <ErrorBoundary
-        fallbackRender={({ error, resetError }) => (
-          <InventoryErrorFallback error={error} resetError={resetError} />
-        )}
-      >
-        <ToastProvider>
-          <Suspense fallback={<InventoryLoadingFallback />}>
-            <InventoryApp />
-          </Suspense>
-          <ToastContainer />
-        </ToastProvider>
-      </ErrorBoundary>
-    </PasswordProtection>
+    <AuthProvider>
+      <ProtectedApp />
+    </AuthProvider>
   );
 }
