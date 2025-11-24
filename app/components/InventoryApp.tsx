@@ -3702,21 +3702,27 @@ function AddPurchaseModal({ onClose, onPurchaseAdded }) {
   };
 
   return (
-    <div 
+    <div
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999] overflow-y-auto"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      style={{ touchAction: 'none' }}
     >
-      <div className="bg-white rounded-xl max-w-lg w-full max-h-[90vh] overflow-y-auto my-8">
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-gray-900">Add Purchase Record</h2>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+      <div className="bg-white rounded-xl max-w-lg w-full max-h-[90vh] overflow-y-auto my-8" style={{ touchAction: 'auto' }}>
+        <div className="p-4 sm:p-6">
+          <div className="flex items-center justify-between mb-4 sm:mb-6">
+            <h2 className="text-lg sm:text-xl font-bold text-gray-900">Add Purchase Record</h2>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600 p-2 -mr-2 touch-target"
+              aria-label="Close"
+              style={{ minWidth: '44px', minHeight: '44px' }}
+            >
               <X className="h-6 w-6" />
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+          <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="form-group">
                 <label className="form-label">Party Name *</label>
                 <input
@@ -3726,6 +3732,8 @@ function AddPurchaseModal({ onClose, onPurchaseAdded }) {
                   onChange={(e) => setFormData({...formData, party_name: e.target.value})}
                   className="input-field"
                   placeholder="Supplier name"
+                  style={{ minHeight: '44px', fontSize: '16px' }}
+                  autoComplete="off"
                 />
               </div>
 
@@ -3753,6 +3761,9 @@ function AddPurchaseModal({ onClose, onPurchaseAdded }) {
                   className="input-field"
                   placeholder="dd/mm/yyyy"
                   maxLength={10}
+                  style={{ minHeight: '44px', fontSize: '16px' }}
+                  autoComplete="off"
+                  inputMode="numeric"
                 />
               </div>
             </div>
@@ -3777,6 +3788,7 @@ function AddPurchaseModal({ onClose, onPurchaseAdded }) {
                 className="input-field uppercase"
                 placeholder="PRODUCT NAME"
                 autoComplete="off"
+                style={{ minHeight: '44px', fontSize: '16px' }}
               />
               {showSuggestions && (
                 <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
@@ -3805,10 +3817,12 @@ function AddPurchaseModal({ onClose, onPurchaseAdded }) {
                 onChange={(e) => setFormData({...formData, barcode: e.target.value})}
                 className="input-field"
                 placeholder="Product code"
+                style={{ minHeight: '44px', fontSize: '16px' }}
+                autoComplete="off"
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="form-group">
                 <label className="form-label">Purchase Price *</label>
                 <input
@@ -3819,6 +3833,8 @@ function AddPurchaseModal({ onClose, onPurchaseAdded }) {
                   onChange={(e) => setFormData({...formData, purchase_price: e.target.value})}
                   className="input-field"
                   placeholder="0.00"
+                  style={{ minHeight: '44px', fontSize: '16px' }}
+                  inputMode="decimal"
                 />
               </div>
 
@@ -3832,6 +3848,8 @@ function AddPurchaseModal({ onClose, onPurchaseAdded }) {
                   onChange={(e) => setFormData({...formData, selling_price: e.target.value})}
                   className="input-field"
                   placeholder="0.00"
+                  style={{ minHeight: '44px', fontSize: '16px' }}
+                  inputMode="decimal"
                 />
               </div>
             </div>
@@ -3853,6 +3871,8 @@ function AddPurchaseModal({ onClose, onPurchaseAdded }) {
                 }}
                 className="input-field"
                 placeholder="0"
+                style={{ minHeight: '44px', fontSize: '16px' }}
+                inputMode="numeric"
               />
             </div>
 
@@ -3864,14 +3884,24 @@ function AddPurchaseModal({ onClose, onPurchaseAdded }) {
                 className="input-field"
                 rows={3}
                 placeholder="Additional notes (optional)"
+                style={{ fontSize: '16px' }}
               />
             </div>
 
             <div className="flex gap-3 pt-4">
-              <button type="button" onClick={onClose} className="btn-outline flex-1">
+              <button
+                type="button"
+                onClick={onClose}
+                className="btn-outline flex-1 touch-target"
+                style={{ minHeight: '44px', touchAction: 'manipulation' }}
+              >
                 Cancel
               </button>
-              <button type="submit" className="btn-primary flex-1">
+              <button
+                type="submit"
+                className="btn-primary flex-1 touch-target"
+                style={{ minHeight: '44px', touchAction: 'manipulation' }}
+              >
                 Add Purchase
               </button>
             </div>
