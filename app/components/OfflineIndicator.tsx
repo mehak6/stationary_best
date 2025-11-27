@@ -11,18 +11,32 @@ export default function OfflineIndicator() {
   const [showSyncStatus, setShowSyncStatus] = useState(false);
 
   useEffect(() => {
+    let previousOnline = isOnline;
+
     // Subscribe to online/offline status
     const unsubscribe = subscribeToOnlineStatus((online) => {
       setIsOnline(online);
 
       // Auto-sync when coming back online
-      if (online && !isOnline) {
+      if (online && !previousOnline) {
         handleSync();
       }
+      previousOnline = online;
     });
 
     return () => unsubscribe();
-  }, [isOnline]);
+  }, []); // Empty dependency array - only run once on mount
+
+  // Auto-hide sync status after 5 seconds
+  useEffect(() => {
+    if (showSyncStatus && syncResult) {
+      const timer = setTimeout(() => {
+        setShowSyncStatus(false);
+        setSyncResult(null);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [showSyncStatus, syncResult]);
 
   const handleSync = async () => {
     setIsSyncing(true);
@@ -31,12 +45,6 @@ export default function OfflineIndicator() {
     try {
       const result = await syncAllData();
       setSyncResult({ synced: result.synced, errors: result.errors });
-
-      // Hide status after 5 seconds
-      setTimeout(() => {
-        setShowSyncStatus(false);
-        setSyncResult(null);
-      }, 5000);
     } catch (error) {
       console.error('Sync error:', error);
       setSyncResult({ synced: 0, errors: 1 });

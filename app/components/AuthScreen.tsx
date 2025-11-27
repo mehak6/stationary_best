@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Lock, Mail, Eye, EyeOff, LogIn, UserPlus, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -42,7 +42,6 @@ export default function AuthScreen() {
           setMessage('Account created! Please check your email to verify your account.');
           setEmail('');
           setPassword('');
-          setTimeout(() => setIsSignUp(false), 3000);
         }
       } else {
         const { error } = await signIn(email, password);
@@ -56,6 +55,14 @@ export default function AuthScreen() {
       setLoading(false);
     }
   };
+
+  // Auto-switch back to sign-in after successful signup
+  useEffect(() => {
+    if (message && isSignUp) {
+      const timer = setTimeout(() => setIsSignUp(false), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [message, isSignUp]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center p-4">

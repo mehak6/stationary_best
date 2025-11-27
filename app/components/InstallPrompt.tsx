@@ -32,6 +32,8 @@ export default function InstallPrompt() {
       }
     }
 
+    let promptTimer: NodeJS.Timeout | null = null;
+
     // Listen for the beforeinstallprompt event
     const handler = (e: Event) => {
       // Prevent the mini-infobar from appearing
@@ -41,25 +43,30 @@ export default function InstallPrompt() {
       setDeferredPrompt(e as BeforeInstallPromptEvent);
 
       // Show install prompt after 2 seconds (don't be too aggressive)
-      setTimeout(() => {
+      promptTimer = setTimeout(() => {
         setShowPrompt(true);
       }, 2000);
     };
 
-    window.addEventListener('beforeinstallprompt', handler);
-
     // Detect if app was installed
-    window.addEventListener('appinstalled', () => {
+    const installedHandler = () => {
       setIsInstalled(true);
       setShowPrompt(false);
       setDeferredPrompt(null);
 
       // Track installation (you can send to analytics here)
       console.log('PWA was installed');
-    });
+    };
+
+    window.addEventListener('beforeinstallprompt', handler);
+    window.addEventListener('appinstalled', installedHandler);
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handler);
+      window.removeEventListener('appinstalled', installedHandler);
+      if (promptTimer) {
+        clearTimeout(promptTimer);
+      }
     };
   }, []);
 

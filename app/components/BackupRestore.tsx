@@ -28,6 +28,7 @@ export default function BackupRestore({ onClose, showToast }: BackupRestoreProps
   const [restorePreview, setRestorePreview] = useState<BackupData | null>(null);
   const [isRestoring, setIsRestoring] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const reloadTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     // Load current settings
@@ -39,6 +40,13 @@ export default function BackupRestore({ onClose, showToast }: BackupRestoreProps
     if (isBackupDue()) {
       showToast('Backup is due! Consider creating a backup now.', 'warning');
     }
+
+    // Cleanup reload timer on unmount
+    return () => {
+      if (reloadTimerRef.current) {
+        clearTimeout(reloadTimerRef.current);
+      }
+    };
   }, []);
 
   // Handle ESC key to close modal
@@ -170,7 +178,7 @@ export default function BackupRestore({ onClose, showToast }: BackupRestoreProps
       setRestorePreview(null);
 
       // Refresh the page to show restored data
-      setTimeout(() => {
+      reloadTimerRef.current = setTimeout(() => {
         window.location.reload();
       }, 1500);
 

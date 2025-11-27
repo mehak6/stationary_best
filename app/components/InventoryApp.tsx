@@ -2423,8 +2423,8 @@ function QuickSale({ onNavigate }) {
             </div>
           ) : (
             <div className="space-y-3">
-{cart.map((item, index) => (
-                  <div key={index} className="bg-white border-2 border-gray-200 rounded-lg p-4">
+{cart.map((item) => (
+                  <div key={item.product.id} className="bg-white border-2 border-gray-200 rounded-lg p-4">
                     <div className="grid grid-cols-1 md:grid-cols-10 gap-4 items-center">
                       {/* Product Info */}
                       <div className="md:col-span-4 flex items-center gap-3">
@@ -5406,7 +5406,7 @@ function FileUploadModal({ onClose, onFileProcessed }) {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {editableData.map((item, index) => (
-                      <tr key={index} className="hover:bg-gray-50">
+                      <tr key={item.id || `party-${index}`} className="hover:bg-gray-50">
                         <td className="px-4 py-3">
                           <input
                             type="text"
@@ -5881,8 +5881,8 @@ function Reports({ onNavigate }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {partyGroupArray.map((party, index) => (
-                    <tr key={index}>
+                  {partyGroupArray.map((party) => (
+                    <tr key={party.partyName}>
                       <td className="font-medium">{party.partyName}</td>
                       <td>{party.items.length}</td>
                       <td>{party.totalQuantity}</td>
