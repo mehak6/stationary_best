@@ -69,6 +69,7 @@ import SyncIndicator from './SyncIndicator';
 import SyncSettingsModal from './SyncSettingsModal';
 import OfflineIndicator from './OfflineIndicator';
 import BackupRestore from './BackupRestore';
+import ConfirmDialog from './ConfirmDialog';
 
 // Import backup utilities
 import { isBackupDue } from '../../lib/backup-utils';
@@ -230,12 +231,13 @@ function Dashboard({ onNavigate }) {
   };
 
   const handleDeleteSale = async (saleId: string, saleData: any) => {
-    if (!confirm(`Are you sure you want to delete this sale of ${saleData.products?.name || 'Unknown Product'}? This action cannot be undone.`)) {
-      return;
-    }
-
-    try {
-      await deleteSale(saleId);
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Delete Sale',
+      message: `Are you sure you want to delete this sale of ${saleData.products?.name || 'Unknown Product'}? This action cannot be undone.`,
+      onConfirm: async () => {
+        try {
+          await deleteSale(saleId);
 
       // Note: Recent sales removed from dashboard
 
@@ -258,9 +260,14 @@ function Dashboard({ onNavigate }) {
         await fetchAllSales(allSalesPage);
       }
 
-    } catch (error) {
-      console.error('Error deleting sale:', error);
-    }
+      showToast('Sale deleted successfully', 'success');
+        } catch (error) {
+          console.error('Error deleting sale:', error);
+          showToast('Error deleting sale. Please try again.', 'error');
+        }
+      },
+      variant: 'danger'
+    });
   };
 
   // Fetch All Sales with filtering and pagination
@@ -816,16 +823,22 @@ function ProductManagement({ onNavigate }) {
     .sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
 
   const handleDeleteProduct = async (productId: string) => {
-    if (!confirm('Are you sure you want to delete this product? This action cannot be undone.')) {
-      return;
-    }
-
-    try {
-      await deleteProduct(productId);
-      setProducts(products.filter(p => p.id !== productId));
-    } catch (error) {
-      console.error('Error deleting product:', error);
-    }
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Delete Product',
+      message: 'Are you sure you want to delete this product? This action cannot be undone.',
+      onConfirm: async () => {
+        try {
+          await deleteProduct(productId);
+          setProducts(products.filter(p => p.id !== productId));
+          showToast('Product deleted successfully', 'success');
+        } catch (error) {
+          console.error('Error deleting product:', error);
+          showToast('Error deleting product. Please try again.', 'error');
+        }
+      },
+      variant: 'danger'
+    });
   };
 
   // Start editing a field
@@ -2959,16 +2972,22 @@ function PartyManagement({ onNavigate }) {
 
 
   const handleDeletePurchase = async (purchaseId: string) => {
-    if (!confirm('Are you sure you want to delete this purchase record?')) {
-      return;
-    }
-
-    try {
-      await deletePartyPurchase(purchaseId);
-      setPartyPurchases(partyPurchases.filter(p => p.id !== purchaseId));
-    } catch (error) {
-      console.error('Error deleting purchase:', error);
-    }
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Delete Purchase Record',
+      message: 'Are you sure you want to delete this purchase record? This action cannot be undone.',
+      onConfirm: async () => {
+        try {
+          await deletePartyPurchase(purchaseId);
+          setPartyPurchases(partyPurchases.filter(p => p.id !== purchaseId));
+          showToast('Purchase record deleted successfully', 'success');
+        } catch (error) {
+          console.error('Error deleting purchase:', error);
+          showToast('Error deleting purchase. Please try again.', 'error');
+        }
+      },
+      variant: 'danger'
+    });
   };
 
   // Handle bulk selection
@@ -3000,23 +3019,29 @@ function PartyManagement({ onNavigate }) {
       return;
     }
 
-    if (!confirm(`Are you sure you want to delete ${selectedItems.size} purchase record(s)? This action cannot be undone.`)) {
-      return;
-    }
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Delete Multiple Records',
+      message: `Are you sure you want to delete ${selectedItems.size} purchase record(s)? This action cannot be undone.`,
+      onConfirm: async () => {
+        setBulkDeleting(true);
+        try {
+          const deletePromises = Array.from(selectedItems).map(id => deletePartyPurchase(id));
+          await Promise.all(deletePromises);
 
-    setBulkDeleting(true);
-    try {
-      const deletePromises = Array.from(selectedItems).map(id => deletePartyPurchase(id));
-      await Promise.all(deletePromises);
-
-      setPartyPurchases(partyPurchases.filter(p => !selectedItems.has(p.id)));
-      setSelectedItems(new Set());
-      setSelectAll(false);
-    } catch (error) {
-      console.error('Error deleting purchases:', error);
-    } finally {
-      setBulkDeleting(false);
-    }
+          setPartyPurchases(partyPurchases.filter(p => !selectedItems.has(p.id)));
+          setSelectedItems(new Set());
+          setSelectAll(false);
+          showToast(`${selectedItems.size} purchase record(s) deleted successfully`, 'success');
+        } catch (error) {
+          console.error('Error deleting purchases:', error);
+          showToast('Error deleting purchases. Please try again.', 'error');
+        } finally {
+          setBulkDeleting(false);
+        }
+      },
+      variant: 'danger'
+    });
   };
 
   // Handle edit notes
@@ -5929,6 +5954,15 @@ function InventoryApp() {
   const [viewHistory, setViewHistory] = useState(['dashboard']);
   const [showBackupModal, setShowBackupModal] = useState(false);
 
+  // Confirm dialog state
+  const [confirmDialog, setConfirmDialog] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+    variant: 'danger' as 'danger' | 'warning' | 'info'
+  });
+
   const handleSignOut = async () => {
     try {
       await signOut();
@@ -6269,6 +6303,16 @@ function InventoryApp() {
           showToast={showToast}
         />
       )}
+
+      {/* Confirm Dialog */}
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
+        onConfirm={confirmDialog.onConfirm}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        variant={confirmDialog.variant}
+      />
     </div>
   );
 }
