@@ -2448,14 +2448,13 @@ function QuickSale({ onNavigate }) {
                           <input
                             type="number"
                             min="1"
-                            max={item.product.stock_quantity}
                             value={item.quantity}
                             onChange={(e) => updateCartItem(index, 'quantity', parseInt(e.target.value) || 1)}
                             onFocus={(e) => e.target.select()}
                             className="w-16 text-center border border-gray-300 rounded-md py-1 font-semibold"
                           />
                           <button
-                            onClick={() => updateCartItem(index, 'quantity', Math.min(item.product.stock_quantity, item.quantity + 1))}
+                            onClick={() => updateCartItem(index, 'quantity', item.quantity + 1)}
                             className="w-8 h-8 border-2 border-primary-500 text-primary-600 rounded-md hover:bg-primary-50 font-bold flex items-center justify-center"
                           >
                             +
