@@ -2423,7 +2423,7 @@ function QuickSale({ onNavigate }) {
             </div>
           ) : (
             <div className="space-y-3">
-{cart.map((item) => (
+              {cart.map((item, index) => (
                   <div key={item.product.id} className="bg-white border-2 border-gray-200 rounded-lg p-4">
                     <div className="grid grid-cols-1 md:grid-cols-10 gap-4 items-center">
                       {/* Product Info */}
