@@ -2380,6 +2380,7 @@ function QuickSale({ onNavigate }) {
                   <p className={`text-xs ${product.stock_quantity <= product.min_stock_level ? 'text-danger-600' : 'text-gray-500'}`}>
                     {product.stock_quantity} left
                   </p>
+                  <p className="text-xs text-gray-500 mt-1">Added: {formatDateToDDMMYYYY(product.created_at)}</p>
                 </div>
               </div>
             ))}
