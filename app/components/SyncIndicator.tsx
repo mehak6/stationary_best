@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useSyncStatus } from '../../hooks/useSyncStatus';
-import { RefreshCw, CheckCircle, AlertCircle, Clock, Wifi, WifiOff } from 'lucide-react';
+import { RefreshCw, CheckCircle, AlertCircle, Clock, Wifi, WifiOff, PauseCircle } from 'lucide-react';
 
 export default function SyncIndicator() {
   const [isClient, setIsClient] = useState(false);
@@ -19,7 +19,8 @@ export default function SyncIndicator() {
     error,
     stats,
     triggerSync,
-    isOnline
+    isOnline,
+    supabaseStatus
   } = useSyncStatus();
 
   // Only render on client side
@@ -30,6 +31,10 @@ export default function SyncIndicator() {
   const getStatusIcon = () => {
     if (!isOnline) {
       return <WifiOff className="w-4 h-4" />;
+    }
+
+    if (supabaseStatus === 'paused') {
+      return <PauseCircle className="w-4 h-4 text-orange-500" />;
     }
 
     if (isSyncing) {
@@ -51,6 +56,10 @@ export default function SyncIndicator() {
   const getStatusText = () => {
     if (!isOnline) {
       return 'Offline';
+    }
+
+    if (supabaseStatus === 'paused') {
+      return 'Project Paused';
     }
 
     if (isSyncing) {
@@ -76,6 +85,10 @@ export default function SyncIndicator() {
   const getStatusColor = () => {
     if (!isOnline) {
       return 'bg-gray-500';
+    }
+
+    if (supabaseStatus === 'paused') {
+      return 'bg-orange-500';
     }
 
     if (isSyncing) {

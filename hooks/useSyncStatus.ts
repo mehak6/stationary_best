@@ -26,6 +26,7 @@ export const useSyncStatus = () => {
   const [isSyncing, setIsSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [syncConfig, setSyncConfig] = useState<SyncConfig | null>(null);
+  const [supabaseStatus, setSupabaseStatus] = useState<'active' | 'paused' | 'offline' | 'error'>('active');
   const [stats, setStats] = useState({
     totalSynced: 0,
     totalErrors: 0,
@@ -33,6 +34,33 @@ export const useSyncStatus = () => {
   });
 
   const { isOnline } = useOfflineStatus();
+
+  // Check Supabase status
+  useEffect(() => {
+    const checkStatus = async () => {
+      if (!isOnline) {
+        setSupabaseStatus('offline');
+        return;
+      }
+
+      // Dynamic import to avoid circular dependencies if any
+      const { checkSupabaseStatus } = await import('../lib/supabase-status');
+      const status = await checkSupabaseStatus();
+      setSupabaseStatus(status);
+    };
+
+    checkStatus();
+    
+    // Check every minute
+    const interval = setInterval(checkStatus, 60000);
+    
+    // Also check when coming online
+    if (isOnline) {
+      checkStatus();
+    }
+
+    return () => clearInterval(interval);
+  }, [isOnline]);
 
   // Initialize sync manager on mount
   useEffect(() => {
@@ -236,6 +264,9 @@ export const useSyncStatus = () => {
     // Configuration
     syncConfig,
     updateConfig,
+    
+    // Supabase Status
+    supabaseStatus,
 
     // Actions
     triggerSync,
