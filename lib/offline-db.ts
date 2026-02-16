@@ -285,20 +285,33 @@ export const saveSale = async (sale: Sale): Promise<Sale> => {
 };
 
 export const createSale = async (sale: Omit<Sale, 'id' | 'created_at'>): Promise<Sale> => {
-  const db = await getSalesDB();
+  const productsDB = await getProductsDB();
+  const salesDB = await getSalesDB();
+  
+  // 1. Check stock FIRST
+  const product = await getProductById(sale.product_id);
+  if (!product) {
+    throw new Error('Product not found');
+  }
+  
+  if (product.stock_quantity < sale.quantity) {
+    throw new Error(`Insufficient stock. Available: ${product.stock_quantity}, Requested: ${sale.quantity}`);
+  }
+
   const id = generateUUID();
   const now = getCurrentTimestamp();
 
+  // 2. Update product stock
+  await updateProductStock(sale.product_id, -sale.quantity);
+
+  // 3. Create sale record
   const doc = {
     _id: toPouchID('sale', id),
     ...sale,
     created_at: now
   };
 
-  await db.put(doc);
-
-  // Update product stock
-  await updateProductStock(sale.product_id, -sale.quantity);
+  await salesDB.put(doc);
 
   return {
     id,
@@ -312,6 +325,12 @@ export const updateSale = async (id: string, updates: Partial<Sale>): Promise<Sa
     const db = await getSalesDB();
     const docId = toPouchID('sale', id);
     const doc: any = await db.get(docId);
+
+    // If quantity is being updated, adjust stock
+    if (updates.quantity !== undefined && updates.quantity !== doc.quantity) {
+      const quantityDiff = updates.quantity - doc.quantity;
+      await updateProductStock(doc.product_id, -quantityDiff);
+    }
 
     const updatedDoc = { ...doc, ...updates };
     await db.put(updatedDoc);
@@ -412,12 +431,19 @@ const updateProductStock = async (productId: string, quantityChange: number) => 
   try {
     const product = await getProductById(productId);
     if (product) {
+      const newStock = product.stock_quantity + quantityChange;
+      
+      if (newStock < 0) {
+        throw new Error(`Insufficient stock. Available: ${product.stock_quantity}, Requested change: ${quantityChange}`);
+      }
+
       await updateProduct(productId, {
-        stock_quantity: product.stock_quantity + quantityChange
+        stock_quantity: newStock
       });
     }
   } catch (error) {
     console.error('Error updating product stock:', error);
+    throw error;
   }
 };
 

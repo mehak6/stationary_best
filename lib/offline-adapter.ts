@@ -11,7 +11,14 @@
  */
 
 import { supabase } from '../supabase_client';
-import type { Product, Sale, PartyPurchase } from '../supabase_client';
+import type { 
+  Product, 
+  Sale, 
+  PartyPurchase,
+  ProductInsert,
+  SaleInsert,
+  PartyPurchaseInsert 
+} from '../supabase_client';
 import * as OfflineDB from './offline-db';
 
 // Network status
@@ -78,7 +85,7 @@ export const getProducts = async (limit?: number): Promise<Product[]> => {
   }
 };
 
-export const createProduct = async (product: any): Promise<Product> => {
+export const createProduct = async (product: ProductInsert): Promise<Product> => {
   try {
     if (isOnline) {
       const { data, error } = await supabase
@@ -104,7 +111,7 @@ export const createProduct = async (product: any): Promise<Product> => {
   }
 };
 
-export const updateProduct = async (productId: string, updates: any): Promise<Product> => {
+export const updateProduct = async (productId: string, updates: Partial<ProductInsert>): Promise<Product> => {
   try {
     if (isOnline) {
       const { data, error } = await supabase
@@ -266,12 +273,30 @@ export const getSalesByDate = async (date: string): Promise<Sale[]> => {
   return getSalesByDateRange(date, date);
 };
 
-export const createSale = async (sale: any): Promise<Sale> => {
+export const createSale = async (sale: SaleInsert): Promise<Sale> => {
   try {
     if (isOnline) {
-      const { data, error } = await supabase
+      // Use RPC for atomic sale creation and stock check
+      const { data, error } = await supabase.rpc('create_sale_with_stock_check', {
+        p_product_id: sale.product_id,
+        p_quantity: sale.quantity,
+        p_unit_price: sale.unit_price,
+        p_total_amount: sale.total_amount,
+        p_profit: sale.profit,
+        p_sale_date: sale.sale_date,
+        p_notes: sale.notes,
+        p_customer_info: sale.customer_info
+      });
+
+      if (error) throw error;
+      
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to create sale');
+      }
+
+      // Fetch the created sale to return it with product details
+      const { data: saleData, error: fetchError } = await supabase
         .from('sales')
-        .insert(sale)
         .select(`
           *,
           products (
@@ -280,13 +305,14 @@ export const createSale = async (sale: any): Promise<Sale> => {
             purchase_price
           )
         `)
+        .eq('id', data.sale_id)
         .single();
 
-      if (error) throw error;
+      if (fetchError) throw fetchError;
 
       // Cache to local DB
-      await OfflineDB.saveSale(data);
-      return data;
+      await OfflineDB.saveSale(saleData);
+      return saleData;
     } else {
       // Save to offline DB with pending sync flag
       const newSale = await OfflineDB.createSale(sale);
@@ -298,7 +324,7 @@ export const createSale = async (sale: any): Promise<Sale> => {
   }
 };
 
-export const updateSale = async (saleId: string, updates: any): Promise<Sale> => {
+export const updateSale = async (saleId: string, updates: Partial<SaleInsert>): Promise<Sale> => {
   try {
     if (isOnline) {
       const { data, error } = await supabase
@@ -436,7 +462,7 @@ export const getPartyPurchases = async (): Promise<PartyPurchase[]> => {
   }
 };
 
-export const createPartyPurchase = async (purchase: any): Promise<PartyPurchase> => {
+export const createPartyPurchase = async (purchase: PartyPurchaseInsert): Promise<PartyPurchase> => {
   try {
     if (isOnline) {
       const { data, error } = await supabase
@@ -458,7 +484,7 @@ export const createPartyPurchase = async (purchase: any): Promise<PartyPurchase>
   }
 };
 
-export const updatePartyPurchase = async (purchaseId: string, updates: any): Promise<PartyPurchase> => {
+export const updatePartyPurchase = async (purchaseId: string, updates: Partial<PartyPurchaseInsert>): Promise<PartyPurchase> => {
   try {
     if (isOnline) {
       const { data, error } = await supabase
