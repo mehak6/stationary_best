@@ -10,13 +10,17 @@ import {
   Trash2,
   X,
   Check,
-  History
+  History,
+  Calendar,
+  AlertCircle
 } from 'lucide-react';
 import {
   getProducts,
   updateProduct,
   deleteProduct,
-  createProduct
+  createProduct,
+  resetAllProductsStock,
+  getClosingStockForYear
 } from 'lib/offline-adapter';
 import { addProductHistory } from 'lib/product-history';
 import type { Product, ProductInsert } from 'supabase_client';
@@ -40,6 +44,13 @@ export default function ProductManagement({ onNavigate }: ProductManagementProps
   const [editingField, setEditingField] = useState<string | null>(null);
   const [tempValue, setTempValue] = useState('');
   const [saving, setSaving] = useState(false);
+  const [financialYear, setFinancialYear] = useState('2026-27');
+  const [historicalStock, setHistoricalStock] = useState<Record<string, number>>({});
+  const [isResetting, setIsResetting] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+  
+  const isCurrentYear = financialYear === '2026-27';
+
   const [undoData, setUndoData] = useState<{
     productId: string;
     fieldName: string;
@@ -49,13 +60,20 @@ export default function ProductManagement({ onNavigate }: ProductManagementProps
   } | null>(null);
   const [showUndo, setShowUndo] = useState(false);
 
-  // Fetch products on component mount
+  // Fetch products and historical stock
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         const productsData = await getProducts();
         setProducts(productsData || []);
+
+        if (!isCurrentYear) {
+          const closingData = await getClosingStockForYear(financialYear);
+          setHistoricalStock(closingData || {});
+        } else {
+          setHistoricalStock({});
+        }
       } catch (error) {
         console.error('Error fetching data:', error);
         setProducts([]);
@@ -65,7 +83,32 @@ export default function ProductManagement({ onNavigate }: ProductManagementProps
     };
 
     fetchData();
-  }, []);
+  }, [financialYear, isCurrentYear]);
+
+  const handleResetStock = async () => {
+    setIsResetting(true);
+    try {
+      const success = await resetAllProductsStock(financialYear);
+      if (success) {
+        // Save current products as closing stock for 2025-26 locally for immediate UI update
+        const closingData: Record<string, number> = {};
+        products.forEach(p => closingData[p.id] = p.stock_quantity);
+        
+        const updatedProducts = products.map(p => ({ ...p, stock_quantity: 0 }));
+        setProducts(updatedProducts);
+        showToast(`All stock reset to 0 for ${financialYear}. 2025-26 data preserved.`, 'success');
+        localStorage.setItem(`stock_reset_${financialYear}`, 'true');
+        setShowResetConfirm(false);
+      } else {
+        showToast('Failed to reset stock. Please try again.', 'error');
+      }
+    } catch (error) {
+      console.error('Error resetting stock:', error);
+      showToast('Error resetting stock', 'error');
+    } finally {
+      setIsResetting(false);
+    }
+  };
 
   const filteredProducts = products
     .filter(product => {
@@ -76,6 +119,10 @@ export default function ProductManagement({ onNavigate }: ProductManagementProps
     .sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
 
   const handleDeleteProduct = async (productId: string) => {
+    if (!isCurrentYear) {
+      showToast('Deletions are not allowed in historical records.', 'error');
+      return;
+    }
     if (!confirm('Are you sure you want to delete this product? This action cannot be undone.')) {
       return;
     }
@@ -91,6 +138,10 @@ export default function ProductManagement({ onNavigate }: ProductManagementProps
   };
 
   const startEditing = (productId: string, fieldName: string, currentValue: any) => {
+    if (!isCurrentYear) {
+      showToast('Editing is not allowed in historical records.', 'error');
+      return;
+    }
     setEditingProduct(productId);
     setEditingField(fieldName);
     setTempValue(currentValue?.toString() || '');
@@ -213,30 +264,60 @@ export default function ProductManagement({ onNavigate }: ProductManagementProps
     }
   };
 
+  const getDisplayStock = (product: Product) => {
+    if (isCurrentYear) return product.stock_quantity;
+    return historicalStock[product.id] ?? 0;
+  };
+
   return (
     <div className="p-4 sm:p-6 bg-primary-50 min-h-screen">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Products</h1>
-          <p className="text-gray-600 mt-2">Manage your inventory items</p>
+        <div className="flex items-center gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Products</h1>
+            <p className="text-gray-600 mt-2">Manage your inventory items</p>
+          </div>
+          <div className="bg-white border-2 border-primary-200 rounded-xl px-4 py-2 flex items-center gap-3 shadow-sm">
+            <Calendar className="h-5 w-5 text-primary-600" />
+            <div className="flex flex-col">
+              <span className="text-[10px] uppercase font-bold text-gray-400 leading-none mb-1">Financial Year</span>
+              <select 
+                value={financialYear}
+                onChange={(e) => setFinancialYear(e.target.value)}
+                className="bg-transparent text-sm font-bold text-primary-900 focus:outline-none cursor-pointer"
+              >
+                <option value="2025-26">2025-26 (Legacy)</option>
+                <option value="2026-27">2026-27 (Current)</option>
+              </select>
+            </div>
+          </div>
         </div>
         <div className="flex gap-3 mt-4 sm:mt-0">
           <button
             onClick={() => setShowBulkEntry(true)}
-            className="btn-outline flex items-center"
+            disabled={!isCurrentYear}
+            className={`btn-outline flex items-center ${!isCurrentYear ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             <Package className="h-5 w-5 mr-2" />
             Bulk Entry
           </button>
           <button
             onClick={() => setShowAddForm(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg flex items-center"
+            disabled={!isCurrentYear}
+            className={`bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg flex items-center ${!isCurrentYear ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             <Plus className="h-5 w-5 mr-2" />
             Add Product
           </button>
         </div>
       </div>
+
+      {!isCurrentYear && (
+        <div className="mb-6 p-4 bg-orange-50 border border-orange-200 rounded-xl flex items-center gap-3 text-orange-800">
+          <AlertCircle className="h-5 w-5 shrink-0" />
+          <p className="text-sm">You are viewing <strong>Historical Data</strong> for FY {financialYear}. Records are read-only. Switch to 2026-27 to make changes.</p>
+        </div>
+      )}
 
       <div className="card mb-6">
         <div className="flex flex-col sm:flex-row gap-3">
@@ -277,7 +358,60 @@ export default function ProductManagement({ onNavigate }: ProductManagementProps
             </button>
           </div>
         </div>
+
+        {isCurrentYear && typeof window !== 'undefined' && !localStorage.getItem('stock_reset_2026_27') && new Date() >= new Date('2026-03-20') && (
+          <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="flex items-center gap-3">
+              <div className="bg-blue-100 p-2 rounded-full">
+                <Calendar className="h-5 w-5 text-blue-600" />
+              </div>
+              <div>
+                <h4 className="font-bold text-blue-900">New Financial Year Detected</h4>
+                <p className="text-sm text-blue-700">Select this option to clear all current stock levels and start fresh for 2026-27. <strong>All 2025-26 stock will be preserved as historical closing data.</strong></p>
+              </div>
+            </div>
+            <button 
+              onClick={() => setShowResetConfirm(true)}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg text-sm font-bold transition-all shadow-md whitespace-nowrap"
+            >
+              Reset Stock Now
+            </button>
+          </div>
+        )}
       </div>
+
+      {showResetConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-[10000] backdrop-blur-sm">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-red-100">
+            <div className="flex items-center gap-3 text-red-600 mb-4">
+              <div className="bg-red-100 p-2 rounded-full">
+                <Trash2 className="h-6 w-6" />
+              </div>
+              <h3 className="text-xl font-bold">Confirm Stock Reset</h3>
+            </div>
+            <p className="text-gray-600 mb-6 leading-relaxed">
+              Are you sure you want to reset all stock to <span className="font-bold text-gray-900">EMPTY (0)</span> for the financial year <span className="font-bold text-gray-900">{financialYear}</span>? 
+              <br /><br />
+              Current stock levels will be saved as <strong>Closing Stock for 2025-26</strong>. Prices will not be changed.
+            </p>
+            <div className="flex gap-3">
+              <button 
+                onClick={() => setShowResetConfirm(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleResetStock}
+                disabled={isResetting}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700 transition-colors shadow-lg disabled:opacity-50"
+              >
+                {isResetting ? 'Resetting...' : 'Yes, Reset All Stock'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {loading ? (
         <div className={viewMode === 'card' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6' : 'space-y-3'}>
@@ -309,35 +443,218 @@ export default function ProductManagement({ onNavigate }: ProductManagementProps
             </div>
           </div>
 
-          {filteredProducts.map(product => (
-            <div key={product.id} className="card hover:shadow-md transition-shadow">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div className="flex-1 grid grid-cols-1 sm:grid-cols-5 gap-2 sm:gap-4 items-center">
-                  <div className="sm:col-span-2">
-                    {editingProduct === product.id && editingField === 'name' ? (
-                      <input
-                        type="text"
-                        value={tempValue}
-                        onChange={(e) => setTempValue(e.target.value.toUpperCase())}
-                        onKeyDown={(e) => handleKeyPress(e, product.id, 'name')}
-                        className="w-full px-2 py-1 border border-blue-300 rounded font-semibold uppercase text-sm focus:ring-2 focus:ring-blue-500"
-                        autoFocus
-                      />
-                    ) : (
-                      <div>
-                        <h3
-                          className="font-semibold text-gray-900 cursor-pointer hover:bg-blue-50 px-2 py-1 rounded inline-block hover:text-blue-700 transition-colors text-sm sm:text-base"
-                          onClick={() => startEditing(product.id, 'name', product.name)}
+          {filteredProducts.map(product => {
+            const stock = getDisplayStock(product);
+            return (
+              <div key={product.id} className={`card hover:shadow-md transition-shadow ${!isCurrentYear ? 'bg-gray-50 opacity-90' : ''}`}>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div className="flex-1 grid grid-cols-1 sm:grid-cols-5 gap-2 sm:gap-4 items-center">
+                    <div className="sm:col-span-2">
+                      {editingProduct === product.id && editingField === 'name' ? (
+                        <input
+                          type="text"
+                          value={tempValue}
+                          onChange={(e) => setTempValue(e.target.value.toUpperCase())}
+                          onKeyDown={(e) => handleKeyPress(e, product.id, 'name')}
+                          className="w-full px-2 py-1 border border-blue-300 rounded font-semibold uppercase text-sm focus:ring-2 focus:ring-blue-500"
+                          autoFocus
+                        />
+                      ) : (
+                        <div>
+                          <h3
+                            className={`font-semibold text-gray-900 ${isCurrentYear ? 'cursor-pointer hover:bg-blue-50 px-2 py-1 rounded inline-block hover:text-blue-700 transition-colors' : ''} text-sm sm:text-base`}
+                            onClick={() => startEditing(product.id, 'name', product.name)}
+                          >
+                            {product.name}
+                          </h3>
+                          <p className="text-xs text-gray-500">Code: {product.barcode || 'N/A'}</p>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="text-gray-500 sm:hidden">Purchase: </span>
+                      <span className="text-gray-500">₹</span>
+                      {editingProduct === product.id && editingField === 'purchase_price' ? (
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={tempValue}
+                          onChange={(e) => setTempValue(e.target.value)}
+                          onKeyDown={(e) => handleKeyPress(e, product.id, 'purchase_price')}
+                          className="w-20 px-2 py-1 border border-primary-300 rounded text-sm"
+                          autoFocus
+                        />
+                      ) : (
+                        <span
+                          className={`font-medium ${isCurrentYear ? 'cursor-pointer hover:bg-primary-50 px-2 py-1 rounded' : ''} text-primary-700`}
+                          onClick={() => startEditing(product.id, 'purchase_price', product.purchase_price)}
                         >
-                          {product.name}
-                        </h3>
-                        <p className="text-xs text-gray-500">Code: {product.barcode || 'N/A'}</p>
-                      </div>
+                          {product.purchase_price}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="text-gray-500 sm:hidden">Selling: </span>
+                      <span className="text-gray-500">₹</span>
+                      {editingProduct === product.id && editingField === 'selling_price' ? (
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={tempValue}
+                          onChange={(e) => setTempValue(e.target.value)}
+                          onKeyDown={(e) => handleKeyPress(e, product.id, 'selling_price')}
+                          className="w-20 px-2 py-1 border border-secondary-300 rounded text-sm"
+                          autoFocus
+                        />
+                      ) : (
+                        <span
+                          className={`font-medium ${isCurrentYear ? 'cursor-pointer hover:bg-secondary-50 px-2 py-1 rounded' : ''} text-secondary-700`}
+                          onClick={() => startEditing(product.id, 'selling_price', product.selling_price)}
+                        >
+                          {product.selling_price}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-4 text-sm">
+                      <span className="text-gray-500 sm:hidden">Stock: </span>
+                      {editingProduct === product.id && editingField === 'stock_quantity' ? (
+                        <input
+                          type="number"
+                          value={tempValue}
+                          onChange={(e) => setTempValue(e.target.value)}
+                          onKeyDown={(e) => handleKeyPress(e, product.id, 'stock_quantity')}
+                          className="w-16 px-2 py-1 border border-accent-300 rounded text-sm"
+                          autoFocus
+                        />
+                      ) : (
+                        <span
+                          className={`font-medium ${isCurrentYear ? 'cursor-pointer hover:bg-accent-50 px-2 py-1 rounded' : ''} ${
+                            stock <= product.min_stock_level ? 'text-red-600' : 'text-accent-700'
+                          }`}
+                          onClick={() => startEditing(product.id, 'stock_quantity', product.stock_quantity)}
+                        >
+                          {stock}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex gap-2 justify-end">
+                    {editingProduct === product.id && (
+                      <>
+                        <button
+                          onClick={() => saveEdit(editingProduct!, editingField!, tempValue)}
+                          disabled={saving}
+                          className="p-1 text-green-600 hover:text-green-800"
+                        >
+                          <Check className="h-5 w-5" />
+                        </button>
+                        <button
+                          onClick={cancelEditing}
+                          disabled={saving}
+                          className="p-1 text-gray-400 hover:text-gray-600"
+                        >
+                          <X className="h-5 w-5" />
+                        </button>
+                      </>
+                    )}
+                    <button
+                      onClick={() => {
+                        setSelectedProductForHistory(product);
+                        setShowHistory(true);
+                      }}
+                      className="p-1 text-gray-400 hover:text-primary-600"
+                      title="View History"
+                    >
+                      <History className="h-5 w-5" />
+                    </button>
+                    {isCurrentYear && (
+                      <button
+                        onClick={() => handleDeleteProduct(product.id)}
+                        className="p-1 text-gray-400 hover:text-red-600"
+                        title="Delete Product"
+                      >
+                        <Trash2 className="h-5 w-5" />
+                      </button>
                     )}
                   </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="text-gray-500 sm:hidden">Purchase: </span>
-                    <span className="text-gray-500">₹</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          {filteredProducts.map(product => {
+            const stock = getDisplayStock(product);
+            return (
+              <div key={product.id} className={`card hover:shadow-md transition-shadow ${!isCurrentYear ? 'bg-gray-50' : ''}`}>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="text-xs text-gray-500">
+                    {!isCurrentYear ? 'Read-only history' : (editingProduct === product.id ? 'Editing...' : 'Click values to edit')}
+                  </div>
+                  <div className="flex gap-2">
+                    {editingProduct === product.id && (
+                      <>
+                        <button 
+                          onClick={() => saveEdit(editingProduct!, editingField!, tempValue)}
+                          disabled={saving}
+                          className="p-1 text-green-600 hover:text-green-800"
+                        >
+                          <Check className="h-4 w-4" />
+                        </button>
+                        <button 
+                          onClick={cancelEditing}
+                          disabled={saving}
+                          className="p-1 text-gray-400 hover:text-gray-600"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </>
+                    )}
+                    <button
+                      onClick={() => {
+                        setSelectedProductForHistory(product);
+                        setShowHistory(true);
+                      }}
+                      className="p-1 text-gray-400 hover:text-primary-600"
+                    >
+                      <History className="h-4 w-4" />
+                    </button>
+                    {isCurrentYear && (
+                      <button
+                        onClick={() => handleDeleteProduct(product.id)}
+                        className="p-1 text-gray-400 hover:text-red-600"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="mb-4">
+                  {editingProduct === product.id && editingField === 'name' ? (
+                    <input
+                      type="text"
+                      value={tempValue}
+                      onChange={(e) => setTempValue(e.target.value.toUpperCase())}
+                      onKeyDown={(e) => handleKeyPress(e, product.id, 'name')}
+                      className="w-full px-2 py-1 border border-blue-300 rounded font-semibold uppercase"
+                      autoFocus
+                    />
+                  ) : (
+                    <h3
+                      className={`font-semibold text-gray-900 ${isCurrentYear ? 'cursor-pointer hover:bg-blue-50 px-2 py-1 rounded inline-block' : ''}`}
+                      onClick={() => startEditing(product.id, 'name', product.name)}
+                    >
+                      {product.name}
+                    </h3>
+                  )}
+                  <p className="text-sm text-gray-500">Code: {product.barcode || 'N/A'}</p>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-500">Purchase:</span>
                     {editingProduct === product.id && editingField === 'purchase_price' ? (
                       <input
                         type="number"
@@ -349,17 +666,17 @@ export default function ProductManagement({ onNavigate }: ProductManagementProps
                         autoFocus
                       />
                     ) : (
-                      <span
-                        className="font-medium cursor-pointer hover:bg-primary-50 px-2 py-1 rounded text-primary-700"
+                      <span 
+                        className={`font-medium ${isCurrentYear ? 'cursor-pointer hover:bg-primary-50 px-2 py-1 rounded' : ''} text-primary-700`}
                         onClick={() => startEditing(product.id, 'purchase_price', product.purchase_price)}
                       >
-                        {product.purchase_price}
+                        ₹{product.purchase_price}
                       </span>
                     )}
                   </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="text-gray-500 sm:hidden">Selling: </span>
-                    <span className="text-gray-500">₹</span>
+
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-500">Selling:</span>
                     {editingProduct === product.id && editingField === 'selling_price' ? (
                       <input
                         type="number"
@@ -371,16 +688,17 @@ export default function ProductManagement({ onNavigate }: ProductManagementProps
                         autoFocus
                       />
                     ) : (
-                      <span
-                        className="font-medium cursor-pointer hover:bg-secondary-50 px-2 py-1 rounded text-secondary-700"
+                      <span 
+                        className={`font-medium text-secondary-600 ${isCurrentYear ? 'cursor-pointer hover:bg-secondary-50 px-2 py-1 rounded' : ''}`}
                         onClick={() => startEditing(product.id, 'selling_price', product.selling_price)}
                       >
-                        {product.selling_price}
+                        ₹{product.selling_price}
                       </span>
                     )}
                   </div>
-                  <div className="flex items-center gap-4 text-sm">
-                    <span className="text-gray-500 sm:hidden">Stock: </span>
+
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-500">Stock:</span>
                     {editingProduct === product.id && editingField === 'stock_quantity' ? (
                       <input
                         type="number"
@@ -391,194 +709,20 @@ export default function ProductManagement({ onNavigate }: ProductManagementProps
                         autoFocus
                       />
                     ) : (
-                      <span
-                        className={`font-medium cursor-pointer hover:bg-accent-50 px-2 py-1 rounded ${
-                          product.stock_quantity <= product.min_stock_level ? 'text-red-600' : 'text-accent-700'
+                      <span 
+                        className={`font-medium ${isCurrentYear ? 'cursor-pointer px-2 py-1 rounded' : ''} ${
+                          stock <= product.min_stock_level ? 'text-red-600' : 'text-gray-900'
                         }`}
                         onClick={() => startEditing(product.id, 'stock_quantity', product.stock_quantity)}
                       >
-                        {product.stock_quantity}
+                        {stock} units
                       </span>
                     )}
                   </div>
                 </div>
-                <div className="flex gap-2 justify-end">
-                  {editingProduct === product.id && (
-                    <>
-                      <button
-                        onClick={() => saveEdit(editingProduct!, editingField!, tempValue)}
-                        disabled={saving}
-                        className="p-1 text-green-600 hover:text-green-800"
-                      >
-                        <Check className="h-5 w-5" />
-                      </button>
-                      <button
-                        onClick={cancelEditing}
-                        disabled={saving}
-                        className="p-1 text-gray-400 hover:text-gray-600"
-                      >
-                        <X className="h-5 w-5" />
-                      </button>
-                    </>
-                  )}
-                  <button
-                    onClick={() => {
-                      setSelectedProductForHistory(product);
-                      setShowHistory(true);
-                    }}
-                    className="p-1 text-gray-400 hover:text-primary-600"
-                    title="View History"
-                  >
-                    <History className="h-5 w-5" />
-                  </button>
-                  <button
-                    onClick={() => handleDeleteProduct(product.id)}
-                    className="p-1 text-gray-400 hover:text-red-600"
-                    title="Delete Product"
-                  >
-                    <Trash2 className="h-5 w-5" />
-                  </button>
-                </div>
               </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-          {filteredProducts.map(product => (
-            <div key={product.id} className="card hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between mb-4">
-                <div className="text-xs text-gray-500">
-                  {editingProduct === product.id ? 'Editing...' : 'Click values to edit'}
-                </div>
-                <div className="flex gap-2">
-                  {editingProduct === product.id && (
-                    <>
-                      <button 
-                        onClick={() => saveEdit(editingProduct!, editingField!, tempValue)}
-                        disabled={saving}
-                        className="p-1 text-green-600 hover:text-green-800"
-                      >
-                        <Check className="h-4 w-4" />
-                      </button>
-                      <button 
-                        onClick={cancelEditing}
-                        disabled={saving}
-                        className="p-1 text-gray-400 hover:text-gray-600"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </>
-                  )}
-                  <button
-                    onClick={() => {
-                      setSelectedProductForHistory(product);
-                      setShowHistory(true);
-                    }}
-                    className="p-1 text-gray-400 hover:text-primary-600"
-                  >
-                    <History className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDeleteProduct(product.id)}
-                    className="p-1 text-gray-400 hover:text-red-600"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-
-              <div className="mb-4">
-                {editingProduct === product.id && editingField === 'name' ? (
-                  <input
-                    type="text"
-                    value={tempValue}
-                    onChange={(e) => setTempValue(e.target.value.toUpperCase())}
-                    onKeyDown={(e) => handleKeyPress(e, product.id, 'name')}
-                    className="w-full px-2 py-1 border border-blue-300 rounded font-semibold uppercase"
-                    autoFocus
-                  />
-                ) : (
-                  <h3
-                    className="font-semibold text-gray-900 cursor-pointer hover:bg-blue-50 px-2 py-1 rounded inline-block"
-                    onClick={() => startEditing(product.id, 'name', product.name)}
-                  >
-                    {product.name}
-                  </h3>
-                )}
-                <p className="text-sm text-gray-500">Code: {product.barcode || 'N/A'}</p>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-500">Purchase:</span>
-                  {editingProduct === product.id && editingField === 'purchase_price' ? (
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={tempValue}
-                      onChange={(e) => setTempValue(e.target.value)}
-                      onKeyDown={(e) => handleKeyPress(e, product.id, 'purchase_price')}
-                      className="w-20 px-2 py-1 border border-primary-300 rounded text-sm"
-                      autoFocus
-                    />
-                  ) : (
-                    <span 
-                      className="font-medium cursor-pointer hover:bg-primary-50 px-2 py-1 rounded text-primary-700"
-                      onClick={() => startEditing(product.id, 'purchase_price', product.purchase_price)}
-                    >
-                      ₹{product.purchase_price}
-                    </span>
-                  )}
-                </div>
-
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-500">Selling:</span>
-                  {editingProduct === product.id && editingField === 'selling_price' ? (
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={tempValue}
-                      onChange={(e) => setTempValue(e.target.value)}
-                      onKeyDown={(e) => handleKeyPress(e, product.id, 'selling_price')}
-                      className="w-20 px-2 py-1 border border-secondary-300 rounded text-sm"
-                      autoFocus
-                    />
-                  ) : (
-                    <span 
-                      className="font-medium text-secondary-600 cursor-pointer hover:bg-secondary-50 px-2 py-1 rounded"
-                      onClick={() => startEditing(product.id, 'selling_price', product.selling_price)}
-                    >
-                      ₹{product.selling_price}
-                    </span>
-                  )}
-                </div>
-
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-500">Stock:</span>
-                  {editingProduct === product.id && editingField === 'stock_quantity' ? (
-                    <input
-                      type="number"
-                      value={tempValue}
-                      onChange={(e) => setTempValue(e.target.value)}
-                      onKeyDown={(e) => handleKeyPress(e, product.id, 'stock_quantity')}
-                      className="w-16 px-2 py-1 border border-accent-300 rounded text-sm"
-                      autoFocus
-                    />
-                  ) : (
-                    <span 
-                      className={`font-medium cursor-pointer px-2 py-1 rounded ${
-                        product.stock_quantity <= product.min_stock_level ? 'text-red-600' : 'text-gray-900'
-                      }`}
-                      onClick={() => startEditing(product.id, 'stock_quantity', product.stock_quantity)}
-                    >
-                      {product.stock_quantity} units
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
@@ -755,7 +899,7 @@ function AddProductModal({ onClose, onProductAdded }: { onClose: () => void; onP
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999]">
-      <div className="bg-white rounded-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-xl max-md w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-gray-900">Add New Product</h2>

@@ -11,6 +11,15 @@ import {
   getCurrentTimestamp
 } from './pouchdb-client';
 
+// Yearly Stock record interface
+export interface YearlyStockRecord {
+  id: string; // product_id_year
+  product_id: string;
+  financial_year: string;
+  closing_stock: number;
+  recorded_at: string;
+}
+
 // Type definitions matching Supabase schema
 export interface Product {
   id: string;
@@ -207,6 +216,39 @@ export const updateProduct = async (id: string, updates: Partial<Product>): Prom
   } catch (error) {
     console.error('Error updating product:', error);
     return null;
+  }
+};
+
+export const bulkUpdateProducts = async (updates: Array<{ id: string; updates: Partial<Product> }>): Promise<boolean> => {
+  try {
+    const db = await getProductsDB();
+    const ids = updates.map(u => u.id);
+    const pouchIds = ids.map(id => toPouchID('product', id));
+
+    const result = await db.allDocs({
+      include_docs: true,
+      keys: pouchIds
+    });
+
+    const now = getCurrentTimestamp();
+    const docsToUpdate = result.rows.map((row: any, index) => {
+      if (row.error || !row.doc) return null;
+      const updateData = updates[index].updates;
+      return {
+        ...row.doc,
+        ...updateData,
+        updated_at: now
+      };
+    }).filter(doc => doc !== null);
+
+    if (docsToUpdate.length > 0) {
+      await db.bulkDocs(docsToUpdate);
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error in bulk updating products:', error);
+    return false;
   }
 };
 
@@ -625,7 +667,49 @@ export const deletePartyPurchase = async (id: string): Promise<boolean> => {
   }
 };
 
-// ==================== PRODUCT HISTORY ====================
+// ==================== YEARLY CLOSING STOCK ====================
+
+export const saveYearlyClosingStock = async (records: Omit<YearlyStockRecord, 'id' | 'recorded_at'>[]): Promise<void> => {
+  try {
+    const { getYearlyClosingStockDB } = await import('./pouchdb-client');
+    const db = await getYearlyClosingStockDB();
+    const now = getCurrentTimestamp();
+
+    const docs = records.map(r => ({
+      _id: `closing_${r.product_id}_${r.financial_year.replace('-', '_')}`,
+      ...r,
+      recorded_at: now
+    }));
+
+    // Use bulkDocs to save all records
+    await db.bulkDocs(docs);
+  } catch (error) {
+    console.error('Error saving yearly closing stock:', error);
+    throw error;
+  }
+};
+
+export const getClosingStockForYear = async (financialYear: string): Promise<Record<string, number>> => {
+  try {
+    const { getYearlyClosingStockDB } = await import('./pouchdb-client');
+    const db = await getYearlyClosingStockDB();
+    const result = await db.find({
+      selector: {
+        financial_year: financialYear
+      }
+    });
+
+    const stockMap: Record<string, number> = {};
+    result.docs.forEach((doc: any) => {
+      stockMap[doc.product_id] = doc.closing_stock;
+    });
+
+    return stockMap;
+  } catch (error) {
+    console.error('Error getting closing stock for year:', error);
+    return {};
+  }
+};
 
 let productHistoryDB: any = null;
 

@@ -158,6 +158,63 @@ export const deleteProduct = async (productId: string): Promise<void> => {
   }
 };
 
+export const resetAllProductsStock = async (newYearLabel: string): Promise<boolean> => {
+  try {
+    const products = await getProducts();
+    if (!products || products.length === 0) return true;
+
+    const updates = products.map(p => ({
+      id: p.id,
+      updates: { stock_quantity: 0 }
+    }));
+
+    if (isOnline) {
+      const { error } = await supabase
+        .from('products')
+        .update({ stock_quantity: 0 });
+      
+      if (error) throw error;
+    }
+
+    // Always update local cache
+    await OfflineDB.bulkUpdateProducts(updates as any);
+    
+    // Save closing stock for the previous year (e.g., if resetting for 2026-27, save for 2025-26)
+    const prevYear = newYearLabel === '2026-27' ? '2025-26' : 'unknown';
+    if (prevYear !== 'unknown') {
+      const closingRecords = products.map(p => ({
+        product_id: p.id,
+        financial_year: prevYear,
+        closing_stock: p.stock_quantity
+      }));
+      await OfflineDB.saveYearlyClosingStock(closingRecords);
+    }
+
+    // Add to history for all products
+    const { addProductHistory } = await import('./product-history');
+    for (const p of products) {
+      await addProductHistory({
+        product_id: p.id,
+        product_name: p.name,
+        action: 'stock_reset',
+        quantity_change: -p.stock_quantity,
+        stock_before: p.stock_quantity,
+        stock_after: 0,
+        notes: `Stock reset for new financial year ${newYearLabel}`
+      });
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error resetting products stock:', error);
+    return false;
+  }
+};
+
+export const getClosingStockForYear = async (financialYear: string): Promise<Record<string, number>> => {
+  return await OfflineDB.getClosingStockForYear(financialYear);
+};
+
 // ==================== SALES ====================
 
 export const getSales = async (limit?: number): Promise<Sale[]> => {

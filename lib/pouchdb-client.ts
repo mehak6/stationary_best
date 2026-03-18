@@ -25,6 +25,7 @@ let productsDB: PouchDB.Database | null = null;
 let salesDB: PouchDB.Database | null = null;
 let categoriesDB: PouchDB.Database | null = null;
 let partyPurchasesDB: PouchDB.Database | null = null;
+let yearlyClosingStockDB: PouchDB.Database | null = null;
 let syncMetaDB: PouchDB.Database | null = null;
 
 // Initialization state tracking
@@ -73,6 +74,13 @@ export const initializeDatabases = async () => {
 
     if (!partyPurchasesDB) {
       partyPurchasesDB = new PouchDB('inventory_party_purchases', {
+        auto_compaction: true,
+        revs_limit: 10
+      });
+    }
+
+    if (!yearlyClosingStockDB) {
+      yearlyClosingStockDB = new PouchDB('inventory_yearly_closing_stock', {
         auto_compaction: true,
         revs_limit: 10
       });
@@ -165,6 +173,12 @@ const createIndexes = async () => {
       });
     }
 
+    if (yearlyClosingStockDB) {
+      await yearlyClosingStockDB.createIndex({
+        index: { fields: ['financial_year'] }
+      });
+    }
+
     console.log('✅ PouchDB indexes created successfully');
   } catch (error) {
     console.error('❌ Error creating indexes:', error);
@@ -202,6 +216,14 @@ export const getPartyPurchasesDB = async (): Promise<PouchDB.Database> => {
     throw new Error('Party purchases database not initialized');
   }
   return partyPurchasesDB;
+};
+
+export const getYearlyClosingStockDB = async (): Promise<PouchDB.Database> => {
+  await waitForDatabaseInit();
+  if (!yearlyClosingStockDB) {
+    throw new Error('Yearly closing stock database not initialized');
+  }
+  return yearlyClosingStockDB;
 };
 
 export const getSyncMetaDB = async (): Promise<PouchDB.Database> => {

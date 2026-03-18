@@ -10,10 +10,12 @@ import {
   getProducts,
   getSales,
   getPartyPurchases,
-  getSalesByDateRange
+  getSalesByDateRange,
+  getClosingStockForYear
 } from 'lib/offline-adapter';
 import { formatDateToDDMMYYYY, parseDDMMYYYYToISO } from '../utils/dateHelpers';
 import type { Product, Sale, PartyPurchase } from 'supabase_client';
+import { Calendar, Filter, Download } from 'lucide-react';
 
 interface ReportsProps {
   onNavigate: (view: string) => void;
@@ -24,33 +26,51 @@ export default function Reports({ onNavigate }: ReportsProps) {
   const [products, setProducts] = useState<Product[]>([]);
   const [sales, setSales] = useState<Sale[]>([]);
   const [partyPurchases, setPartyPurchases] = useState<PartyPurchase[]>([]);
+  const [financialYear, setFinancialYear] = useState('2026-27');
+  const [historicalStock, setHistoricalStock] = useState<Record<string, number>>({});
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
   const [startDateDisplay, setStartDateDisplay] = useState('');
-  const [endDateDisplay, setEndDateDisplay] = useState(() => {
-    const today = new Date();
-    const day = String(today.getDate()).padStart(2, '0');
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const year = String(today.getFullYear());
-    return `${day}/${month}/${year}`;
-  });
+  const [endDateDisplay, setEndDateDisplay] = useState('');
   const [filterApplied, setFilterApplied] = useState(false);
 
-  useEffect(() => {
-    fetchReportsData();
-  }, []);
+  const isCurrentYear = financialYear === '2026-27';
 
-  const fetchReportsData = async () => {
+  useEffect(() => {
+    // Set default date range based on financial year
+    if (financialYear === '2025-26') {
+      setStartDate('2025-04-01');
+      setEndDate('2026-03-19');
+      setStartDateDisplay('01/04/2025');
+      setEndDateDisplay('19/03/2026');
+    } else {
+      setStartDate('2026-03-20');
+      const today = new Date().toISOString().split('T')[0];
+      setEndDate(today);
+      setStartDateDisplay('20/03/2026');
+      const d = new Date();
+      setEndDateDisplay(`${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`);
+    }
+    fetchReportsData(financialYear);
+  }, [financialYear]);
+
+  const fetchReportsData = async (year: string) => {
     try {
       setLoading(true);
-      const [productsData, salesData, partyData] = await Promise.all([
+      const start = year === '2025-26' ? '2025-04-01' : '2026-03-20';
+      const end = year === '2025-26' ? '2026-03-19' : '2027-03-19';
+
+      const [productsData, salesData, partyData, closingData] = await Promise.all([
         getProducts(),
-        getSales(),
-        getPartyPurchases()
+        getSalesByDateRange(start, end),
+        getPartyPurchases(),
+        year === '2025-26' ? getClosingStockForYear(year) : Promise.resolve({})
       ]);
+
       setProducts(productsData || []);
       setSales(salesData || []);
       setPartyPurchases(partyData || []);
+      setHistoricalStock(closingData || {});
     } catch (error) {
       console.error('Error fetching reports data:', error);
     } finally {
@@ -74,19 +94,20 @@ export default function Reports({ onNavigate }: ReportsProps) {
   };
 
   const clearFilter = async () => {
-    setStartDate('');
-    setEndDate(new Date().toISOString().split('T')[0]);
     setFilterApplied(false);
-    fetchReportsData();
+    fetchReportsData(financialYear);
   };
 
-  const totalProductInvestment = products.reduce((sum, p) => sum + (p.purchase_price * p.stock_quantity), 0);
-  const totalPartyInvestment = partyPurchases.reduce((sum, pp) => sum + (pp.purchase_price * pp.remaining_quantity), 0);
+  // Calculate investment based on either current stock or historical closing stock
+  const getStockForProduct = (p: Product) => isCurrentYear ? p.stock_quantity : (historicalStock[p.id] ?? 0);
+
+  const totalProductInvestment = products.reduce((sum, p) => sum + (p.purchase_price * getStockForProduct(p)), 0);
+  const totalPartyInvestment = isCurrentYear ? partyPurchases.reduce((sum, pp) => sum + (pp.purchase_price * pp.remaining_quantity), 0) : 0;
   const totalInvestment = totalProductInvestment + totalPartyInvestment;
   const totalSalesRevenue = sales.reduce((sum, s) => sum + s.total_amount, 0);
   const totalProfit = sales.reduce((sum, s) => sum + s.profit, 0);
   const profitMargin = totalSalesRevenue > 0 ? (totalProfit / totalSalesRevenue) * 100 : 0;
-  const currentInventoryValue = products.reduce((sum, p) => sum + (p.selling_price * p.stock_quantity), 0);
+  const currentInventoryValue = products.reduce((sum, p) => sum + (p.selling_price * getStockForProduct(p)), 0);
 
   const productSalesMap = sales.reduce((acc: Record<string, any>, sale) => {
     if (!acc[sale.product_id]) acc[sale.product_id] = { revenue: 0, profit: 0, quantity: 0 };
@@ -105,7 +126,36 @@ export default function Reports({ onNavigate }: ReportsProps) {
   if (loading) return <div className="p-6 text-center">Loading reports...</div>;
 
   return (
-    <div className="p-6 bg-primary-50 min-h-screen">
+    <div className="p-4 sm:p-6 bg-primary-50 min-h-screen">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+        <div className="flex items-center gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Reports</h1>
+            <p className="text-gray-600 mt-2">Financial performance & inventory analytics</p>
+          </div>
+          <div className="bg-white border-2 border-primary-200 rounded-xl px-4 py-2 flex items-center gap-3 shadow-sm">
+            <Calendar className="h-5 w-5 text-primary-600" />
+            <div className="flex flex-col">
+              <span className="text-[10px] uppercase font-bold text-gray-400 leading-none mb-1">Financial Year</span>
+              <select 
+                value={financialYear}
+                onChange={(e) => setFinancialYear(e.target.value)}
+                className="bg-transparent text-sm font-bold text-primary-900 focus:outline-none cursor-pointer"
+              >
+                <option value="2025-26">2025-26</option>
+                <option value="2026-27">2026-27</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        {!isCurrentYear && (
+          <div className="mt-4 sm:mt-0 px-4 py-2 bg-orange-100 border border-orange-200 rounded-lg flex items-center gap-2 text-orange-800 text-sm font-medium">
+            <AlertCircle className="h-4 w-4" />
+            Historical View
+          </div>
+        )}
+      </div>
+
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="card bg-orange-600 text-white">

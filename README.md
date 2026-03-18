@@ -274,6 +274,13 @@ Potential areas for expansion:
 
 *This section contains technical insights and observations for future AI assistance sessions.*
 
+### Senior Developer Architectural Learnings (March 2026 Update)
+- **True Architecture Discovered**: The application is not just a standard web app; it is a **Tauri-wrapped Desktop Application** with an **Offline-First Architecture**.
+- **Local Data First**: Core business logic and database operations (like stock deduction and sales creation) happen locally against **PouchDB** (IndexedDB wrapper) via `lib/offline-db.ts`. This ensures the app works seamlessly without an internet connection.
+- **Synchronization Engine**: A custom sync layer in `lib/supabase-sync.ts` manages bidirectional data flow between the local PouchDB instance and the remote Supabase PostgreSQL database using timestamp-based tracking (`updated_at`).
+- **Domain Logic**: The system cleanly separates "Products" (customer-facing inventory) from "Party Purchases" (supplier-facing bulk tracking), representing a mature understanding of retail inventory domains.
+- **Desktop Integration**: The presence of `src-tauri` indicates the application is compiled as a native desktop executable, allowing for potential native OS capabilities beyond standard web constraints.
+
 ### Code Quality & Architecture
 - **Well-structured component architecture** with clear separation of concerns
 - **Comprehensive error handling** with React Error Boundaries and fallback UIs
