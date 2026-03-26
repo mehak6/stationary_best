@@ -735,6 +735,20 @@ export const saveProductHistory = async (entry: any): Promise<void> => {
   }
 };
 
+export const saveProductHistoryBulk = async (entries: any[]): Promise<void> => {
+  try {
+    const db = getProductHistoryDB();
+    const docs = entries.map(entry => ({
+      _id: `history_${entry.id}`,
+      ...entry
+    }));
+    await db.bulkDocs(docs);
+  } catch (error) {
+    console.error('Error saving product history bulk:', error);
+    throw error;
+  }
+};
+
 export const getProductHistory = async (productId: string): Promise<any[]> => {
   try {
     const db = getProductHistoryDB();
