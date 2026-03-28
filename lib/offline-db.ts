@@ -141,8 +141,22 @@ export const saveProduct = async (product: Product): Promise<Product> => {
     let doc: any;
     try {
       doc = await db.get(docId);
+      
+      // CRITICAL: Only update if the incoming data is newer or equal in timestamp
+      // This prevents stale Supabase data from overwriting fresh local resets
+      const localUpdatedAt = new Date(doc.updated_at || 0).getTime();
+      const incomingUpdatedAt = new Date(product.updated_at || 0).getTime();
+      
+      if (incomingUpdatedAt < localUpdatedAt) {
+        // console.log(`Skipping update for ${product.name}: Local data is newer`);
+        return {
+          id: fromPouchID(doc._id),
+          ...doc
+        } as any;
+      }
+
       // Update existing
-      const updatedDoc = { ...doc, ...product };
+      const updatedDoc = { ...doc, ...product, _id: docId, _rev: doc._rev };
       await db.put(updatedDoc);
     } catch {
       // Create new

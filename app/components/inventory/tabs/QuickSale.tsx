@@ -7,13 +7,15 @@ import {
   Search,
   Plus,
   X,
-  BarChart3
+  BarChart3,
+  Calendar
 } from 'lucide-react';
 import {
   getProducts,
   getSalesByDate,
   createSale,
-  updateProduct
+  updateProduct,
+  getClosingStockForYear
 } from 'lib/offline-adapter';
 import { formatDateToDDMMYYYY } from '../utils/dateHelpers';
 import type { Product, Sale, SaleInsert } from 'supabase_client';
@@ -32,6 +34,15 @@ interface CartItem {
 
 export default function QuickSale({ onNavigate }: QuickSaleProps) {
   const { showToast } = useToast();
+  const [financialYear, setFinancialYear] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('inventory_pro_fy') || '2026-27';
+    }
+    return '2026-27';
+  });
+  const isCurrentYear = financialYear === '2026-27';
+  const [historicalStock, setHistoricalStock] = useState<Record<string, number>>({});
+
   const [cart, setCart] = useState<CartItem[]>([]);
   const [saleDate, setSaleDate] = useState(new Date().toISOString().split('T')[0]);
   const [saleDateDisplay, setSaleDateDisplay] = useState(() => {
@@ -54,23 +65,49 @@ export default function QuickSale({ onNavigate }: QuickSaleProps) {
   const [showQuickAddModal, setShowQuickAddModal] = useState(false);
   const [quickAddPrefillName, setQuickAddPrefillName] = useState('');
 
-  // Fetch products on component mount
+  const [financialYear, setFinancialYear] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('inventory_pro_fy') || '2026-27';
+    }
+    return '2026-27';
+  });
+  const isCurrentYear = financialYear === '2026-27';
+  const [historicalStock, setHistoricalStock] = useState<Record<string, number>>({});
+
+  // Sync FY to localStorage
   useEffect(() => {
-    const fetchProducts = async () => {
+    localStorage.setItem('inventory_pro_fy', financialYear);
+  }, [financialYear]);
+
+  // Fetch products and historical stock
+  useEffect(() => {
+    const fetchData = async () => {
       try {
         setLoading(true);
         const productsData = await getProducts();
         setProducts(productsData || []);
+
+        if (!isCurrentYear) {
+          const closingData = await getClosingStockForYear(financialYear);
+          setHistoricalStock(closingData || {});
+        } else {
+          setHistoricalStock({});
+        }
       } catch (error) {
-        console.error('Error fetching products:', error);
+        console.error('Error fetching data:', error);
         setProducts([]);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProducts();
-  }, []);
+    fetchData();
+  }, [financialYear, isCurrentYear]);
+
+  const getDisplayStock = (product: Product) => {
+    if (isCurrentYear) return product.stock_quantity;
+    return historicalStock[product.id] ?? 0;
+  };
 
   // Fetch sales for selected date
   useEffect(() => {
@@ -250,11 +287,40 @@ export default function QuickSale({ onNavigate }: QuickSaleProps) {
 
   return (
     <div className="p-6 bg-primary-50 min-h-screen">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Quick Sale</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Quick Sale</h1>
+          <p className="text-gray-600 mt-1">Process sales and manage daily transactions</p>
+        </div>
+        <div className="bg-white border-2 border-primary-200 rounded-xl px-4 py-2 flex items-center gap-3 shadow-sm mt-4 sm:mt-0">
+          <Calendar className="h-5 w-5 text-primary-600" />
+          <div className="flex flex-col">
+            <span className="text-[10px] uppercase font-bold text-gray-400 leading-none mb-1">Financial Year</span>
+            <select 
+              value={financialYear}
+              onChange={(e) => setFinancialYear(e.target.value)}
+              className="bg-transparent text-sm font-bold text-primary-900 focus:outline-none cursor-pointer"
+            >
+              <option value="2025-26">2025-26 (Legacy)</option>
+              <option value="2026-27">2026-27 (Current)</option>
+            </select>
+          </div>
+        </div>
       </div>
 
       <div className="space-y-6">
+        {!isCurrentYear && (
+          <div className="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-lg animate-in fade-in slide-in-from-top-2">
+            <div className="flex items-center gap-3">
+              <Package className="h-5 w-5 text-amber-600" />
+              <p className="text-amber-800 text-sm">
+                You are viewing historical data for <strong>{financialYear}</strong>. 
+                New sales and stock additions are only allowed in the <strong>Current Year (2026-27)</strong>.
+              </p>
+            </div>
+          </div>
+        )}
+
         <div className="card bg-primary-600 text-white p-4">
           <div className="flex flex-col md:flex-row gap-4 items-center">
             <div className="flex-shrink-0">
@@ -265,6 +331,7 @@ export default function QuickSale({ onNavigate }: QuickSaleProps) {
                 onChange={(e) => handleSaleDateChange(e.target.value)}
                 className="input-field w-36 text-gray-900 font-semibold"
                 placeholder="DD/MM/YYYY"
+                disabled={!isCurrentYear}
               />
             </div>
             <div className="flex-1 w-full relative">
@@ -272,34 +339,40 @@ export default function QuickSale({ onNavigate }: QuickSaleProps) {
               <input
                 ref={searchInputRef}
                 type="text"
-                placeholder="Search products or scan barcode..."
+                placeholder={isCurrentYear ? "Search products or scan barcode..." : "View-only mode for historical records"}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="input-field pl-10 w-full text-gray-900"
+                disabled={!isCurrentYear}
               />
             </div>
           </div>
         </div>
 
         <div className="card">
-          <h3 className="text-sm font-semibold text-gray-700 mb-3">Quick Access</h3>
+          <h3 className="text-sm font-semibold text-gray-700 mb-3">
+            {isCurrentYear ? 'Quick Access' : `Historical Stock (${financialYear})`}
+          </h3>
           <div className="flex gap-3 overflow-x-auto pb-3">
-            {filteredProducts.slice(0, 10).map(product => (
-              <div
-                key={product.id}
-                onClick={() => addToCart(product)}
-                className="flex-shrink-0 w-36 p-3 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-primary-500 transition-all text-center"
-              >
-                <p className="font-bold text-sm text-gray-900 truncate">{product.name}</p>
-                <p className="text-lg font-bold text-primary-600">₹{product.selling_price}</p>
-                <p className={`text-xs ${product.stock_quantity <= product.min_stock_level ? 'text-red-600' : 'text-gray-500'}`}>
-                  {product.stock_quantity} left
-                </p>
-              </div>
-            ))}
+            {filteredProducts.slice(0, 10).map(product => {
+              const displayStock = getDisplayStock(product);
+              return (
+                <div
+                  key={product.id}
+                  onClick={() => isCurrentYear && addToCart(product)}
+                  className={`flex-shrink-0 w-36 p-3 border-2 border-gray-200 rounded-lg transition-all text-center ${isCurrentYear ? 'cursor-pointer hover:border-primary-500' : 'opacity-80 bg-gray-50'}`}
+                >
+                  <p className="font-bold text-sm text-gray-900 truncate">{product.name}</p>
+                  <p className="text-lg font-bold text-primary-600">₹{product.selling_price}</p>
+                  <p className={`text-xs ${displayStock <= product.min_stock_level ? 'text-red-600' : 'text-gray-500'}`}>
+                    {displayStock} left
+                  </p>
+                </div>
+              );
+            })}
           </div>
 
-          {noResults && (
+          {isCurrentYear && noResults && (
             <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
               <button
                 onClick={() => handleAddNewProduct(searchTerm)}
@@ -358,7 +431,11 @@ export default function QuickSale({ onNavigate }: QuickSaleProps) {
               <p className="text-sm opacity-80">TOTAL</p>
               <p className="text-4xl font-bold">₹{cart.reduce((s, i) => s + (i.salePrice * i.quantity), 0).toFixed(2)}</p>
             </div>
-            <button onClick={handleCompleteSale} disabled={processing} className="card bg-primary-600 text-white text-xl font-bold flex items-center justify-center gap-2 hover:bg-primary-700">
+            <button 
+              onClick={handleCompleteSale} 
+              disabled={processing || !isCurrentYear} 
+              className={`card bg-primary-600 text-white text-xl font-bold flex items-center justify-center gap-2 hover:bg-primary-700 ${!isCurrentYear ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
               {processing ? 'Processing...' : 'Complete Sale'}
             </button>
           </div>
