@@ -53,32 +53,29 @@ export const subscribeToOnlineStatus = (callback: (online: boolean) => void) => 
 export const getProducts = async (limit?: number): Promise<Product[]> => {
   try {
     if (isOnline) {
-      // Try online first
+      // Try online sync first
       const { data, error } = await supabase
         .from('products')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(limit || 1000);
 
-      if (error) throw error;
-
-      // Cache to local DB
-      if (data && data.length > 0) {
+      if (!error && data && data.length > 0) {
+        // Update local cache but don't wait for it
         await Promise.all(data.map(product =>
           OfflineDB.saveProduct(product).catch(err =>
             console.warn('Failed to cache product:', err)
           )
         ));
       }
-
-      return data || [];
-    } else {
-      // Use offline cache
-      return await OfflineDB.getAllProducts();
     }
+    
+    // CRITICAL: Always return data from Local DB as the source of truth
+    // This ensures that local resets (0 stock) are shown immediately
+    // even if the server hasn't updated yet.
+    return await OfflineDB.getAllProducts();
   } catch (error) {
-    console.error('Error fetching products, using offline cache:', error);
-    // Fallback to offline
+    console.error('Error in getProducts, using offline cache:', error);
     return await OfflineDB.getAllProducts();
   }
 };
