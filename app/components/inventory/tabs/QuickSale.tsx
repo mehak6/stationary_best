@@ -65,15 +65,6 @@ export default function QuickSale({ onNavigate }: QuickSaleProps) {
   const [showQuickAddModal, setShowQuickAddModal] = useState(false);
   const [quickAddPrefillName, setQuickAddPrefillName] = useState('');
 
-  const [financialYear, setFinancialYear] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('inventory_pro_fy') || '2026-27';
-    }
-    return '2026-27';
-  });
-  const isCurrentYear = financialYear === '2026-27';
-  const [historicalStock, setHistoricalStock] = useState<Record<string, number>>({});
-
   // Sync FY to localStorage
   useEffect(() => {
     localStorage.setItem('inventory_pro_fy', financialYear);
