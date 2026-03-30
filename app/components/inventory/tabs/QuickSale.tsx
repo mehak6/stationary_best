@@ -36,11 +36,16 @@ export default function QuickSale({ onNavigate }: QuickSaleProps) {
   const { showToast } = useToast();
   const [financialYear, setFinancialYear] = useState(() => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('inventory_pro_fy') || '2026-27';
+      const saved = localStorage.getItem('inventory_pro_fy');
+      // Normalize to 2026-27 format
+      if (saved === '2026-2027') return '2026-27';
+      return saved || '2026-27';
     }
     return '2026-27';
   });
-  const isCurrentYear = financialYear === '2026-27';
+  
+  // Support both 2026-27 and 2026-2027 formats for the check
+  const isCurrentYear = financialYear === '2026-27' || financialYear === '2026-2027';
   const [historicalStock, setHistoricalStock] = useState<Record<string, number>>({});
 
   const [cart, setCart] = useState<CartItem[]>([]);
