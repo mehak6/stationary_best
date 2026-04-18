@@ -137,17 +137,32 @@ const syncWithRetry = async (
 
   try {
     // Check if Supabase is available
+    const { checkSupabaseStatus } = await import('./supabase-status');
     const status = await checkSupabaseStatus();
+    
     if (status === 'paused') {
       console.warn('Supabase project is paused. Skipping sync.');
       
       const duration = Date.now() - startTime;
       const result: SyncResult = {
-        status: 'paused', // We need to add this to SyncStatus type
+        status: 'paused',
         timestamp: new Date().toISOString(),
         stats: {
           products: { push: 0, pull: 0, errors: 0 },
           sales: { push: 0, pull: 0, errors: 0 },
+          categories: { push: 0, pull: 0, errors: 0 },
+          partyPurchases: { push: 0, pull: 0, errors: 0 }
+        },
+        totalSynced: 0,
+        totalErrors: 0,
+        duration,
+        error: 'Supabase project is paused. Please resume to sync.'
+      };
+
+      lastSyncResult = result;
+      notifyListeners(result);
+      return result;
+    }
           categories: { push: 0, pull: 0, errors: 0 },
           partyPurchases: { push: 0, pull: 0, errors: 0 }
         },
