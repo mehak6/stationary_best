@@ -38,3 +38,35 @@ export const checkSupabaseStatus = async (): Promise<SupabaseStatus> => {
     return 'error';
   }
 };
+
+/**
+ * Attempts to wake up a paused Supabase project by making a simple request.
+ * Returns true if the project is responsive (not returning 503).
+ */
+export const resumeSupabase = async (): Promise<boolean> => {
+  try {
+    console.log('Attempting to resume Supabase project...');
+    
+    // Attempt a lightweight request to trigger wake-up
+    const { error, status } = await supabase
+      .from('products')
+      .select('id')
+      .limit(1);
+    
+    if (error) {
+      if (status === 503) {
+        console.warn('Supabase is still waking up (503)...');
+        return false;
+      }
+      // If it's a different error, the project is at least responsive
+      console.log('Supabase responded with error (not 503), project is awake:', error.message);
+      return true;
+    }
+
+    console.log('Supabase project resumed successfully!');
+    return true;
+  } catch (err) {
+    console.error('Error during Supabase resume attempt:', err);
+    return false;
+  }
+};

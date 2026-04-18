@@ -215,6 +215,52 @@ export const getClosingStockForYear = async (financialYear: string): Promise<Rec
   return await OfflineDB.getClosingStockForYear(financialYear);
 };
 
+// ==================== ANALYTICS ====================
+
+export const getAnalytics = async () => {
+  try {
+    if (isOnline) {
+      // Import dynamic to avoid circular dependencies
+      const { getAnalytics: getOnlineAnalytics } = await import('../supabase_client');
+      return await getOnlineAnalytics();
+    }
+    
+    // Fallback to offline analytics
+    const products = await OfflineDB.getAllProducts();
+    const sales = await OfflineDB.getAllSales();
+    
+    const totalProducts = products.length;
+    const totalSales = sales.reduce((sum, sale) => sum + (sale.total_amount || 0), 0);
+    const totalProfit = sales.reduce((sum, sale) => sum + (sale.profit || 0), 0);
+    
+    const today = new Date().toISOString().split('T')[0];
+    const todaySalesData = sales.filter(sale => sale.sale_date === today);
+    const todaySales = todaySalesData.reduce((sum, sale) => sum + (sale.total_amount || 0), 0);
+    const todayProfit = todaySalesData.reduce((sum, sale) => sum + (sale.profit || 0), 0);
+    
+    const lowStockProducts = products.filter(p => p.stock_quantity <= p.min_stock_level).length;
+
+    return {
+      totalProducts,
+      totalSales,
+      totalProfit,
+      todaySales,
+      todayProfit,
+      lowStockProducts
+    };
+  } catch (error) {
+    console.error('Error fetching analytics:', error);
+    return {
+      totalProducts: 0,
+      totalSales: 0,
+      totalProfit: 0,
+      todaySales: 0,
+      todayProfit: 0,
+      lowStockProducts: 0
+    };
+  }
+};
+
 // ==================== SALES ====================
 
 export const getSales = async (limit?: number): Promise<Sale[]> => {

@@ -271,6 +271,21 @@ export const useSyncStatus = () => {
     // Actions
     triggerSync,
     forceSync,
+    resume: useCallback(async () => {
+      try {
+        const { resumeSupabase } = await import('../lib/supabase-status');
+        const success = await resumeSupabase();
+        if (success) {
+          setSupabaseStatus('active');
+          // Trigger a sync if it was paused
+          triggerSync();
+        }
+        return success;
+      } catch (err) {
+        console.error('Error in resume action:', err);
+        return false;
+      }
+    }, [triggerSync]),
     refreshStats,
 
     // Helpers

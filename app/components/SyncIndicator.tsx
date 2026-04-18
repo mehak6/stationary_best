@@ -19,6 +19,7 @@ export default function SyncIndicator() {
     error,
     stats,
     triggerSync,
+    resume,
     isOnline,
     supabaseStatus
   } = useSyncStatus();
@@ -132,13 +133,24 @@ export default function SyncIndicator() {
             </div>
           </div>
 
-          {isOnline && !isSyncing && (
+          {isOnline && !isSyncing && supabaseStatus !== 'paused' && (
             <button
               onClick={triggerSync}
               className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
               title="Sync now"
             >
               <RefreshCw className="w-4 h-4 text-gray-600" />
+            </button>
+          )}
+
+          {isOnline && supabaseStatus === 'paused' && (
+            <button
+              onClick={resume}
+              className="px-3 py-1.5 bg-orange-100 hover:bg-orange-200 text-orange-700 rounded-lg transition-colors flex items-center gap-1.5 text-xs font-bold border border-orange-200"
+              title="Resume Supabase Project"
+            >
+              <RefreshCw className="w-3 h-3" />
+              RESUME
             </button>
           )}
         </div>

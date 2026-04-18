@@ -15,7 +15,8 @@ import {
   getSalesByDate,
   createSale,
   updateProduct,
-  getClosingStockForYear
+  getClosingStockForYear,
+  getAnalytics
 } from 'lib/offline-adapter';
 import { formatDateToDDMMYYYY } from '../utils/dateHelpers';
 import type { Product, Sale, SaleInsert } from 'supabase_client';
@@ -45,7 +46,8 @@ export default function QuickSale({ onNavigate }: QuickSaleProps) {
   });
   
   // Support both 2026-27 and 2026-2027 formats for the check
-  const isCurrentYear = financialYear === '2026-27' || financialYear === '2026-2027';
+  // Also allow 2025-26 as a current year for now if the user hasn't fully transitioned
+  const isCurrentYear = financialYear === '2026-27' || financialYear === '2026-2027' || financialYear === '2025-26';
   const [historicalStock, setHistoricalStock] = useState<Record<string, number>>({});
 
   const [cart, setCart] = useState<CartItem[]>([]);
