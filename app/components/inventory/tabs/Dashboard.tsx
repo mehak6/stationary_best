@@ -186,12 +186,15 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
     }
 
     try {
-      await deleteSale(saleId);
+      const success = await deleteSale(saleId);
+      
+      if (!success) {
+        showToast('Failed to delete sale from database', 'error');
+        return;
+      }
 
       // Refresh dashboard data to update analytics
-      const [analyticsData] = await Promise.all([
-        getAnalytics()
-      ]);
+      const analyticsData = await getAnalytics();
 
       setAnalytics(analyticsData || {
         totalProducts: 0,
@@ -207,8 +210,11 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
         await fetchAllSales(allSalesPage);
       }
 
+      showToast('Sale deleted successfully', 'success');
+
     } catch (error) {
       console.error('Error deleting sale:', error);
+      showToast('Error deleting sale. Please try again.', 'error');
     }
   };
 

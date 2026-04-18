@@ -217,17 +217,56 @@ export const getClosingStockForYear = async (financialYear: string): Promise<Rec
 
 // ==================== ANALYTICS ====================
 
-export const getAnalytics = async () => {
+export const getAnalytics = async (financialYear: string = '2026-27') => {
   try {
+    // FY 2026-27 range
+    const fyStart = '2026-04-01';
+    const fyEnd = '2027-03-31';
+
     if (isOnline) {
-      // Import dynamic to avoid circular dependencies
-      const { getAnalytics: getOnlineAnalytics } = await import('../supabase_client');
-      return await getOnlineAnalytics();
+      const { data: salesData, error: salesError } = await supabase
+        .from('sales')
+        .select('total_amount, profit, sale_date')
+        .gte('sale_date', fyStart)
+        .lte('sale_date', fyEnd);
+
+      const { count: totalProducts, error: prodError } = await supabase
+        .from('products')
+        .select('*', { count: 'exact', head: true });
+
+      const { count: lowStockCount } = await supabase
+        .from('products')
+        .select('*', { count: 'exact', head: true })
+        .lt('stock_quantity', 5);
+
+      if (salesError || prodError) throw salesError || prodError;
+
+      const totalSales = salesData?.reduce((sum, sale) => sum + (sale.total_amount || 0), 0) || 0;
+      const totalProfit = salesData?.reduce((sum, sale) => sum + (sale.profit || 0), 0) || 0;
+
+      const today = new Date().toISOString().split('T')[0];
+      const todaySalesData = salesData?.filter(sale => sale.sale_date === today) || [];
+      const todaySales = todaySalesData.reduce((sum, sale) => sum + (sale.total_amount || 0), 0);
+      const todayProfit = todaySalesData.reduce((sum, sale) => sum + (sale.profit || 0), 0);
+
+      return {
+        totalProducts: totalProducts || 0,
+        totalSales,
+        totalProfit,
+        todaySales,
+        todayProfit,
+        lowStockProducts: lowStockCount || 0
+      };
     }
     
     // Fallback to offline analytics
     const products = await OfflineDB.getAllProducts();
-    const sales = await OfflineDB.getAllSales();
+    const allSales = await OfflineDB.getAllSales();
+    
+    // Filter sales by financial year
+    const sales = allSales.filter(sale => 
+      sale.sale_date >= fyStart && sale.sale_date <= fyEnd
+    );
     
     const totalProducts = products.length;
     const totalSales = sales.reduce((sum, sale) => sum + (sale.total_amount || 0), 0);
@@ -378,6 +417,87 @@ export const createSale = async (sale: SaleInsert): Promise<Sale> => {
   } catch (error) {
     console.error('Error creating sale online, saving offline:', error);
     return await OfflineDB.createSale(sale);
+  }
+};
+
+export const updateSale = async (id: string, updates: Partial<SaleInsert>): Promise<Sale> => {
+  try {
+    if (isOnline) {
+      const { data, error } = await supabase
+        .from('sales')
+        .update(updates)
+        .eq('id', id)
+        .select(`
+          *,
+          products (
+            id,
+            name,
+            purchase_price
+          )
+        `)
+        .single();
+
+      if (error) throw error;
+
+      const formattedSale = {
+        ...data,
+        product_name: (data as any).products?.name
+      };
+
+      // Update local cache
+      await OfflineDB.saveSale(formattedSale);
+      return formattedSale;
+    } else {
+      const updated = await OfflineDB.updateSale(id, updates as any);
+      return updated;
+    }
+  } catch (error) {
+    console.error('Error updating sale online, saving offline:', error);
+    return await OfflineDB.updateSale(id, updates as any);
+  }
+};
+
+export const deleteSale = async (id: string): Promise<boolean> => {
+  try {
+    if (isOnline) {
+      // First, get the sale to know the quantity and product_id for stock restoration
+      const { data: sale, error: getError } = await supabase
+        .from('sales')
+        .select('product_id, quantity')
+        .eq('id', id)
+        .single();
+
+      if (!getError && sale) {
+        // Try to restore stock online first
+        const { data: product, error: prodError } = await supabase
+          .from('products')
+          .select('stock_quantity')
+          .eq('id', sale.product_id)
+          .single();
+
+        if (!prodError && product) {
+          await supabase
+            .from('products')
+            .update({ stock_quantity: product.stock_quantity + sale.quantity })
+            .eq('id', sale.product_id);
+        }
+      }
+
+      const { error } = await supabase
+        .from('sales')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      // Remove from local cache (OfflineDB.deleteSale also restores local stock)
+      return await OfflineDB.deleteSale(id);
+    } else {
+      return await OfflineDB.deleteSale(id);
+    }
+  } catch (error) {
+    console.error('Error deleting sale online, marking offline:', error);
+    return await OfflineDB.deleteSale(id);
   }
 };
 
