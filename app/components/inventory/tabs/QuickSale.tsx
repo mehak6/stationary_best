@@ -47,6 +47,7 @@ export default function QuickSale({ onNavigate }: QuickSaleProps) {
   
   // Support both 2026-27 and 2026-2027 formats for the check
   // Also allow 2025-26 as a current year for now if the user hasn't fully transitioned
+  // Redefined FY 2026-27 to start from March 20th, 2026
   const isCurrentYear = financialYear === '2026-27' || financialYear === '2026-2027' || financialYear === '2025-26';
   const [historicalStock, setHistoricalStock] = useState<Record<string, number>>({});
 

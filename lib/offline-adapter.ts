@@ -219,9 +219,9 @@ export const getClosingStockForYear = async (financialYear: string): Promise<Rec
 
 export const getAnalytics = async (financialYear: string = '2026-27') => {
   try {
-    // FY 2026-27 range
-    const fyStart = '2026-04-01';
-    const fyEnd = '2027-03-31';
+    // FY 2026-27 range (Custom start date: March 20th)
+    const fyStart = '2026-03-20';
+    const fyEnd = '2027-03-20';
 
     if (isOnline) {
       const { data: salesData, error: salesError } = await supabase

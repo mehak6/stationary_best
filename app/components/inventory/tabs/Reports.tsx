@@ -5,17 +5,11 @@ import {
   DollarSign,
   TrendingUp,
   BarChart3,
+  Calendar, 
+  Filter, 
+  Download,
+  AlertCircle
 } from 'lucide-react';
-import {
-  getProducts,
-  getSales,
-  getPartyPurchases,
-  getSalesByDateRange,
-  getClosingStockForYear
-} from 'lib/offline-adapter';
-import { formatDateToDDMMYYYY, parseDDMMYYYYToISO } from '../utils/dateHelpers';
-import type { Product, Sale, PartyPurchase } from 'supabase_client';
-import { Calendar, Filter, Download } from 'lucide-react';
 
 interface ReportsProps {
   onNavigate: (view: string) => void;
@@ -46,10 +40,13 @@ export default function Reports({ onNavigate }: ReportsProps) {
     } else {
       setStartDate('2026-03-20');
       const today = new Date().toISOString().split('T')[0];
-      setEndDate(today);
+      // End date for 2026-27 is 2027-03-20
+      setEndDate(today > '2027-03-20' ? '2027-03-20' : today);
       setStartDateDisplay('20/03/2026');
+      
       const d = new Date();
-      setEndDateDisplay(`${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`);
+      const displayDate = today > '2027-03-20' ? '20/03/2027' : `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+      setEndDateDisplay(displayDate);
     }
     fetchReportsData(financialYear);
   }, [financialYear]);
@@ -58,7 +55,7 @@ export default function Reports({ onNavigate }: ReportsProps) {
     try {
       setLoading(true);
       const start = year === '2025-26' ? '2025-04-01' : '2026-03-20';
-      const end = year === '2025-26' ? '2026-03-19' : '2027-03-19';
+      const end = year === '2025-26' ? '2026-03-19' : '2027-03-20';
 
       const [productsData, salesData, partyData, closingData] = await Promise.all([
         getProducts(),
