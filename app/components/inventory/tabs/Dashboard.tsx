@@ -235,12 +235,15 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
         `, { count: 'exact' });
 
       // Apply date filtering
-      if (startDate) {
-        query = query.gte('sale_date', startDate);
-      }
-      if (endDate) {
-        query = query.lte('sale_date', endDate);
-      }
+      // Default to FY 2026-27 if no filters applied
+      const fyStart = '2026-03-20';
+      const fyEnd = '2027-03-20';
+      
+      const effectiveStart = startDate || fyStart;
+      const effectiveEnd = endDate || fyEnd;
+
+      query = query.gte('sale_date', effectiveStart);
+      query = query.lte('sale_date', effectiveEnd);
 
       // Apply pagination
       const from = (page - 1) * SALES_PER_PAGE;
