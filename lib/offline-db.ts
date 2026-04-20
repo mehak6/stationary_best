@@ -549,6 +549,31 @@ export const createCategory = async (category: Omit<Category, 'id' | 'created_at
   };
 };
 
+export const saveCategory = async (category: Category): Promise<Category> => {
+  try {
+    const db = await getCategoriesDB();
+    const docId = toPouchID('category', category.id);
+
+    let doc: any;
+    try {
+      doc = await db.get(docId);
+      const updatedDoc = { ...doc, ...category, _id: docId, _rev: doc._rev };
+      await db.put(updatedDoc);
+    } catch {
+      doc = {
+        _id: docId,
+        ...category
+      };
+      await db.put(doc);
+    }
+
+    return category;
+  } catch (error) {
+    console.error('Error saving category:', error);
+    throw error;
+  }
+};
+
 // ==================== PARTY PURCHASES ====================
 
 export const getAllPartyPurchases = async (): Promise<PartyPurchase[]> => {
@@ -760,6 +785,31 @@ export const saveProductHistoryBulk = async (entries: any[]): Promise<void> => {
   } catch (error) {
     console.error('Error saving product history bulk:', error);
     throw error;
+  }
+};
+
+export const getAllProductHistory = async (): Promise<any[]> => {
+  try {
+    const db = getProductHistoryDB();
+    const result = await db.allDocs({
+      include_docs: true,
+      startkey: 'history_',
+      endkey: 'history_\\ufff0'
+    });
+    return result.rows.map((row: any) => ({
+      id: row.doc.id,
+      product_id: row.doc.product_id,
+      product_name: row.doc.product_name,
+      action: row.doc.action,
+      quantity_change: row.doc.quantity_change,
+      stock_before: row.doc.stock_before,
+      stock_after: row.doc.stock_after,
+      date: row.doc.date,
+      notes: row.doc.notes
+    }));
+  } catch (error) {
+    console.error('Error getting all product history:', error);
+    return [];
   }
 };
 

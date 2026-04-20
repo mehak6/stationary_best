@@ -3,53 +3,83 @@
  * Handles automatic backups and data restoration
  */
 
-import { getProducts, getSales, getPartyPurchases } from './offline-adapter';
+import { 
+  getProducts, 
+  getSales, 
+  getPartyPurchases, 
+  getCategories,
+  getClosingStockForYear
+} from './offline-adapter';
+import * as OfflineDB from './offline-db';
 
 export interface BackupData {
   version: string;
   timestamp: string;
+  financialYear?: string;
   products: any[];
   sales: any[];
   partyPurchases: any[];
+  categories: any[];
+  closingStock: Record<string, number>;
+  productHistory: any[];
   metadata: {
     totalProducts: number;
     totalSales: number;
     totalPartyPurchases: number;
-    backupType: 'manual' | 'automatic';
+    totalCategories: number;
+    backupType: 'manual' | 'automatic' | 'archive';
   };
 }
 
-const BACKUP_VERSION = '1.0.0';
+const BACKUP_VERSION = '1.1.0';
 const BACKUP_INTERVAL_KEY = 'inventory_pro_backup_interval';
 const LAST_BACKUP_KEY = 'inventory_pro_last_backup';
 
 /**
  * Create a backup of all data
  */
-export async function createBackup(backupType: 'manual' | 'automatic' = 'manual'): Promise<BackupData> {
+export async function createBackup(
+  backupType: 'manual' | 'automatic' | 'archive' = 'manual',
+  financialYear?: string
+): Promise<BackupData> {
   try {
-    const [products, sales, partyPurchases] = await Promise.all([
+    const [products, sales, partyPurchases, categories] = await Promise.all([
       getProducts(),
-      getSales(10000), // Get all sales
-      getPartyPurchases()
+      getSales(20000), // Get up to 20k sales
+      getPartyPurchases(),
+      getCategories()
     ]);
+
+    // Fetch closing stock for specific year if archive, else for current/last known
+    const targetFY = financialYear || '2025-26';
+    const closingStock = await getClosingStockForYear(targetFY);
+
+    // Fetch all history entries
+    const productHistory = await OfflineDB.getAllProductHistory();
 
     const backup: BackupData = {
       version: BACKUP_VERSION,
       timestamp: new Date().toISOString(),
+      financialYear: targetFY,
       products: products || [],
       sales: sales || [],
       partyPurchases: partyPurchases || [],
+      categories: categories || [],
+      closingStock: closingStock || {},
+      productHistory: productHistory || [],
       metadata: {
         totalProducts: products?.length || 0,
         totalSales: sales?.length || 0,
         totalPartyPurchases: partyPurchases?.length || 0,
+        totalCategories: categories?.length || 0,
         backupType
       }
     };
 
-    // Update last backup timestamp
-    localStorage.setItem(LAST_BACKUP_KEY, backup.timestamp);
+    // Update last backup timestamp only for regular backups
+    if (backupType !== 'archive') {
+      localStorage.setItem(LAST_BACKUP_KEY, backup.timestamp);
+    }
 
     return backup;
   } catch (error) {
@@ -69,7 +99,12 @@ export function downloadBackup(backup: BackupData): void {
   const date = new Date(backup.timestamp);
   const dateStr = date.toISOString().split('T')[0];
   const timeStr = date.toTimeString().split(' ')[0].replace(/:/g, '-');
-  const filename = `inventory_pro_backup_${dateStr}_${timeStr}.json`;
+  
+  const prefix = backup.metadata.backupType === 'archive' 
+    ? `inventory_archive_${backup.financialYear}_` 
+    : `inventory_pro_backup_`;
+    
+  const filename = `${prefix}${dateStr}_${timeStr}.json`;
 
   const link = document.createElement('a');
   link.href = url;
@@ -78,6 +113,14 @@ export function downloadBackup(backup: BackupData): void {
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
+}
+
+/**
+ * Create and download an archive for a specific financial year
+ */
+export async function createYearEndArchive(financialYear: string): Promise<void> {
+  const backup = await createBackup('archive', financialYear);
+  downloadBackup(backup);
 }
 
 /**

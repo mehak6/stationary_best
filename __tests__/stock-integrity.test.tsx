@@ -40,8 +40,7 @@ export const runStockIntegrityTests = async () => {
     console.log('Test Product Created:', testProduct);
 
     // Test 1: Stock Underflow Prevention
-    console.log('
---- Test 1: Stock Underflow ---');
+    console.log('\n--- Test 1: Stock Underflow ---');
     try {
       await OfflineDB.createSale({
         product_id: testProduct.id,
@@ -63,8 +62,7 @@ export const runStockIntegrityTests = async () => {
     assert(productAfterFail?.stock_quantity === 10, `Stock remains 10: ${productAfterFail?.stock_quantity}`);
 
     // Test 2: Successful Sale and Stock Deduction
-    console.log('
---- Test 2: Successful Sale ---');
+    console.log('\n--- Test 2: Successful Sale ---');
     const validSale = await OfflineDB.createSale({
       product_id: testProduct.id,
       quantity: 4,
@@ -83,8 +81,7 @@ export const runStockIntegrityTests = async () => {
     // Test 3: Duplicate Sale Submission (Idempotency)
     // Note: In a real app, we might use idempotency keys. 
     // For now, we'll simulate a retry logic check if we can.
-    console.log('
---- Test 3: Multiple Sales in Rapid Succession ---');
+    console.log('\n--- Test 3: Multiple Sales in Rapid Succession ---');
     try {
       // Attempt two sales that would collectively exceed stock
       // Remaining: 6. Requesting 4 and 4.
@@ -125,8 +122,7 @@ export const runStockIntegrityTests = async () => {
 
     // Cleanup
     await OfflineDB.deleteProduct(testProduct.id);
-    console.log('
---- Cleanup ---');
+    console.log('\n--- Cleanup ---');
     console.log('Test product deleted.');
 
   } catch (error) {

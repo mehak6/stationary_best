@@ -54,8 +54,7 @@ export const getProducts = async (limit?: number): Promise<Product[]> => {
   try {
     if (isOnline) {
       // Try online sync first
-      const { data, error } = await supabase
-        .from('products')
+      const { data, error } = await (supabase.from('products') as any)
         .select('*')
         .order('created_at', { ascending: false })
         .limit(limit || 1000);
@@ -74,11 +73,12 @@ export const getProducts = async (limit?: number): Promise<Product[]> => {
     // This ensures that local resets (0 stock) are shown immediately
     // even if the server hasn't updated yet.
     return await OfflineDB.getAllProducts();
-  } catch (error) {
+    } catch (error) {
     console.error('Error in getProducts, using offline cache:', error);
     return await OfflineDB.getAllProducts();
-  }
-};
+    }
+    };
+
 
 export const createProduct = async (product: ProductInsert): Promise<Product> => {
   try {
@@ -109,10 +109,9 @@ export const createProduct = async (product: ProductInsert): Promise<Product> =>
 export const updateProduct = async (productId: string, updates: Partial<ProductInsert>): Promise<Product> => {
   try {
     if (isOnline) {
-      const { data, error } = await supabase
-        .from('products')
+      const { data, error } = await (supabase.from('party_purchases') as any)
         .update({ ...updates, updated_at: new Date().toISOString() })
-        .eq('id', productId)
+        .eq('id', id)
         .select()
         .single();
 
@@ -215,6 +214,19 @@ export const getClosingStockForYear = async (financialYear: string): Promise<Rec
   return await OfflineDB.getClosingStockForYear(financialYear);
 };
 
+export const getSalesByDate = async (date: string): Promise<Sale[]> => {
+  return await OfflineDB.getSalesByDate(date);
+};
+
+export const deletePartyPurchase = async (id: string): Promise<boolean> => {
+  return await OfflineDB.deletePartyPurchase(id);
+};
+
+export const syncAllData = async () => {
+  const { performFullSync } = await import('./supabase-sync');
+  return await performFullSync();
+};
+
 // ==================== ANALYTICS ====================
 
 export const getAnalytics = async (financialYear: string = '2026-27') => {
@@ -305,8 +317,7 @@ export const getAnalytics = async (financialYear: string = '2026-27') => {
 export const getSales = async (limit?: number): Promise<Sale[]> => {
   try {
     if (isOnline) {
-      const { data, error } = await supabase
-        .from('sales')
+      const { data, error } = await (supabase.from('sales') as any)
         .select(`
           *,
           products (
@@ -336,11 +347,11 @@ export const getSales = async (limit?: number): Promise<Sale[]> => {
 
       return formattedSales;
     } else {
-      return await OfflineDB.getSales();
+      return await OfflineDB.getAllSales();
     }
   } catch (error) {
     console.error('Error fetching sales, using offline cache:', error);
-    return await OfflineDB.getSales();
+    return await OfflineDB.getAllSales();
   }
 };
 
@@ -402,13 +413,13 @@ export const createSale = async (sale: SaleInsert): Promise<Sale> => {
       return data;
     } else {
       // Offline sale
-      const newSale = await OfflineDB.createSale(sale);
+      const newSale = await OfflineDB.createSale(sale as any);
       
       // Update local product stock
-      const product = await OfflineDB.getProduct(sale.product_id);
+      const product = await OfflineDB.getProductById(sale.product_id!);
       if (product) {
-        await OfflineDB.updateProduct(sale.product_id, {
-          stock_quantity: product.stock_quantity - sale.quantity
+        await OfflineDB.updateProduct(sale.product_id!, {
+          stock_quantity: product.stock_quantity - sale.quantity!
         });
       }
       
@@ -416,7 +427,7 @@ export const createSale = async (sale: SaleInsert): Promise<Sale> => {
     }
   } catch (error) {
     console.error('Error creating sale online, saving offline:', error);
-    return await OfflineDB.createSale(sale);
+    return await OfflineDB.createSale(sale as any);
   }
 };
 
@@ -506,8 +517,7 @@ export const deleteSale = async (id: string): Promise<boolean> => {
 export const getCategories = async (): Promise<Category[]> => {
   try {
     if (isOnline) {
-      const { data, error } = await supabase
-        .from('categories')
+      const { data, error } = await (supabase.from('categories') as any)
         .select('*')
         .order('name');
 
@@ -515,18 +525,18 @@ export const getCategories = async (): Promise<Category[]> => {
 
       // Cache to local DB
       await Promise.all((data || []).map(cat =>
-        OfflineDB.saveCategory(cat).catch(err =>
+        OfflineDB.saveCategory(cat as any).catch(err =>
           console.warn('Failed to cache category:', err)
         )
       ));
 
       return data || [];
     } else {
-      return await OfflineDB.getCategories();
+      return await OfflineDB.getAllCategories();
     }
   } catch (error) {
     console.error('Error fetching categories, using offline cache:', error);
-    return await OfflineDB.getCategories();
+    return await OfflineDB.getAllCategories();
   }
 };
 
@@ -535,8 +545,7 @@ export const getCategories = async (): Promise<Category[]> => {
 export const getPartyPurchases = async (): Promise<PartyPurchase[]> => {
   try {
     if (isOnline) {
-      const { data, error } = await supabase
-        .from('party_purchases')
+      const { data, error } = await (supabase.from('party_purchases') as any)
         .select('*')
         .order('purchase_date', { ascending: false })
         .order('created_at', { ascending: false });
@@ -552,19 +561,18 @@ export const getPartyPurchases = async (): Promise<PartyPurchase[]> => {
 
       return data || [];
     } else {
-      return await OfflineDB.getPartyPurchases();
+      return await OfflineDB.getAllPartyPurchases();
     }
   } catch (error) {
     console.error('Error fetching party purchases, using offline cache:', error);
-    return await OfflineDB.getPartyPurchases();
+    return await OfflineDB.getAllPartyPurchases();
   }
 };
 
 export const createPartyPurchase = async (purchase: PartyPurchaseInsert): Promise<PartyPurchase> => {
   try {
     if (isOnline) {
-      const { data, error } = await supabase
-        .from('party_purchases')
+      const { data, error } = await (supabase.from('party_purchases') as any)
         .insert(purchase)
         .select()
         .single();
@@ -586,8 +594,7 @@ export const createPartyPurchase = async (purchase: PartyPurchaseInsert): Promis
 export const updatePartyPurchase = async (id: string, updates: Partial<PartyPurchaseInsert>): Promise<PartyPurchase> => {
   try {
     if (isOnline) {
-      const { data, error } = await supabase
-        .from('party_purchases')
+      const { data, error } = await (supabase.from('party_purchases') as any)
         .update({ ...updates, updated_at: new Date().toISOString() })
         .eq('id', id)
         .select()

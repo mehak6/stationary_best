@@ -65,18 +65,45 @@ export const updateSyncConfig = (config: Partial<SyncConfig>): void => {
   saveSyncConfig(currentConfig);
 };
 
+interface SyncConfigDoc {
+  _id: string;
+  _rev?: string;
+  config: SyncConfig;
+  updated_at: string;
+  created_at: string;
+}
+
+interface LastSyncResultDoc {
+  _id: string;
+  _rev?: string;
+  result: SyncResult;
+  updated_at: string;
+  created_at: string;
+}
+
+interface SyncQueueDoc {
+  _id: string;
+  _rev?: string;
+  queued: boolean;
+  queued_at?: string;
+  cleared_at?: string;
+}
+
 // Save config to IndexedDB
 const saveSyncConfig = async (config: SyncConfig): Promise<void> => {
   try {
     const db = await getSyncMetaDB();
 
     const docId = 'sync_config';
-    let doc: any;
+    let doc: SyncConfigDoc;
 
     try {
-      doc = await db.get(docId);
-      doc.config = config;
-      doc.updated_at = new Date().toISOString();
+      const existing = await db.get(docId) as SyncConfigDoc;
+      doc = {
+        ...existing,
+        config,
+        updated_at: new Date().toISOString()
+      };
     } catch {
       doc = {
         _id: docId,
@@ -96,7 +123,7 @@ const saveSyncConfig = async (config: SyncConfig): Promise<void> => {
 export const loadSyncConfig = async (): Promise<SyncConfig> => {
   try {
     const db = await getSyncMetaDB();
-    const doc = await db.get('sync_config');
+    const doc = await db.get('sync_config') as SyncConfigDoc;
     return doc.config || DEFAULT_CONFIG;
   } catch {
     return DEFAULT_CONFIG;
@@ -161,18 +188,6 @@ const syncWithRetry = async (
 
       lastSyncResult = result;
       notifyListeners(result);
-      return result;
-    }
-          categories: { push: 0, pull: 0, errors: 0 },
-          partyPurchases: { push: 0, pull: 0, errors: 0 }
-        },
-        totalSynced: 0,
-        totalErrors: 0,
-        duration,
-        error: 'Supabase project is paused'
-      };
-      
-      await saveLastSyncResult(result);
       return result;
     }
 
@@ -247,12 +262,15 @@ const saveLastSyncResult = async (result: SyncResult): Promise<void> => {
     const db = await getSyncMetaDB();
 
     const docId = 'last_sync_result';
-    let doc: any;
+    let doc: LastSyncResultDoc;
 
     try {
-      doc = await db.get(docId);
-      doc.result = result;
-      doc.updated_at = new Date().toISOString();
+      const existing = await db.get(docId) as LastSyncResultDoc;
+      doc = {
+        ...existing,
+        result,
+        updated_at: new Date().toISOString()
+      };
     } catch {
       doc = {
         _id: docId,
@@ -277,7 +295,7 @@ export const getLastSyncResult = async (): Promise<SyncResult | null> => {
 
   try {
     const db = await getSyncMetaDB();
-    const doc = await db.get('last_sync_result');
+    const doc = await db.get('last_sync_result') as LastSyncResultDoc;
     lastSyncResult = doc.result;
     return doc.result;
   } catch {
@@ -422,12 +440,15 @@ export const queueSync = async (): Promise<void> => {
     const db = await getSyncMetaDB();
 
     const docId = 'sync_queue';
-    let doc: any;
+    let doc: SyncQueueDoc;
 
     try {
-      doc = await db.get(docId);
-      doc.queued = true;
-      doc.queued_at = new Date().toISOString();
+      const existing = await db.get(docId) as SyncQueueDoc;
+      doc = {
+        ...existing,
+        queued: true,
+        queued_at: new Date().toISOString()
+      };
     } catch {
       doc = {
         _id: docId,
@@ -450,7 +471,7 @@ export const queueSync = async (): Promise<void> => {
 export const isSyncQueued = async (): Promise<boolean> => {
   try {
     const db = await getSyncMetaDB();
-    const doc = await db.get('sync_queue');
+    const doc = await db.get('sync_queue') as SyncQueueDoc;
     return doc.queued || false;
   } catch {
     return false;
@@ -461,7 +482,7 @@ export const isSyncQueued = async (): Promise<boolean> => {
 export const clearSyncQueue = async (): Promise<void> => {
   try {
     const db = await getSyncMetaDB();
-    const doc = await db.get('sync_queue');
+    const doc = await db.get('sync_queue') as SyncQueueDoc;
     doc.queued = false;
     doc.cleared_at = new Date().toISOString();
     await db.put(doc);

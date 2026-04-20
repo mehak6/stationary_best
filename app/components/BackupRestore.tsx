@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Download, Upload, Clock, AlertTriangle, CheckCircle, Settings, Database, RefreshCw } from 'lucide-react';
 import {
   createAndDownloadBackup,
+  createYearEndArchive,
   readBackupFile,
   isBackupDue,
   getBackupInterval,
@@ -333,6 +334,36 @@ export default function BackupRestore({ onClose, showToast }: BackupRestoreProps
                     </button>
                   ))}
                 </div>
+              </div>
+
+              {/* Year-End Archive */}
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Database className="h-5 w-5 text-amber-600" />
+                  <span className="font-medium text-amber-900">Year-End Archive (2025-26)</span>
+                </div>
+                <p className="text-xs text-amber-700 mb-4">
+                  Download a complete, permanent record of the previous financial year including all sales, reports, categories, and final stock levels.
+                </p>
+                <button
+                  onClick={async () => {
+                    setLoading(true);
+                    try {
+                      await createYearEndArchive('2025-26');
+                      showToast('Year-End Archive (2025-26) downloaded successfully!', 'success');
+                    } catch (error) {
+                      showToast('Failed to create archive.', 'error');
+                    } finally {
+                      setLoading(false);
+                    }
+                  }}
+                  disabled={loading}
+                  className="w-full py-2 px-4 bg-amber-600 text-white rounded-lg hover:bg-amber-700 disabled:opacity-50 flex items-center justify-center gap-2 text-sm font-semibold transition-colors shadow-sm"
+                  type="button"
+                >
+                  <Download className="h-4 w-4" />
+                  Download 2025-26 Archive
+                </button>
               </div>
 
               {/* Action Buttons */}

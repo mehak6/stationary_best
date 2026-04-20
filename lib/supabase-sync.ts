@@ -19,7 +19,7 @@ export const getSupabaseClient = () => {
 const getSyncMeta = async (key: string): Promise<any> => {
   try {
     const db = await getSyncMetaDB();
-    const doc = await db.get(`sync_${key}`);
+    const doc = await db.get(`sync_${key}`) as any;
     return doc.value;
   } catch (err) {
     return null;
