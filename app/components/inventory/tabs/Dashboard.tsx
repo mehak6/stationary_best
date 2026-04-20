@@ -140,7 +140,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
 
       // Calculate new total and profit
       const totalAmount = editSaleData.quantity * editSaleData.unit_price;
-      const purchasePrice = editingSale.products?.purchase_price || 0;
+      const purchasePrice = (editingSale as any).products?.purchase_price || 0;
       const profit = totalAmount - (editSaleData.quantity * purchasePrice);
 
       const updates = {
@@ -173,7 +173,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
       }
 
       // Show success message
-      showToast(`Sale updated successfully for ${editingSale.products?.name}`, 'success');
+      showToast(`Sale updated successfully for ${(editingSale as any).products?.name}`, 'success');
 
       // Close edit modal
       setEditingSale(null);
@@ -185,7 +185,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   };
 
   const handleDeleteSale = async (saleId: string, saleData: any) => {
-    if (!confirm(`Are you sure you want to delete this sale of ${saleData.products?.name || 'Unknown Product'}? This action cannot be undone.`)) {
+    if (!confirm(`Are you sure you want to delete this sale of ${(saleData as any).products?.name || 'Unknown Product'}? This action cannot be undone.`)) {
       return;
     }
 
@@ -523,7 +523,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                                 {dateSales.map(sale => (
                                   <div key={sale.id} className="flex items-center justify-between p-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50">
                                     <div className="flex-1">
-                                      <p className="font-medium text-gray-900">{sale.products?.name || 'Unknown Product'}</p>
+                                      <p className="font-medium text-gray-900">{(sale as any).products?.name || 'Unknown Product'}</p>
                                       <p className="text-sm text-gray-500">Qty: {sale.quantity} • Unit: ₹{sale.unit_price}</p>
                                     </div>
                                     <div className="text-right mr-3">
@@ -619,7 +619,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                   Product
                 </label>
                 <p className="text-base font-semibold text-gray-900">
-                  {editingSale.products?.name || 'Unknown Product'}
+                  {(editingSale as any).products?.name || 'Unknown Product'}
                 </p>
               </div>
 

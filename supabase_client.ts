@@ -83,8 +83,7 @@ export type ProductHistoryInsert = Omit<ProductHistory, 'id'>;
 
 // Products
 export const getProducts = async () => {
-  const { data, error } = await supabase
-    .from('products')
+  const { data, error } = await (supabase.from('products') as any)
     .select('*')
     .order('created_at', { ascending: false })
 
@@ -93,8 +92,7 @@ export const getProducts = async () => {
 }
 
 export const getProductById = async (id: string) => {
-  const { data, error } = await supabase
-    .from('products')
+  const { data, error } = await (supabase.from('products') as any)
     .select('*')
     .eq('id', id)
     .single()
@@ -104,8 +102,7 @@ export const getProductById = async (id: string) => {
 }
 
 export const createProduct = async (product: ProductInsert) => {
-  const { data, error } = await supabase
-    .from('products')
+  const { data, error } = await (supabase.from('products') as any)
     .insert(product)
     .select()
     .single()
@@ -115,8 +112,7 @@ export const createProduct = async (product: ProductInsert) => {
 }
 
 export const updateProduct = async (id: string, updates: Partial<ProductInsert>) => {
-  const { data, error } = await supabase
-    .from('products')
+  const { data, error } = await (supabase.from('products') as any)
     .update({ ...updates, updated_at: new Date().toISOString() })
     .eq('id', id)
     .select()
@@ -127,8 +123,7 @@ export const updateProduct = async (id: string, updates: Partial<ProductInsert>)
 }
 
 export const deleteProduct = async (id: string) => {
-  const { error } = await supabase
-    .from('products')
+  const { error } = await (supabase.from('products') as any)
     .delete()
     .eq('id', id)
 
@@ -137,8 +132,7 @@ export const deleteProduct = async (id: string) => {
 
 // Sales
 export const getSales = async (limit?: number) => {
-  let query = supabase
-    .from('sales')
+  let query = (supabase.from('sales') as any)
     .select(`
       *,
       products (
@@ -159,8 +153,7 @@ export const getSales = async (limit?: number) => {
 }
 
 export const createSale = async (sale: SaleInsert) => {
-  const { data, error } = await supabase
-    .from('sales')
+  const { data, error } = await (supabase.from('sales') as any)
     .insert(sale)
     .select()
     .single()
@@ -170,8 +163,7 @@ export const createSale = async (sale: SaleInsert) => {
 }
 
 export const updateSale = async (saleId: string, updates: Partial<SaleInsert>) => {
-  const { data, error } = await supabase
-    .from('sales')
+  const { data, error } = await (supabase.from('sales') as any)
     .update(updates)
     .eq('id', saleId)
     .select(`
@@ -189,8 +181,7 @@ export const updateSale = async (saleId: string, updates: Partial<SaleInsert>) =
 }
 
 export const deleteSale = async (saleId: string) => {
-  const { data, error } = await supabase
-    .from('sales')
+  const { data, error } = await (supabase.from('sales') as any)
     .delete()
     .eq('id', saleId)
     .select()
@@ -201,8 +192,7 @@ export const deleteSale = async (saleId: string) => {
 }
 
 export const getSalesByDate = async (date: string) => {
-  const { data, error } = await supabase
-    .from('sales')
+  const { data, error } = await (supabase.from('sales') as any)
     .select(`
       *,
       products (
@@ -218,8 +208,7 @@ export const getSalesByDate = async (date: string) => {
 }
 
 export const getSalesByDateRange = async (startDate: string, endDate: string) => {
-  const { data, error } = await supabase
-    .from('sales')
+  const { data, error } = await (supabase.from('sales') as any)
     .select(`
       *,
       products (
@@ -238,8 +227,7 @@ export const getSalesByDateRange = async (startDate: string, endDate: string) =>
 
 // Categories
 export const getCategories = async () => {
-  const { data, error } = await supabase
-    .from('categories')
+  const { data, error } = await (supabase.from('categories') as any)
     .select('*')
     .order('name')
 
@@ -248,8 +236,7 @@ export const getCategories = async () => {
 }
 
 export const createCategory = async (category: CategoryInsert) => {
-  const { data, error } = await supabase
-    .from('categories')
+  const { data, error } = await (supabase.from('categories') as any)
     .insert(category)
     .select()
     .single()
@@ -262,13 +249,11 @@ export const createCategory = async (category: CategoryInsert) => {
 export const getAnalytics = async () => {
   try {
     // Get total products
-    const { count: totalProducts } = await supabase
-      .from('products')
+    const { count: totalProducts } = await (supabase.from('products') as any)
       .select('*', { count: 'exact', head: true })
 
     // Get total sales amount
-    const { data: salesData } = await supabase
-      .from('sales')
+    const { data: salesData } = await (supabase.from('sales') as any)
       .select('total_amount, profit, created_at')
 
     const totalSales = salesData?.reduce((sum, sale) => sum + (sale.total_amount || 0), 0) || 0
@@ -276,8 +261,7 @@ export const getAnalytics = async () => {
 
     // Get today's sales
     const today = new Date().toISOString().split('T')[0]
-    const { data: todaySalesData } = await supabase
-      .from('sales')
+    const { data: todaySalesData } = await (supabase.from('sales') as any)
       .select('total_amount, profit')
       .eq('sale_date', today)
 
@@ -285,8 +269,7 @@ export const getAnalytics = async () => {
     const todayProfit = todaySalesData?.reduce((sum, sale) => sum + (sale.profit || 0), 0) || 0
 
     // Get low stock products
-    const { count: lowStockCount } = await supabase
-      .from('products')
+    const { count: lowStockCount } = await (supabase.from('products') as any)
       .select('*', { count: 'exact', head: true })
       .lt('stock_quantity', 5)
 
@@ -371,8 +354,7 @@ export const getPartyPurchases = async () => {
     console.log('[DEBUG] getPartyPurchases: Table count query successful');
 
     // Now get actual data
-    const { data: actualData, error: dataError } = await supabase
-      .from('party_purchases')
+    const { data: actualData, error: dataError } = await (supabase.from('party_purchases') as any)
       .select('*')
       .order('created_at', { ascending: false })
 
@@ -391,8 +373,7 @@ export const getPartyPurchases = async () => {
 }
 
 export const createPartyPurchase = async (purchase: PartyPurchaseInsert) => {
-  const { data, error } = await supabase
-    .from('party_purchases')
+  const { data, error } = await (supabase.from('party_purchases') as any)
     .insert(purchase)
     .select()
     .single()
@@ -402,8 +383,7 @@ export const createPartyPurchase = async (purchase: PartyPurchaseInsert) => {
 }
 
 export const updatePartyPurchase = async (id: string, updates: Partial<PartyPurchaseInsert>) => {
-  const { data, error } = await supabase
-    .from('party_purchases')
+  const { data, error } = await (supabase.from('party_purchases') as any)
     .update(updates)
     .eq('id', id)
     .select()
@@ -414,8 +394,7 @@ export const updatePartyPurchase = async (id: string, updates: Partial<PartyPurc
 }
 
 export const deletePartyPurchase = async (id: string) => {
-  const { error } = await supabase
-    .from('party_purchases')
+  const { error } = await (supabase.from('party_purchases') as any)
     .delete()
     .eq('id', id)
 
@@ -461,8 +440,7 @@ export const getCurrentProfile = async () => {
   const user = await getCurrentUser()
   if (!user) return null
 
-  const { data, error } = await supabase
-    .from('profiles')
+  const { data, error } = await (supabase.from('profiles') as any)
     .select('*')
     .eq('id', user.id)
     .single()

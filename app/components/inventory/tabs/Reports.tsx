@@ -2,13 +2,29 @@
 
 import React, { useState, useEffect } from 'react';
 import {
+  getProducts,
+  getSales,
+  getPartyPurchases,
+  getSalesByDateRange,
+  getClosingStockForYear
+} from 'lib/offline-adapter';
+import { 
+  getFinancialYear, 
+  getFYRange, 
+  getFYList,
+  formatFYLabel
+} from 'lib/date-utils';
+import { formatDateToDDMMYYYY, parseDDMMYYYYToISO } from '../utils/dateHelpers';
+import type { Product, Sale, PartyPurchase } from 'supabase_client';
+import {
   DollarSign,
   TrendingUp,
   BarChart3,
   Calendar, 
   Filter, 
   Download,
-  AlertCircle
+  AlertCircle,
+  ShoppingCart
 } from 'lucide-react';
 
 interface ReportsProps {

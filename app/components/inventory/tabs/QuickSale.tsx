@@ -26,7 +26,7 @@ import {
   formatFYLabel
 } from 'lib/date-utils';
 import { formatDateToDDMMYYYY } from '../utils/dateHelpers';
-import type { Product, Sale, SaleInsert } from 'supabase_client';
+import type { Product, Sale, SaleInsert, ProductInsert } from 'supabase_client';
 import { useToast } from 'app/context/ToastContext';
 
 interface QuickSaleProps {

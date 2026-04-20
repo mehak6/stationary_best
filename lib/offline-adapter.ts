@@ -59,7 +59,7 @@ export const getProducts = async (limit?: number): Promise<Product[]> => {
   try {
     if (isOnline) {
       // Try online sync first
-      const { data, error } = await supabase.from('products')
+      const { data, error } = await (supabase.from('products') as any)
         .select('*')
         .order('created_at', { ascending: false })
         .limit(limit || 1000);
@@ -88,7 +88,7 @@ export const getProducts = async (limit?: number): Promise<Product[]> => {
 export const createProduct = async (product: ProductInsert): Promise<Product> => {
   try {
     if (isOnline) {
-      const { data, error } = await supabase.from('products')
+      const { data, error } = await (supabase.from('products') as any)
         .insert(product)
         .select()
         .single();
@@ -113,7 +113,7 @@ export const createProduct = async (product: ProductInsert): Promise<Product> =>
 export const updateProduct = async (productId: string, updates: Partial<ProductInsert>): Promise<Product> => {
   try {
     if (isOnline) {
-      const { data, error } = await supabase.from('products')
+      const { data, error } = await (supabase.from('products') as any)
         .update({ ...updates, updated_at: new Date().toISOString() })
         .eq('id', productId)
         .select()
@@ -239,18 +239,15 @@ export const getAnalytics = async (financialYear?: string) => {
     const { start: fyStart, end: fyEnd } = getFYRange(targetFY);
 
     if (isOnline) {
-      const { data: salesData, error: salesError } = await supabase
-        .from('sales')
+      const { data: salesData, error: salesError } = await (supabase.from('sales') as any)
         .select('total_amount, profit, sale_date')
         .gte('sale_date', fyStart)
         .lte('sale_date', fyEnd);
 
-      const { count: totalProducts, error: prodError } = await supabase
-        .from('products')
+      const { count: totalProducts, error: prodError } = await (supabase.from('products') as any)
         .select('*', { count: 'exact', head: true });
 
-      const { count: lowStockCount } = await supabase
-        .from('products')
+      const { count: lowStockCount } = await (supabase.from('products') as any)
         .select('*', { count: 'exact', head: true })
         .lt('stock_quantity', 5);
 
@@ -320,7 +317,7 @@ export const getAnalytics = async (financialYear?: string) => {
 export const getSales = async (limit?: number): Promise<Sale[]> => {
   try {
     if (isOnline) {
-      const { data, error } = await supabase.from('sales')
+      const { data, error } = await (supabase.from('sales') as any)
         .select(`
           *,
           products (
@@ -437,8 +434,7 @@ export const createSale = async (sale: SaleInsert): Promise<Sale> => {
 export const updateSale = async (id: string, updates: Partial<SaleInsert>): Promise<Sale> => {
   try {
     if (isOnline) {
-      const { data, error } = await supabase
-        .from('sales')
+      const { data, error } = await (supabase.from('sales') as any)
         .update(updates)
         .eq('id', id)
         .select(`
@@ -475,30 +471,26 @@ export const deleteSale = async (id: string): Promise<boolean> => {
   try {
     if (isOnline) {
       // First, get the sale to know the quantity and product_id for stock restoration
-      const { data: sale, error: getError } = await supabase
-        .from('sales')
+      const { data: sale, error: getError } = await (supabase.from('sales') as any)
         .select('product_id, quantity')
         .eq('id', id)
         .single();
 
       if (!getError && sale) {
         // Try to restore stock online first
-        const { data: product, error: prodError } = await supabase
-          .from('products')
+        const { data: product, error: prodError } = await (supabase.from('products') as any)
           .select('stock_quantity')
           .eq('id', sale.product_id)
           .single();
 
         if (!prodError && product) {
-          await supabase
-            .from('products')
+          await (supabase.from('products') as any)
             .update({ stock_quantity: product.stock_quantity + sale.quantity })
             .eq('id', sale.product_id);
         }
       }
 
-      const { error } = await supabase
-        .from('sales')
+      const { error } = await (supabase.from('sales') as any)
         .delete()
         .eq('id', id);
 
@@ -520,7 +512,7 @@ export const deleteSale = async (id: string): Promise<boolean> => {
 export const getCategories = async (): Promise<Category[]> => {
   try {
     if (isOnline) {
-      const { data, error } = await supabase.from('categories')
+      const { data, error } = await (supabase.from('categories') as any)
         .select('*')
         .order('name');
 
@@ -548,7 +540,7 @@ export const getCategories = async (): Promise<Category[]> => {
 export const getPartyPurchases = async (): Promise<PartyPurchase[]> => {
   try {
     if (isOnline) {
-      const { data, error } = await supabase.from('party_purchases')
+      const { data, error } = await (supabase.from('party_purchases') as any)
         .select('*')
         .order('purchase_date', { ascending: false })
         .order('created_at', { ascending: false });
@@ -575,7 +567,7 @@ export const getPartyPurchases = async (): Promise<PartyPurchase[]> => {
 export const createPartyPurchase = async (purchase: PartyPurchaseInsert): Promise<PartyPurchase> => {
   try {
     if (isOnline) {
-      const { data, error } = await supabase.from('party_purchases')
+      const { data, error } = await (supabase.from('party_purchases') as any)
         .insert(purchase)
         .select()
         .single();
@@ -597,7 +589,7 @@ export const createPartyPurchase = async (purchase: PartyPurchaseInsert): Promis
 export const updatePartyPurchase = async (id: string, updates: Partial<PartyPurchaseInsert>): Promise<PartyPurchase> => {
   try {
     if (isOnline) {
-      const { data, error } = await supabase.from('party_purchases')
+      const { data, error } = await (supabase.from('party_purchases') as any)
         .update({ ...updates, updated_at: new Date().toISOString() })
         .eq('id', id)
         .select()

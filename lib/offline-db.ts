@@ -891,6 +891,11 @@ export const getProductHistory = async (productId: string): Promise<any[]> => {
         date: doc.date,
         notes: doc.notes
       }));
+  } catch (error) {
+    console.error('Error getting product history:', error);
+    return [];
+  }
+};
 // ==================== DELETION LOG ====================
 
 /**
