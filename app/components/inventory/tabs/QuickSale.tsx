@@ -15,9 +15,16 @@ import {
   getSalesByDate,
   createSale,
   updateProduct,
+  createProduct,
   getClosingStockForYear,
   getAnalytics
 } from 'lib/offline-adapter';
+import { 
+  getFinancialYear, 
+  getFYRange, 
+  getFYList,
+  formatFYLabel
+} from 'lib/date-utils';
 import { formatDateToDDMMYYYY } from '../utils/dateHelpers';
 import type { Product, Sale, SaleInsert } from 'supabase_client';
 import { useToast } from 'app/context/ToastContext';
@@ -35,20 +42,16 @@ interface CartItem {
 
 export default function QuickSale({ onNavigate }: QuickSaleProps) {
   const { showToast } = useToast();
+  const currentFY = getFinancialYear();
   const [financialYear, setFinancialYear] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('inventory_pro_fy');
-      // Normalize to 2026-27 format
-      if (saved === '2026-2027') return '2026-27';
-      return saved || '2026-27';
+      return saved || currentFY;
     }
-    return '2026-27';
+    return currentFY;
   });
   
-  // Support both 2026-27 and 2026-2027 formats for the check
-  // Also allow 2025-26 as a current year for now if the user hasn't fully transitioned
-  // Redefined FY 2026-27 to start from March 20th, 2026
-  const isCurrentYear = financialYear === '2026-27' || financialYear === '2026-2027' || financialYear === '2025-26';
+  const isCurrentYear = financialYear === currentFY;
   const [historicalStock, setHistoricalStock] = useState<Record<string, number>>({});
 
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -300,8 +303,9 @@ export default function QuickSale({ onNavigate }: QuickSaleProps) {
               onChange={(e) => setFinancialYear(e.target.value)}
               className="bg-transparent text-sm font-bold text-primary-900 focus:outline-none cursor-pointer"
             >
-              <option value="2025-26">2025-26 (Legacy)</option>
-              <option value="2026-27">2026-27 (Current)</option>
+              {getFYList().map(fy => (
+                <option key={fy} value={fy}>{formatFYLabel(fy)}</option>
+              ))}
             </select>
           </div>
         </div>
@@ -314,7 +318,7 @@ export default function QuickSale({ onNavigate }: QuickSaleProps) {
               <Package className="h-5 w-5 text-amber-600" />
               <p className="text-amber-800 text-sm">
                 You are viewing historical data for <strong>{financialYear}</strong>. 
-                New sales and stock additions are only allowed in the <strong>Current Year (2026-27)</strong>.
+                New sales and stock additions are only allowed in the <strong>Current Year ({currentFY})</strong>.
               </p>
             </div>
           </div>
@@ -488,6 +492,7 @@ export default function QuickSale({ onNavigate }: QuickSaleProps) {
 }
 
 function QuickAddProductModal({ onClose, onProductAdded, prefillName }: { onClose: () => void; onProductAdded: (p: Product) => void; prefillName: string }) {
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: prefillName.toUpperCase(),
     barcode: '',
@@ -498,20 +503,26 @@ function QuickAddProductModal({ onClose, onProductAdded, prefillName }: { onClos
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
+    
     try {
+      setLoading(true);
       const data: ProductInsert = {
         name: formData.name,
         barcode: formData.barcode || null,
-        purchase_price: parseFloat(formData.purchase_price),
-        selling_price: parseFloat(formData.selling_price),
-        stock_quantity: parseInt(formData.stock_quantity),
+        purchase_price: parseFloat(formData.purchase_price) || 0,
+        selling_price: parseFloat(formData.selling_price) || 0,
+        stock_quantity: parseInt(formData.stock_quantity) || 0,
         min_stock_level: 5,
         category_id: null
       };
       const newProduct = await createProduct(data);
-      onProductAdded(newProduct);
+      onProductAdded(newProduct as any);
     } catch (error) {
-      console.error(error);
+      console.error('Failed to quick-add product:', error);
+      alert('Failed to add product. Please check your connection and try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -520,16 +531,18 @@ function QuickAddProductModal({ onClose, onProductAdded, prefillName }: { onClos
       <div className="bg-white rounded-lg p-6 max-w-md w-full">
         <h2 className="text-xl font-bold mb-4">Quick Add Product</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <input type="text" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value.toUpperCase()})} className="input-field" placeholder="Name" required />
-          <input type="text" value={formData.barcode} onChange={(e) => setFormData({...formData, barcode: e.target.value})} className="input-field" placeholder="Barcode" />
+          <input type="text" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value.toUpperCase()})} className="input-field" placeholder="Name" required disabled={loading} />
+          <input type="text" value={formData.barcode} onChange={(e) => setFormData({...formData, barcode: e.target.value})} className="input-field" placeholder="Barcode" disabled={loading} />
           <div className="grid grid-cols-2 gap-4">
-            <input type="number" value={formData.purchase_price} onChange={(e) => setFormData({...formData, purchase_price: e.target.value})} className="input-field" placeholder="Purchase Price" required />
-            <input type="number" value={formData.selling_price} onChange={(e) => setFormData({...formData, selling_price: e.target.value})} className="input-field" placeholder="Selling Price" required />
+            <input type="number" value={formData.purchase_price} onChange={(e) => setFormData({...formData, purchase_price: e.target.value})} className="input-field" placeholder="Purchase Price" required disabled={loading} />
+            <input type="number" value={formData.selling_price} onChange={(e) => setFormData({...formData, selling_price: e.target.value})} className="input-field" placeholder="Selling Price" required disabled={loading} />
           </div>
-          <input type="number" value={formData.stock_quantity} onChange={(e) => setFormData({...formData, stock_quantity: e.target.value})} className="input-field" placeholder="Initial Stock" required />
+          <input type="number" value={formData.stock_quantity} onChange={(e) => setFormData({...formData, stock_quantity: e.target.value})} className="input-field" placeholder="Initial Stock" required disabled={loading} />
           <div className="flex gap-3">
-            <button type="submit" className="btn-primary flex-1">Add & Continue</button>
-            <button type="button" onClick={onClose} className="btn-outline flex-1">Cancel</button>
+            <button type="submit" disabled={loading} className="btn-primary flex-1 disabled:opacity-50">
+              {loading ? 'Adding...' : 'Add & Continue'}
+            </button>
+            <button type="button" onClick={onClose} disabled={loading} className="btn-outline flex-1">Cancel</button>
           </div>
         </form>
       </div>

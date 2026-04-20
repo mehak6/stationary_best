@@ -120,6 +120,10 @@ export default function Reports({ onNavigate }: ReportsProps) {
     .sort((a, b) => b.salesData.revenue - a.salesData.revenue)
     .slice(0, 5);
 
+  const totalQuantitySold = sales.reduce((sum, s) => sum + s.quantity, 0);
+  const avgSaleValue = sales.length > 0 ? totalSalesRevenue / sales.length : 0;
+  const totalItemsInInventory = products.reduce((sum, p) => sum + getStockForProduct(p), 0);
+
   if (loading) return <div className="p-6 text-center">Loading reports...</div>;
 
   return (
@@ -127,8 +131,8 @@ export default function Reports({ onNavigate }: ReportsProps) {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
         <div className="flex items-center gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Reports</h1>
-            <p className="text-gray-600 mt-2">Financial performance & inventory analytics</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Yearly Performance</h1>
+            <p className="text-gray-600 mt-2">Business summary for financial year {financialYear}</p>
           </div>
           <div className="bg-white border-2 border-primary-200 rounded-xl px-4 py-2 flex items-center gap-3 shadow-sm">
             <Calendar className="h-5 w-5 text-primary-600" />
@@ -139,8 +143,9 @@ export default function Reports({ onNavigate }: ReportsProps) {
                 onChange={(e) => setFinancialYear(e.target.value)}
                 className="bg-transparent text-sm font-bold text-primary-900 focus:outline-none cursor-pointer"
               >
-                <option value="2025-26">2025-26</option>
-                <option value="2026-27">2026-27</option>
+                {getFYList().map(fy => (
+                  <option key={fy} value={fy}>{formatFYLabel(fy)}</option>
+                ))}
               </select>
             </div>
           </div>
@@ -148,71 +153,159 @@ export default function Reports({ onNavigate }: ReportsProps) {
         {!isCurrentYear && (
           <div className="mt-4 sm:mt-0 px-4 py-2 bg-orange-100 border border-orange-200 rounded-lg flex items-center gap-2 text-orange-800 text-sm font-medium">
             <AlertCircle className="h-4 w-4" />
-            Historical View
+            Historical Archive View
           </div>
         )}
       </div>
 
       <div className="max-w-7xl mx-auto space-y-6">
+        {/* Core Metrics Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="card bg-orange-600 text-white">
-            <p className="text-sm opacity-80">Total Investment</p>
-            <p className="text-2xl font-bold">₹{totalInvestment.toLocaleString('en-IN')}</p>
+          <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+            <div className="flex items-center justify-between mb-3">
+              <div className="p-2 bg-blue-50 rounded-lg">
+                <BarChart3 className="h-5 w-5 text-blue-600" />
+              </div>
+              <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-full">FY {financialYear}</span>
+            </div>
+            <p className="text-sm font-medium text-gray-500">Total Revenue</p>
+            <p className="text-2xl font-bold text-gray-900 mt-1">₹{totalSalesRevenue.toLocaleString('en-IN')}</p>
+            <p className="text-xs text-gray-400 mt-2">Total money from all sales</p>
           </div>
-          <div className="card bg-green-600 text-white">
-            <p className="text-sm opacity-80">Total Revenue</p>
-            <p className="text-2xl font-bold">₹{totalSalesRevenue.toLocaleString('en-IN')}</p>
+
+          <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+            <div className="flex items-center justify-between mb-3">
+              <div className="p-2 bg-green-50 rounded-lg">
+                <TrendingUp className="h-5 w-5 text-green-600" />
+              </div>
+              <span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full">+{profitMargin.toFixed(1)}%</span>
+            </div>
+            <p className="text-sm font-medium text-gray-500">Total Net Profit</p>
+            <p className="text-2xl font-bold text-gray-900 mt-1">₹{totalProfit.toLocaleString('en-IN')}</p>
+            <p className="text-xs text-gray-400 mt-2">Earnings after purchase costs</p>
           </div>
-          <div className="card bg-blue-600 text-white">
-            <p className="text-sm opacity-80">Total Profit</p>
-            <p className="text-2xl font-bold">₹{totalProfit.toLocaleString('en-IN')}</p>
+
+          <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+            <div className="flex items-center justify-between mb-3">
+              <div className="p-2 bg-orange-50 rounded-lg">
+                <DollarSign className="h-5 w-5 text-orange-600" />
+              </div>
+            </div>
+            <p className="text-sm font-medium text-gray-500">Inventory Investment</p>
+            <p className="text-2xl font-bold text-gray-900 mt-1">₹{totalInvestment.toLocaleString('en-IN')}</p>
+            <p className="text-xs text-gray-400 mt-2">Cost of unsold stock</p>
           </div>
-          <div className="card bg-purple-600 text-white">
-            <p className="text-sm opacity-80">Profit Margin</p>
-            <p className="text-2xl font-bold">{profitMargin.toFixed(2)}%</p>
+
+          <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+            <div className="flex items-center justify-between mb-3">
+              <div className="p-2 bg-purple-50 rounded-lg">
+                <ShoppingCart className="h-5 w-5 text-purple-600" />
+              </div>
+            </div>
+            <p className="text-sm font-medium text-gray-500">Total Items Sold</p>
+            <p className="text-2xl font-bold text-gray-900 mt-1">{totalQuantitySold.toLocaleString()}</p>
+            <p className="text-xs text-gray-400 mt-2">Volume across {sales.length} transactions</p>
           </div>
         </div>
 
-        <div className="card">
-          <h3 className="font-bold mb-4">Date Filter</h3>
-          <div className="flex gap-4">
-            <input type="text" placeholder="Start DD/MM/YYYY" value={startDateDisplay} onChange={e => {
-              setStartDateDisplay(e.target.value);
-              if (/^\d{2}\/\d{2}\/\d{4}$/.test(e.target.value)) setStartDate(parseDDMMYYYYToISO(e.target.value));
-            }} className="input-field" />
-            <input type="text" placeholder="End DD/MM/YYYY" value={endDateDisplay} onChange={e => {
-              setEndDateDisplay(e.target.value);
-              if (/^\d{2}\/\d{2}\/\d{4}$/.test(e.target.value)) setEndDate(parseDDMMYYYYToISO(e.target.value));
-            }} className="input-field" />
-            <button onClick={applyDateFilter} className="btn-primary">Apply</button>
-            {filterApplied && <button onClick={clearFilter} className="btn-outline">Clear</button>}
-          </div>
-        </div>
-
+        {/* Detailed Performance Summary Section */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="card">
-            <h3 className="font-bold mb-4">Top 5 Products</h3>
-            <div className="space-y-2">
-              {topProducts.map(p => (
-                <div key={p.id} className="flex justify-between border-b pb-2">
-                  <span>{p.name}</span>
-                  <span className="font-bold">₹{p.salesData.revenue.toLocaleString()}</span>
-                </div>
-              ))}
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-primary-600" />
+              Financial Breakdown
+            </h3>
+            <div className="space-y-4">
+              <div className="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
+                <span className="text-gray-600">Total Gross Revenue:</span>
+                <span className="font-bold text-lg">₹{totalSalesRevenue.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
+                <span className="text-gray-600">Total Net Profit:</span>
+                <span className="font-bold text-lg text-green-600">₹{totalProfit.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
+                <span className="text-gray-600">Average Sale Value:</span>
+                <span className="font-bold">₹{avgSaleValue.toLocaleString(undefined, {maximumFractionDigits: 0})}</span>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
+                <span className="text-gray-600">Profit Margin:</span>
+                <span className="font-bold text-primary-600">{profitMargin.toFixed(2)}%</span>
+              </div>
             </div>
           </div>
-          <div className="card">
-            <h3 className="font-bold mb-4">Inventory Value</h3>
+
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+              <BarChart3 className="h-5 w-5 text-primary-600" />
+              Inventory Valuation
+            </h3>
             <div className="space-y-4">
-              <div className="flex justify-between">
-                <span>Potential Revenue:</span>
-                <span className="font-bold text-green-600">₹{currentInventoryValue.toLocaleString()}</span>
+              <div className="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
+                <span className="text-gray-600">Total Current Stock Value:</span>
+                <span className="font-bold text-lg text-blue-600">₹{currentInventoryValue.toLocaleString()}</span>
               </div>
-              <div className="flex justify-between">
-                <span>Potential Profit:</span>
-                <span className="font-bold text-blue-600">₹{(currentInventoryValue - totalProductInvestment).toLocaleString()}</span>
+              <div className="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
+                <span className="text-gray-600">Total Cost of Stock:</span>
+                <span className="font-bold text-lg">₹{totalInvestment.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
+                <span className="text-gray-600">Potential Profit in Stock:</span>
+                <span className="font-bold text-green-600">₹{(currentInventoryValue - totalProductInvestment).toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
+                <span className="text-gray-600">Total Quantity in Hand:</span>
+                <span className="font-bold">{totalItemsInInventory.toLocaleString()} items</span>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Period Summary Table */}
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-bold text-gray-900">Period Overview</h3>
+            <div className="flex gap-2">
+              <div className="text-xs font-bold text-gray-400 bg-gray-100 px-3 py-1.5 rounded-lg border border-gray-200">
+                {startDateDisplay} - {endDateDisplay}
+              </div>
+            </div>
+          </div>
+          
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="text-gray-400 text-xs uppercase font-bold border-b border-gray-100">
+                  <th className="pb-3 px-2">Performance Metric</th>
+                  <th className="pb-3 px-2 text-right">Value</th>
+                  <th className="pb-3 px-2 text-right">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                <tr className="text-sm">
+                  <td className="py-4 px-2 font-medium text-gray-700">Total Sales Transactions</td>
+                  <td className="py-4 px-2 text-right font-bold">{sales.length}</td>
+                  <td className="py-4 px-2 text-right text-xs font-bold text-green-600 uppercase">Tracked</td>
+                </tr>
+                <tr className="text-sm">
+                  <td className="py-4 px-2 font-medium text-gray-700">Total Profit Generated</td>
+                  <td className="py-4 px-2 text-right font-bold text-green-600">₹{totalProfit.toLocaleString()}</td>
+                  <td className="py-4 px-2 text-right text-xs font-bold text-blue-600 uppercase">Growth</td>
+                </tr>
+                <tr className="text-sm">
+                  <td className="py-4 px-2 font-medium text-gray-700">Total Inventory Investment</td>
+                  <td className="py-4 px-2 text-right font-bold text-orange-600">₹{totalInvestment.toLocaleString()}</td>
+                  <td className="py-4 px-2 text-right text-xs font-bold text-orange-600 uppercase">Assets</td>
+                </tr>
+                <tr className="text-sm">
+                  <td className="py-4 px-2 font-medium text-gray-700">Highest Individual Transaction</td>
+                  <td className="py-4 px-2 text-right font-bold">
+                    ₹{sales.length > 0 ? Math.max(...sales.map(s => s.total_amount)).toLocaleString() : 0}
+                  </td>
+                  <td className="py-4 px-2 text-right text-xs font-bold text-purple-600 uppercase">Peak</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>

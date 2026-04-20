@@ -19,6 +19,10 @@ import {
   deleteSale,
   getAnalytics
 } from 'lib/offline-adapter';
+import { 
+  getFinancialYear, 
+  getFYRange 
+} from 'lib/date-utils';
 import { formatDateToDDMMYYYY, parseDDMMYYYYToISO } from '../utils/dateHelpers';
 import type { Product, Sale } from 'supabase_client';
 import { useToast } from 'app/context/ToastContext';
@@ -235,12 +239,11 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
         `, { count: 'exact' });
 
       // Apply date filtering
-      // Default to FY 2026-27 if no filters applied
-      const fyStart = '2026-03-20';
-      const fyEnd = '2027-03-20';
+      // Default to current FY if no filters applied
+      const range = getFYRange(getFinancialYear());
       
-      const effectiveStart = startDate || fyStart;
-      const effectiveEnd = endDate || fyEnd;
+      const effectiveStart = startDate || range.start;
+      const effectiveEnd = endDate || range.end;
 
       query = query.gte('sale_date', effectiveStart);
       query = query.lte('sale_date', effectiveEnd);

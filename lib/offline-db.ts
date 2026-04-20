@@ -5,6 +5,7 @@ import {
   getSalesDB,
   getCategoriesDB,
   getPartyPurchasesDB,
+  getDeletionLogDB,
   generateUUID,
   toPouchID,
   fromPouchID,
@@ -272,6 +273,9 @@ export const deleteProduct = async (id: string): Promise<boolean> => {
     const docId = toPouchID('product', id);
     const doc = await db.get(docId);
     await db.remove(doc);
+    
+    // Log for sync
+    await logDeletion('products', id);
     return true;
   } catch (error) {
     console.error('Error deleting product:', error);
@@ -344,30 +348,54 @@ export const createSale = async (sale: Omit<Sale, 'id' | 'created_at'>): Promise
   const productsDB = await getProductsDB();
   const salesDB = await getSalesDB();
   
-  // 1. Check stock FIRST
-  const product = await getProductById(sale.product_id);
-  if (!product) {
+  // 1. Fetch product to check stock and get its rev
+  const productDocId = toPouchID('product', sale.product_id);
+  const productDoc: any = await productsDB.get(productDocId);
+  
+  if (!productDoc) {
     throw new Error('Product not found');
   }
   
-  if (product.stock_quantity < sale.quantity) {
-    throw new Error(`Insufficient stock. Available: ${product.stock_quantity}, Requested: ${sale.quantity}`);
+  if (productDoc.stock_quantity < sale.quantity) {
+    throw new Error(`Insufficient stock. Available: ${productDoc.stock_quantity}, Requested: ${sale.quantity}`);
   }
 
   const id = generateUUID();
   const now = getCurrentTimestamp();
 
-  // 2. Update product stock
-  await updateProductStock(sale.product_id, -sale.quantity);
+  // 2. Prepare updates
+  const updatedProductDoc = {
+    ...productDoc,
+    stock_quantity: productDoc.stock_quantity - sale.quantity,
+    updated_at: now
+  };
 
-  // 3. Create sale record
-  const doc = {
+  const saleDoc = {
     _id: toPouchID('sale', id),
     ...sale,
     created_at: now
   };
 
-  await salesDB.put(doc);
+  // 3. Update Product FIRST (Source of truth for stock)
+  await productsDB.put(updatedProductDoc);
+
+  try {
+    // 4. Create sale record
+    await salesDB.put(saleDoc);
+  } catch (err) {
+    // CRITICAL: If sale creation fails, we must attempt to ROLLBACK the stock deduction
+    console.error('Failed to create sale record, attempting stock rollback:', err);
+    try {
+      const currentProduct: any = await productsDB.get(productDocId);
+      await productsDB.put({
+        ...currentProduct,
+        stock_quantity: currentProduct.stock_quantity + sale.quantity
+      });
+    } catch (rollbackErr) {
+      console.error('FAILED TO ROLLBACK STOCK! Inventory mismatch created:', rollbackErr);
+    }
+    throw err;
+  }
 
   return {
     id,
@@ -378,30 +406,44 @@ export const createSale = async (sale: Omit<Sale, 'id' | 'created_at'>): Promise
 
 export const updateSale = async (id: string, updates: Partial<Sale>): Promise<Sale> => {
   try {
-    const db = await getSalesDB();
+    const productsDB = await getProductsDB();
+    const salesDB = await getSalesDB();
     const docId = toPouchID('sale', id);
-    const doc: any = await db.get(docId);
+    const saleDoc: any = await salesDB.get(docId);
 
     // If quantity is being updated, adjust stock
-    if (updates.quantity !== undefined && updates.quantity !== doc.quantity) {
-      const quantityDiff = updates.quantity - doc.quantity;
-      await updateProductStock(doc.product_id, -quantityDiff);
+    if (updates.quantity !== undefined && updates.quantity !== saleDoc.quantity) {
+      const quantityDiff = updates.quantity - saleDoc.quantity;
+      
+      // Update product stock
+      const productDocId = toPouchID('product', saleDoc.product_id);
+      const productDoc: any = await productsDB.get(productDocId);
+      
+      if (productDoc.stock_quantity - quantityDiff < 0) {
+        throw new Error(`Insufficient stock for update. Available: ${productDoc.stock_quantity}, Diff: ${quantityDiff}`);
+      }
+
+      await productsDB.put({
+        ...productDoc,
+        stock_quantity: productDoc.stock_quantity - quantityDiff,
+        updated_at: getCurrentTimestamp()
+      });
     }
 
-    const updatedDoc = { ...doc, ...updates };
-    await db.put(updatedDoc);
+    const updatedSaleDoc = { ...saleDoc, ...updates };
+    await salesDB.put(updatedSaleDoc);
 
     return {
-      id: fromPouchID(updatedDoc._id),
-      product_id: updatedDoc.product_id,
-      quantity: updatedDoc.quantity,
-      unit_price: updatedDoc.unit_price,
-      total_amount: updatedDoc.total_amount,
-      profit: updatedDoc.profit,
-      customer_info: updatedDoc.customer_info,
-      sale_date: updatedDoc.sale_date,
-      notes: updatedDoc.notes,
-      created_at: updatedDoc.created_at
+      id: fromPouchID(updatedSaleDoc._id),
+      product_id: updatedSaleDoc.product_id,
+      quantity: updatedSaleDoc.quantity,
+      unit_price: updatedSaleDoc.unit_price,
+      total_amount: updatedSaleDoc.total_amount,
+      profit: updatedSaleDoc.profit,
+      customer_info: updatedSaleDoc.customer_info,
+      sale_date: updatedSaleDoc.sale_date,
+      notes: updatedSaleDoc.notes,
+      created_at: updatedSaleDoc.created_at
     };
   } catch (error) {
     console.error('Error updating sale:', error);
@@ -411,14 +453,29 @@ export const updateSale = async (id: string, updates: Partial<Sale>): Promise<Sa
 
 export const deleteSale = async (id: string): Promise<boolean> => {
   try {
-    const db = await getSalesDB();
+    const productsDB = await getProductsDB();
+    const salesDB = await getSalesDB();
     const docId = toPouchID('sale', id);
-    const doc: any = await db.get(docId);
+    const saleDoc: any = await salesDB.get(docId);
 
-    // Restore product stock before deleting
-    await updateProductStock(doc.product_id, doc.quantity);
+    // 1. Restore product stock
+    const productDocId = toPouchID('product', saleDoc.product_id);
+    try {
+      const productDoc: any = await productsDB.get(productDocId);
+      await productsDB.put({
+        ...productDoc,
+        stock_quantity: productDoc.stock_quantity + saleDoc.quantity,
+        updated_at: getCurrentTimestamp()
+      });
+    } catch (err) {
+      console.warn('Could not restore stock for deleted sale (product might be deleted):', err);
+    }
 
-    await db.remove(doc);
+    // 2. Delete sale
+    await salesDB.remove(saleDoc);
+    
+    // 3. Log for sync
+    await logDeletion('sales', id);
     return true;
   } catch (error) {
     console.error('Error deleting sale:', error);
@@ -699,6 +756,9 @@ export const deletePartyPurchase = async (id: string): Promise<boolean> => {
     const docId = toPouchID('party', id);
     const doc = await db.get(docId);
     await db.remove(doc);
+    
+    // Log for sync
+    await logDeletion('party_purchases', id);
     return true;
   } catch (error) {
     console.error('Error deleting party purchase:', error);
@@ -831,8 +891,53 @@ export const getProductHistory = async (productId: string): Promise<any[]> => {
         date: doc.date,
         notes: doc.notes
       }));
+// ==================== DELETION LOG ====================
+
+/**
+ * Logs a deletion for offline synchronization
+ */
+const logDeletion = async (table: string, id: string): Promise<void> => {
+  try {
+    const db = await getDeletionLogDB();
+    const docId = `del_${table}_${id}`;
+    
+    await db.put({
+      _id: docId,
+      table,
+      record_id: id,
+      deleted_at: getCurrentTimestamp()
+    });
   } catch (error) {
-    console.error('Error getting product history:', error);
+    console.error(`Error logging deletion for ${table}:${id}:`, error);
+  }
+};
+
+/**
+ * Gets all pending deletions for synchronization
+ */
+export const getPendingDeletions = async (): Promise<any[]> => {
+  try {
+    const db = await getDeletionLogDB();
+    const result = await db.allDocs({
+      include_docs: true,
+      startkey: 'del_',
+      endkey: 'del_\\ufff0'
+    });
+    return result.rows.map(row => row.doc);
+  } catch (error) {
+    console.error('Error getting pending deletions:', error);
     return [];
+  }
+};
+
+/**
+ * Clears a deletion from the log after successful synchronization
+ */
+export const clearDeletion = async (logDoc: any): Promise<void> => {
+  try {
+    const db = await getDeletionLogDB();
+    await db.remove(logDoc);
+  } catch (error) {
+    console.error('Error clearing deletion log:', error);
   }
 };

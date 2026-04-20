@@ -11,6 +11,8 @@ export default function SyncIndicator() {
     setIsClient(true);
   }, []);
 
+  const [isResuming, setIsResuming] = useState(false);
+
   const {
     syncStatus,
     isSyncing,
@@ -24,6 +26,19 @@ export default function SyncIndicator() {
     supabaseStatus
   } = useSyncStatus();
 
+  const handleResume = async () => {
+    setIsResuming(true);
+    try {
+      const success = await resume();
+      if (!success) {
+        // Still 503, notify user it's taking time
+        console.log('Project still waking up...');
+      }
+    } finally {
+      setIsResuming(false);
+    }
+  };
+
   // Only render on client side
   if (!isClient) {
     return null;
@@ -35,7 +50,7 @@ export default function SyncIndicator() {
     }
 
     if (supabaseStatus === 'paused') {
-      return <PauseCircle className="w-4 h-4 text-orange-500" />;
+      return isResuming ? <RefreshCw className="w-4 h-4 animate-spin text-orange-500" /> : <PauseCircle className="w-4 h-4 text-orange-500" />;
     }
 
     if (isSyncing) {
@@ -60,7 +75,7 @@ export default function SyncIndicator() {
     }
 
     if (supabaseStatus === 'paused') {
-      return 'Project Paused';
+      return isResuming ? 'Waking up...' : 'Project Paused';
     }
 
     if (isSyncing) {
@@ -145,12 +160,13 @@ export default function SyncIndicator() {
 
           {isOnline && supabaseStatus === 'paused' && (
             <button
-              onClick={resume}
-              className="px-3 py-1.5 bg-orange-100 hover:bg-orange-200 text-orange-700 rounded-lg transition-colors flex items-center gap-1.5 text-xs font-bold border border-orange-200"
+              onClick={handleResume}
+              disabled={isResuming}
+              className="px-3 py-1.5 bg-orange-100 hover:bg-orange-200 disabled:opacity-50 text-orange-700 rounded-lg transition-colors flex items-center gap-1.5 text-xs font-bold border border-orange-200"
               title="Resume Supabase Project"
             >
-              <RefreshCw className="w-3 h-3" />
-              RESUME
+              <RefreshCw className={`w-3 h-3 ${isResuming ? 'animate-spin' : ''}`} />
+              {isResuming ? 'WAKING UP...' : 'RESUME'}
             </button>
           )}
         </div>

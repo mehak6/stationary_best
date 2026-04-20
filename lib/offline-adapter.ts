@@ -20,6 +20,11 @@ import type {
   PartyPurchaseInsert 
 } from '../supabase_client';
 import * as OfflineDB from './offline-db';
+import { 
+  getFinancialYear, 
+  getFYRange, 
+  isDateInFY 
+} from './date-utils';
 
 // Network status
 let isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true;
@@ -54,7 +59,7 @@ export const getProducts = async (limit?: number): Promise<Product[]> => {
   try {
     if (isOnline) {
       // Try online sync first
-      const { data, error } = await (supabase.from('products') as any)
+      const { data, error } = await supabase.from('products')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(limit || 1000);
@@ -83,8 +88,7 @@ export const getProducts = async (limit?: number): Promise<Product[]> => {
 export const createProduct = async (product: ProductInsert): Promise<Product> => {
   try {
     if (isOnline) {
-      const { data, error } = await supabase
-        .from('products')
+      const { data, error } = await supabase.from('products')
         .insert(product)
         .select()
         .single();
@@ -109,9 +113,9 @@ export const createProduct = async (product: ProductInsert): Promise<Product> =>
 export const updateProduct = async (productId: string, updates: Partial<ProductInsert>): Promise<Product> => {
   try {
     if (isOnline) {
-      const { data, error } = await (supabase.from('party_purchases') as any)
+      const { data, error } = await supabase.from('products')
         .update({ ...updates, updated_at: new Date().toISOString() })
-        .eq('id', id)
+        .eq('id', productId)
         .select()
         .single();
 
@@ -160,7 +164,6 @@ export const deleteProduct = async (productId: string): Promise<void> => {
 export const resetAllProductsStock = async (newYearLabel: string): Promise<boolean> => {
   try {
     // CRITICAL: Fetch products from LOCAL DB only to ensure reset can always proceed
-    // This avoids hitting the online getProducts() which might trigger a network error
     const products = await OfflineDB.getAllProducts();
     if (!products || products.length === 0) return true;
 
@@ -170,19 +173,20 @@ export const resetAllProductsStock = async (newYearLabel: string): Promise<boole
     }));
 
     // Step 1: Update local PouchDB cache
-    // The sync engine will automatically pick up these changes because updated_at is new
     await OfflineDB.bulkUpdateProducts(updates as any);
     
     // Step 2: Save closing stock for the previous year
-    const prevYear = newYearLabel === '2026-27' ? '2025-26' : 'unknown';
-    if (prevYear !== 'unknown') {
-      const closingRecords = products.map(p => ({
-        product_id: p.id,
-        financial_year: prevYear,
-        closing_stock: p.stock_quantity
-      }));
-      await OfflineDB.saveYearlyClosingStock(closingRecords);
-    }
+    // Extract previous year from the newYearLabel
+    const [startYearStr] = newYearLabel.split('-');
+    const startYear = parseInt(startYearStr);
+    const prevYearLabel = `${startYear - 1}-${String(startYear % 100).padStart(2, '0')}`;
+    
+    const closingRecords = products.map(p => ({
+      product_id: p.id,
+      financial_year: prevYearLabel,
+      closing_stock: p.stock_quantity
+    }));
+    await OfflineDB.saveYearlyClosingStock(closingRecords);
 
     // Step 3: Add to history in bulk
     const { addProductHistoryBulk } = await import('./product-history');
@@ -229,11 +233,10 @@ export const syncAllData = async () => {
 
 // ==================== ANALYTICS ====================
 
-export const getAnalytics = async (financialYear: string = '2026-27') => {
+export const getAnalytics = async (financialYear?: string) => {
   try {
-    // FY 2026-27 range (Custom start date: March 20th)
-    const fyStart = '2026-03-20';
-    const fyEnd = '2027-03-20';
+    const targetFY = financialYear || getFinancialYear();
+    const { start: fyStart, end: fyEnd } = getFYRange(targetFY);
 
     if (isOnline) {
       const { data: salesData, error: salesError } = await supabase
@@ -317,7 +320,7 @@ export const getAnalytics = async (financialYear: string = '2026-27') => {
 export const getSales = async (limit?: number): Promise<Sale[]> => {
   try {
     if (isOnline) {
-      const { data, error } = await (supabase.from('sales') as any)
+      const { data, error } = await supabase.from('sales')
         .select(`
           *,
           products (
@@ -517,7 +520,7 @@ export const deleteSale = async (id: string): Promise<boolean> => {
 export const getCategories = async (): Promise<Category[]> => {
   try {
     if (isOnline) {
-      const { data, error } = await (supabase.from('categories') as any)
+      const { data, error } = await supabase.from('categories')
         .select('*')
         .order('name');
 
@@ -545,7 +548,7 @@ export const getCategories = async (): Promise<Category[]> => {
 export const getPartyPurchases = async (): Promise<PartyPurchase[]> => {
   try {
     if (isOnline) {
-      const { data, error } = await (supabase.from('party_purchases') as any)
+      const { data, error } = await supabase.from('party_purchases')
         .select('*')
         .order('purchase_date', { ascending: false })
         .order('created_at', { ascending: false });
@@ -572,7 +575,7 @@ export const getPartyPurchases = async (): Promise<PartyPurchase[]> => {
 export const createPartyPurchase = async (purchase: PartyPurchaseInsert): Promise<PartyPurchase> => {
   try {
     if (isOnline) {
-      const { data, error } = await (supabase.from('party_purchases') as any)
+      const { data, error } = await supabase.from('party_purchases')
         .insert(purchase)
         .select()
         .single();
@@ -594,7 +597,7 @@ export const createPartyPurchase = async (purchase: PartyPurchaseInsert): Promis
 export const updatePartyPurchase = async (id: string, updates: Partial<PartyPurchaseInsert>): Promise<PartyPurchase> => {
   try {
     if (isOnline) {
-      const { data, error } = await (supabase.from('party_purchases') as any)
+      const { data, error } = await supabase.from('party_purchases')
         .update({ ...updates, updated_at: new Date().toISOString() })
         .eq('id', id)
         .select()

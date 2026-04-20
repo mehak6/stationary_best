@@ -27,6 +27,7 @@ let categoriesDB: PouchDB.Database | null = null;
 let partyPurchasesDB: PouchDB.Database | null = null;
 let yearlyClosingStockDB: PouchDB.Database | null = null;
 let syncMetaDB: PouchDB.Database | null = null;
+let deletionLogDB: PouchDB.Database | null = null;
 
 // Initialization state tracking
 let isInitialized = false;
@@ -90,6 +91,13 @@ export const initializeDatabases = async () => {
       syncMetaDB = new PouchDB('inventory_sync_meta', {
         auto_compaction: true,
         revs_limit: 5
+      });
+    }
+
+    if (!deletionLogDB) {
+      deletionLogDB = new PouchDB('inventory_deletion_log', {
+        auto_compaction: true,
+        revs_limit: 100
       });
     }
 
@@ -234,6 +242,14 @@ export const getSyncMetaDB = async (): Promise<PouchDB.Database> => {
   return syncMetaDB;
 };
 
+export const getDeletionLogDB = async (): Promise<PouchDB.Database> => {
+  await waitForDatabaseInit();
+  if (!deletionLogDB) {
+    throw new Error('Deletion log database not initialized');
+  }
+  return deletionLogDB;
+};
+
 // Utility: Generate UUID for document IDs
 export const generateUUID = (): string => {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -279,6 +295,7 @@ export const clearAllDatabases = async () => {
     await categoriesDB?.destroy();
     await partyPurchasesDB?.destroy();
     await syncMetaDB?.destroy();
+    await deletionLogDB?.destroy();
 
     // Reinitialize
     productsDB = null;
@@ -286,6 +303,7 @@ export const clearAllDatabases = async () => {
     categoriesDB = null;
     partyPurchasesDB = null;
     syncMetaDB = null;
+    deletionLogDB = null;
 
     initializeDatabases();
 

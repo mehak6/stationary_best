@@ -557,21 +557,63 @@ export const syncPartyPurchasesFromSupabase = async (): Promise<{
   }
 };
 
+// Sync Deletions: PouchDB Deletion Log → Supabase
+export const syncDeletionsToSupabase = async (): Promise<{
+  synced: number;
+  errors: number;
+}> => {
+  const supabase = getSupabaseClient();
+  const { getPendingDeletions, clearDeletion } = await import('./offline-db');
+  
+  const pendingDeletions = await getPendingDeletions();
+  let synced = 0;
+  let errors = 0;
+
+  for (const logDoc of pendingDeletions) {
+    try {
+      const { table, record_id } = logDoc;
+      
+      const { error } = await (supabase.from(table) as any)
+        .delete()
+        .eq('id', record_id);
+
+      if (error) {
+        console.error(`Error syncing deletion for ${table}:${record_id}:`, error);
+        errors++;
+      } else {
+        await clearDeletion(logDoc);
+        synced++;
+      }
+    } catch (err) {
+      console.error('Error processing deletion sync:', err);
+      errors++;
+    }
+  }
+
+  return { synced, errors };
+};
+
 // Full bidirectional sync
 export const performFullSync = async (): Promise<{
   products: { push: number; pull: number; errors: number };
   sales: { push: number; pull: number; errors: number };
   categories: { push: number; pull: number; errors: number };
   partyPurchases: { push: number; pull: number; errors: number };
+  deletions: { synced: number; errors: number };
 }> => {
   const results = {
     products: { push: 0, pull: 0, errors: 0 },
     sales: { push: 0, pull: 0, errors: 0 },
     categories: { push: 0, pull: 0, errors: 0 },
-    partyPurchases: { push: 0, pull: 0, errors: 0 }
+    partyPurchases: { push: 0, pull: 0, errors: 0 },
+    deletions: { synced: 0, errors: 0 }
   };
 
   try {
+    // Process deletions first
+    const deletionResults = await syncDeletionsToSupabase();
+    results.deletions = deletionResults;
+
     // Sync products
     const productsPush = await syncProductsToSupabase();
     const productsPull = await syncProductsFromSupabase();
