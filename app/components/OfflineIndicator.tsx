@@ -44,7 +44,20 @@ export default function OfflineIndicator() {
 
     try {
       const result = await syncAllData();
-      setSyncResult({ synced: result.synced, errors: result.errors });
+      const stats = 
+        result.products.pull + result.products.push +
+        result.sales.pull + result.sales.push +
+        result.categories.pull + result.categories.push +
+        result.partyPurchases.pull + result.partyPurchases.push +
+        result.deletions;
+
+      const errors = 
+        result.products.errors +
+        result.sales.errors +
+        result.categories.errors +
+        result.partyPurchases.errors;
+
+      setSyncResult({ synced: stats, errors: errors });
     } catch (error) {
       console.error('Sync error:', error);
       setSyncResult({ synced: 0, errors: 1 });

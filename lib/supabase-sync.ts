@@ -9,650 +9,300 @@ import {
   getSyncMetaDB
 } from './pouchdb-client';
 import type { Product, Sale, Category, PartyPurchase } from './offline-db';
+import * as OfflineDB from './offline-db';
+import { hasConflict, resolveEntityConflict } from './conflict-resolver';
 
-// Use the singleton Supabase client to avoid multiple GoTrueClient instances
-export const getSupabaseClient = () => {
-  return supabase;
-};
+/**
+ * Supabase Synchronization Engine (Offline-First)
+ * 
+ * Strategy:
+ * 1. Pull changes from Supabase since last sync
+ * 2. Resolve conflicts locally using Last-Write-Wins (LWW)
+ * 3. Push local changes to Supabase
+ */
 
-// Sync metadata helpers
-const getSyncMeta = async (key: string): Promise<any> => {
+interface SyncMeta {
+  _id: string;
+  _rev?: string;
+  last_sync_time: string;
+}
+
+const getSyncMeta = async (table: string): Promise<SyncMeta> => {
+  const db = await getSyncMetaDB();
+  const id = `sync_meta_${table}`;
   try {
-    const db = await getSyncMetaDB();
-    const doc = await db.get(`sync_${key}`) as any;
-    return doc.value;
-  } catch (err) {
-    return null;
+    return await db.get(id);
+  } catch {
+    return { _id: id, last_sync_time: new Date(0).toISOString() };
   }
 };
 
-const setSyncMeta = async (key: string, value: any): Promise<void> => {
-  try {
-    const db = await getSyncMetaDB();
-
-    const docId = `sync_${key}`;
-    let doc: any;
-
-    try {
-      doc = await db.get(docId);
-      doc.value = value;
-      doc.updated_at = new Date().toISOString();
-    } catch {
-      doc = {
-        _id: docId,
-        value,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-    }
-
-    await db.put(doc);
-  } catch (err) {
-    console.error('Error setting sync meta:', err);
-  }
+const updateSyncMeta = async (table: string, time: string): Promise<void> => {
+  const db = await getSyncMetaDB();
+  const meta = await getSyncMeta(table);
+  await db.put({
+    ...meta,
+    last_sync_time: time
+  });
 };
 
-// Convert PouchDB document to Supabase format
-const toSupabaseFormat = (doc: any, type: string) => {
-  const { _id, _rev, ...data } = doc;
-  return {
-    ...data,
-    id: data.id || _id.replace(`${type}_`, '')
-  };
-};
-
-// Convert Supabase document to PouchDB format
-const toPouchFormat = (data: any, type: string) => {
-  const { id, ...rest } = data;
-  return {
-    _id: `${type}_${id}`,
-    id,
-    ...rest
-  };
-};
-
-// Sync Products: PouchDB → Supabase
-export const syncProductsToSupabase = async (): Promise<{
-  synced: number;
-  errors: number;
-}> => {
-  const supabase = getSupabaseClient();
-  if (!supabase) {
-    throw new Error('Supabase not initialized');
-  }
-
-  const db = await getProductsDB();
-
-  let synced = 0;
-  let errors = 0;
-
-  try {
-    // Get last sync timestamp
-    const lastSync = await getSyncMeta('products_last_sync') || '1970-01-01T00:00:00.000Z';
-
-    // Get all products modified since last sync
-    const result = await db.find({
-      selector: {
-        updated_at: { $gt: lastSync }
-      }
-    });
-
-    // Sync each product to Supabase
-    for (const doc of result.docs) {
-      try {
-        const product = toSupabaseFormat(doc, 'product');
-
-        // Upsert to Supabase
-        const { error } = await supabase
-          .from('products')
-          .upsert(product, { onConflict: 'id' });
-
-        if (error) {
-          console.error('Error syncing product:', error);
-          errors++;
-        } else {
-          synced++;
-        }
-      } catch (err) {
-        console.error('Error processing product:', err);
-        errors++;
-      }
-    }
-
-    // Update last sync timestamp
-    if (synced > 0) {
-      await setSyncMeta('products_last_sync', new Date().toISOString());
-    }
-
-    return { synced, errors };
-  } catch (err) {
-    console.error('Error in syncProductsToSupabase:', err);
-    throw err;
-  }
-};
-
-// Sync Products: Supabase → PouchDB
-export const syncProductsFromSupabase = async (): Promise<{
-  synced: number;
-  errors: number;
-}> => {
-  const supabase = getSupabaseClient();
-  if (!supabase) {
-    throw new Error('Supabase not initialized');
-  }
-
-  const db = await getProductsDB();
-
-  let synced = 0;
-  let errors = 0;
-
-  try {
-    // Get last sync timestamp
-    const lastSync = await getSyncMeta('products_last_pull') || '1970-01-01T00:00:00.000Z';
-
-    // Fetch products modified since last sync
-    const { data: products, error } = await supabase
-      .from('products')
-      .select('*')
-      .gt('updated_at', lastSync)
-      .order('updated_at', { ascending: true });
-
-    if (error) {
-      throw error;
-    }
-
-    if (!products || products.length === 0) {
-      return { synced: 0, errors: 0 };
-    }
-
-    // Sync each product to PouchDB
-    for (const product of products) {
-      try {
-        const pouchDoc = toPouchFormat(product, 'product');
-        const docId = pouchDoc._id;
-
-        // Check if document exists
-        let existingDoc;
-        try {
-          existingDoc = await db.get(docId);
-          pouchDoc._rev = existingDoc._rev;
-        } catch {
-          // Document doesn't exist, will be created
-        }
-
-        await db.put(pouchDoc);
-        synced++;
-      } catch (err) {
-        console.error('Error syncing product from Supabase:', err);
-        errors++;
-      }
-    }
-
-    // Update last pull timestamp
-    if (synced > 0) {
-      await setSyncMeta('products_last_pull', new Date().toISOString());
-    }
-
-    return { synced, errors };
-  } catch (err) {
-    console.error('Error in syncProductsFromSupabase:', err);
-    throw err;
-  }
-};
-
-// Sync Sales: PouchDB → Supabase
-export const syncSalesToSupabase = async (): Promise<{
-  synced: number;
-  errors: number;
-}> => {
-  const supabase = getSupabaseClient();
-  if (!supabase) {
-    throw new Error('Supabase not initialized');
-  }
-
-  const db = await getSalesDB();
-
-  let synced = 0;
-  let errors = 0;
-
-  try {
-    const lastSync = await getSyncMeta('sales_last_sync') || '1970-01-01T00:00:00.000Z';
-
-    const result = await db.find({
-      selector: {
-        created_at: { $gt: lastSync }
-      }
-    });
-
-    for (const doc of result.docs) {
-      try {
-        const sale = toSupabaseFormat(doc, 'sale');
-
-        const { error } = await supabase
-          .from('sales')
-          .upsert(sale, { onConflict: 'id' });
-
-        if (error) {
-          console.error('Error syncing sale:', error);
-          errors++;
-        } else {
-          synced++;
-        }
-      } catch (err) {
-        console.error('Error processing sale:', err);
-        errors++;
-      }
-    }
-
-    if (synced > 0) {
-      await setSyncMeta('sales_last_sync', new Date().toISOString());
-    }
-
-    return { synced, errors };
-  } catch (err) {
-    console.error('Error in syncSalesToSupabase:', err);
-    throw err;
-  }
-};
-
-// Sync Sales: Supabase → PouchDB
-export const syncSalesFromSupabase = async (): Promise<{
-  synced: number;
-  errors: number;
-}> => {
-  const supabase = getSupabaseClient();
-  if (!supabase) {
-    throw new Error('Supabase not initialized');
-  }
-
-  const db = await getSalesDB();
-
-  let synced = 0;
-  let errors = 0;
-
-  try {
-    const lastSync = await getSyncMeta('sales_last_pull') || '1970-01-01T00:00:00.000Z';
-
-    const { data: sales, error } = await supabase
-      .from('sales')
-      .select('*')
-      .gt('created_at', lastSync)
-      .order('created_at', { ascending: true });
-
-    if (error) {
-      throw error;
-    }
-
-    if (!sales || sales.length === 0) {
-      return { synced: 0, errors: 0 };
-    }
-
-    for (const sale of sales) {
-      try {
-        const pouchDoc = toPouchFormat(sale, 'sale');
-        const docId = pouchDoc._id;
-
-        let existingDoc;
-        try {
-          existingDoc = await db.get(docId);
-          pouchDoc._rev = existingDoc._rev;
-        } catch {
-          // Document doesn't exist
-        }
-
-        await db.put(pouchDoc);
-        synced++;
-      } catch (err) {
-        console.error('Error syncing sale from Supabase:', err);
-        errors++;
-      }
-    }
-
-    if (synced > 0) {
-      await setSyncMeta('sales_last_pull', new Date().toISOString());
-    }
-
-    return { synced, errors };
-  } catch (err) {
-    console.error('Error in syncSalesFromSupabase:', err);
-    throw err;
-  }
-};
-
-// Sync Categories: PouchDB → Supabase
-export const syncCategoriesToSupabase = async (): Promise<{
-  synced: number;
-  errors: number;
-}> => {
-  const supabase = getSupabaseClient();
-  if (!supabase) {
-    throw new Error('Supabase not initialized');
-  }
-
-  const db = await getCategoriesDB();
-
-  let synced = 0;
-  let errors = 0;
-
-  try {
-    const lastSync = await getSyncMeta('categories_last_sync') || '1970-01-01T00:00:00.000Z';
-
-    const result = await db.find({
-      selector: {
-        created_at: { $gt: lastSync }
-      }
-    });
-
-    for (const doc of result.docs) {
-      try {
-        const category = toSupabaseFormat(doc, 'category');
-
-        const { error } = await supabase
-          .from('categories')
-          .upsert(category, { onConflict: 'id' });
-
-        if (error) {
-          console.error('Error syncing category:', error);
-          errors++;
-        } else {
-          synced++;
-        }
-      } catch (err) {
-        console.error('Error processing category:', err);
-        errors++;
-      }
-    }
-
-    if (synced > 0) {
-      await setSyncMeta('categories_last_sync', new Date().toISOString());
-    }
-
-    return { synced, errors };
-  } catch (err) {
-    console.error('Error in syncCategoriesToSupabase:', err);
-    throw err;
-  }
-};
-
-// Sync Categories: Supabase → PouchDB
-export const syncCategoriesFromSupabase = async (): Promise<{
-  synced: number;
-  errors: number;
-}> => {
-  const supabase = getSupabaseClient();
-  if (!supabase) {
-    throw new Error('Supabase not initialized');
-  }
-
-  const db = await getCategoriesDB();
-
-  let synced = 0;
-  let errors = 0;
-
-  try {
-    const lastSync = await getSyncMeta('categories_last_pull') || '1970-01-01T00:00:00.000Z';
-
-    const { data: categories, error } = await supabase
-      .from('categories')
-      .select('*')
-      .gt('created_at', lastSync)
-      .order('created_at', { ascending: true });
-
-    if (error) {
-      throw error;
-    }
-
-    if (!categories || categories.length === 0) {
-      return { synced: 0, errors: 0 };
-    }
-
-    for (const category of categories) {
-      try {
-        const pouchDoc = toPouchFormat(category, 'category');
-        const docId = pouchDoc._id;
-
-        let existingDoc;
-        try {
-          existingDoc = await db.get(docId);
-          pouchDoc._rev = existingDoc._rev;
-        } catch {
-          // Document doesn't exist
-        }
-
-        await db.put(pouchDoc);
-        synced++;
-      } catch (err) {
-        console.error('Error syncing category from Supabase:', err);
-        errors++;
-      }
-    }
-
-    if (synced > 0) {
-      await setSyncMeta('categories_last_pull', new Date().toISOString());
-    }
-
-    return { synced, errors };
-  } catch (err) {
-    console.error('Error in syncCategoriesFromSupabase:', err);
-    throw err;
-  }
-};
-
-// Sync Party Purchases: PouchDB → Supabase
-export const syncPartyPurchasesToSupabase = async (): Promise<{
-  synced: number;
-  errors: number;
-}> => {
-  const supabase = getSupabaseClient();
-  if (!supabase) {
-    throw new Error('Supabase not initialized');
-  }
-
-  const db = await getPartyPurchasesDB();
-
-  let synced = 0;
-  let errors = 0;
-
-  try {
-    const lastSync = await getSyncMeta('party_purchases_last_sync') || '1970-01-01T00:00:00.000Z';
-
-    const result = await db.find({
-      selector: {
-        created_at: { $gt: lastSync }
-      }
-    });
-
-    for (const doc of result.docs) {
-      try {
-        const purchase = toSupabaseFormat(doc, 'party');
-
-        const { error } = await supabase
-          .from('party_purchases')
-          .upsert(purchase, { onConflict: 'id' });
-
-        if (error) {
-          console.error('Error syncing party purchase:', error);
-          errors++;
-        } else {
-          synced++;
-        }
-      } catch (err) {
-        console.error('Error processing party purchase:', err);
-        errors++;
-      }
-    }
-
-    if (synced > 0) {
-      await setSyncMeta('party_purchases_last_sync', new Date().toISOString());
-    }
-
-    return { synced, errors };
-  } catch (err) {
-    console.error('Error in syncPartyPurchasesToSupabase:', err);
-    throw err;
-  }
-};
-
-// Sync Party Purchases: Supabase → PouchDB
-export const syncPartyPurchasesFromSupabase = async (): Promise<{
-  synced: number;
-  errors: number;
-}> => {
-  const supabase = getSupabaseClient();
-  if (!supabase) {
-    throw new Error('Supabase not initialized');
-  }
-
-  const db = await getPartyPurchasesDB();
-
-  let synced = 0;
-  let errors = 0;
-
-  try {
-    const lastSync = await getSyncMeta('party_purchases_last_pull') || '1970-01-01T00:00:00.000Z';
-
-    const { data: purchases, error } = await supabase
-      .from('party_purchases')
-      .select('*')
-      .gt('created_at', lastSync)
-      .order('created_at', { ascending: true });
-
-    if (error) {
-      throw error;
-    }
-
-    if (!purchases || purchases.length === 0) {
-      return { synced: 0, errors: 0 };
-    }
-
-    for (const purchase of purchases) {
-      try {
-        const pouchDoc = toPouchFormat(purchase, 'party');
-        const docId = pouchDoc._id;
-
-        let existingDoc;
-        try {
-          existingDoc = await db.get(docId);
-          pouchDoc._rev = existingDoc._rev;
-        } catch {
-          // Document doesn't exist
-        }
-
-        await db.put(pouchDoc);
-        synced++;
-      } catch (err) {
-        console.error('Error syncing party purchase from Supabase:', err);
-        errors++;
-      }
-    }
-
-    if (synced > 0) {
-      await setSyncMeta('party_purchases_last_pull', new Date().toISOString());
-    }
-
-    return { synced, errors };
-  } catch (err) {
-    console.error('Error in syncPartyPurchasesFromSupabase:', err);
-    throw err;
-  }
-};
-
-// Sync Deletions: PouchDB Deletion Log → Supabase
-export const syncDeletionsToSupabase = async (): Promise<{
-  synced: number;
-  errors: number;
-}> => {
-  const supabase = getSupabaseClient();
-  const { getPendingDeletions, clearDeletion } = await import('./offline-db');
+// ==================== PRODUCTS SYNC ====================
+
+export const syncProducts = async () => {
+  const meta = await getSyncMeta('products');
+  const syncStartTime = new Date().toISOString();
   
-  const pendingDeletions = await getPendingDeletions();
-  let synced = 0;
-  let errors = 0;
+  let stats = { pull: 0, push: 0, errors: 0 };
 
-  for (const logDoc of pendingDeletions) {
+  try {
+    // 1. PULL changes from Supabase
+    const { data: remoteData, error: pullError } = await (supabase.from('products') as any)
+      .select('*')
+      .gt('updated_at', meta.last_sync_time);
+
+    if (pullError) throw pullError;
+
+    if (remoteData && (remoteData as any[]).length > 0) {
+      for (const remote of (remoteData as any[])) {
+        try {
+          const local = await OfflineDB.getProductById(remote.id);
+          
+          if (local && hasConflict(local, remote)) {
+            const resolved = resolveEntityConflict('product', local, remote);
+            await OfflineDB.saveProduct(resolved);
+          } else {
+            await OfflineDB.saveProduct(remote as Product);
+          }
+          stats.pull++;
+        } catch (err) {
+          console.error(`Error syncing product ${remote.id}:`, err);
+          stats.errors++;
+        }
+      }
+    }
+
+    // 2. PUSH changes to Supabase
+    const localProducts = await OfflineDB.getAllProducts();
+    const toPush = localProducts.filter(p => p.updated_at > meta.last_sync_time);
+
+    if (toPush.length > 0) {
+      for (const local of toPush) {
+        try {
+          // Fetch current remote to check for mid-sync conflicts
+          const { data: currentRemote } = await (supabase.from('products') as any)
+            .select('updated_at')
+            .eq('id', local.id)
+            .single();
+
+          if (currentRemote && (currentRemote as any).updated_at > local.updated_at) {
+            // Remote is newer, skip push and let next pull resolve it
+            continue;
+          }
+
+          const { error: pushError } = await (supabase.from('products') as any)
+            .upsert(local);
+
+          if (pushError) throw pushError;
+          stats.push++;
+        } catch (err) {
+          console.error(`Error pushing product ${local.id}:`, err);
+          stats.errors++;
+        }
+      }
+    }
+
+    await updateSyncMeta('products', syncStartTime);
+  } catch (err) {
+    console.error('Products sync failed:', err);
+    stats.errors++;
+  }
+
+  return stats;
+};
+
+// ==================== SALES SYNC ====================
+
+export const syncSales = async () => {
+  const meta = await getSyncMeta('sales');
+  const syncStartTime = new Date().toISOString();
+  let stats = { pull: 0, push: 0, errors: 0 };
+
+  try {
+    // 1. PULL (Sales are mostly immutable, so we just download new ones)
+    const { data: remoteData, error: pullError } = await (supabase.from('sales') as any)
+      .select('*')
+      .gt('created_at', meta.last_sync_time);
+
+    if (pullError) throw pullError;
+
+    if (remoteData && (remoteData as any[]).length > 0) {
+      for (const remote of (remoteData as any[])) {
+        await OfflineDB.saveSale(remote as Sale);
+        stats.pull++;
+      }
+    }
+
+    // 2. PUSH (Offline created sales)
+    const localSales = await OfflineDB.getAllSales();
+    const toPush = localSales.filter(s => s.created_at > meta.last_sync_time);
+
+    if (toPush.length > 0) {
+      const { error: pushError } = await (supabase.from('sales') as any)
+        .upsert(toPush);
+
+      if (pushError) throw pushError;
+      stats.push += toPush.length;
+    }
+
+    await updateSyncMeta('sales', syncStartTime);
+  } catch (err) {
+    console.error('Sales sync failed:', err);
+    stats.errors++;
+  }
+
+  return stats;
+};
+
+// ==================== CATEGORIES SYNC ====================
+
+export const syncCategories = async () => {
+  const meta = await getSyncMeta('categories');
+  const syncStartTime = new Date().toISOString();
+  let stats = { pull: 0, push: 0, errors: 0 };
+
+  try {
+    const { data: remoteData, error: pullError } = await (supabase.from('categories') as any)
+      .select('*')
+      .gt('created_at', meta.last_sync_time);
+
+    if (pullError) throw pullError;
+
+    if (remoteData) {
+      for (const remote of (remoteData as any[])) {
+        await OfflineDB.saveCategory(remote as Category);
+        stats.pull++;
+      }
+    }
+
+    const localCats = await OfflineDB.getAllCategories();
+    const toPush = localCats.filter(c => c.created_at > meta.last_sync_time);
+
+    if (toPush.length > 0) {
+      const { error: pushError } = await (supabase.from('categories') as any)
+        .upsert(toPush);
+      if (pushError) throw pushError;
+      stats.push += toPush.length;
+    }
+
+    await updateSyncMeta('categories', syncStartTime);
+  } catch (err) {
+    console.error('Categories sync failed:', err);
+    stats.errors++;
+  }
+  return stats;
+};
+
+// ==================== PARTY PURCHASES SYNC ====================
+
+export const syncPartyPurchases = async () => {
+  const meta = await getSyncMeta('party_purchases');
+  const syncStartTime = new Date().toISOString();
+  let stats = { pull: 0, push: 0, errors: 0 };
+
+  try {
+    const { data: remoteData, error: pullError } = await (supabase.from('party_purchases') as any)
+      .select('*')
+      .gt('updated_at', meta.last_sync_time);
+
+    if (pullError) throw pullError;
+
+    if (remoteData) {
+      for (const remote of (remoteData as any[])) {
+        try {
+          const local = await OfflineDB.getPartyPurchaseById(remote.id);
+          if (local && hasConflict(local, remote)) {
+            const resolved = resolveEntityConflict('party_purchase', local, remote);
+            await OfflineDB.savePartyPurchase(resolved);
+          } else {
+            await OfflineDB.savePartyPurchase(remote as PartyPurchase);
+          }
+          stats.pull++;
+        } catch (err) {
+          stats.errors++;
+        }
+      }
+    }
+
+    const localPP = await OfflineDB.getAllPartyPurchases();
+    const toPush = localPP.filter(p => p.updated_at > meta.last_sync_time);
+
+    if (toPush.length > 0) {
+      const { error: pushError } = await (supabase.from('party_purchases') as any)
+        .upsert(toPush);
+      if (pushError) throw pushError;
+      stats.push += toPush.length;
+    }
+
+    await updateSyncMeta('party_purchases', syncStartTime);
+  } catch (err) {
+    console.error('Party purchases sync failed:', err);
+    stats.errors++;
+  }
+  return stats;
+};
+
+// ==================== DELETIONS SYNC ====================
+
+export const syncDeletions = async () => {
+  const pendingDeletions = await OfflineDB.getPendingDeletions();
+  let count = 0;
+
+  for (const del of pendingDeletions) {
     try {
-      const { table, record_id } = logDoc;
-      
-      const { error } = await (supabase.from(table) as any)
+      const { error } = await (supabase.from(del.table) as any)
         .delete()
-        .eq('id', record_id);
+        .eq('id', del.record_id);
 
-      if (error) {
-        console.error(`Error syncing deletion for ${table}:${record_id}:`, error);
-        errors++;
-      } else {
-        await clearDeletion(logDoc);
-        synced++;
+      if (!error) {
+        await OfflineDB.clearDeletion(del);
+        count++;
       }
     } catch (err) {
-      console.error('Error processing deletion sync:', err);
-      errors++;
+      console.error(`Failed to sync deletion for ${del.table}:${del.record_id}`, err);
     }
   }
 
-  return { synced, errors };
+  return count;
 };
 
-// Full bidirectional sync
-export const performFullSync = async (): Promise<{
-  products: { push: number; pull: number; errors: number };
-  sales: { push: number; pull: number; errors: number };
-  categories: { push: number; pull: number; errors: number };
-  partyPurchases: { push: number; pull: number; errors: number };
-  deletions: { synced: number; errors: number };
-}> => {
-  const results = {
-    products: { push: 0, pull: 0, errors: 0 },
-    sales: { push: 0, pull: 0, errors: 0 },
-    categories: { push: 0, pull: 0, errors: 0 },
-    partyPurchases: { push: 0, pull: 0, errors: 0 },
-    deletions: { synced: 0, errors: 0 }
-  };
+// ==================== FULL SYNC ====================
 
+export const performFullSync = async () => {
+  console.log('Starting full synchronization...');
+  
   try {
-    // Process deletions first
-    const deletionResults = await syncDeletionsToSupabase();
-    results.deletions = deletionResults;
+    const [products, sales, categories, partyPurchases] = await Promise.all([
+      syncProducts(),
+      syncSales(),
+      syncCategories(),
+      syncPartyPurchases()
+    ]);
 
-    // Sync products
-    const productsPush = await syncProductsToSupabase();
-    const productsPull = await syncProductsFromSupabase();
-    results.products = {
-      push: productsPush.synced,
-      pull: productsPull.synced,
-      errors: productsPush.errors + productsPull.errors
+    const deletions = await syncDeletions();
+
+    const results = {
+      products,
+      sales,
+      categories,
+      partyPurchases,
+      deletions,
+      timestamp: new Date().toISOString()
     };
 
-    // Sync sales
-    const salesPush = await syncSalesToSupabase();
-    const salesPull = await syncSalesFromSupabase();
-    results.sales = {
-      push: salesPush.synced,
-      pull: salesPull.synced,
-      errors: salesPush.errors + salesPull.errors
-    };
-
-    // Sync categories
-    const categoriesPush = await syncCategoriesToSupabase();
-    const categoriesPull = await syncCategoriesFromSupabase();
-    results.categories = {
-      push: categoriesPush.synced,
-      pull: categoriesPull.synced,
-      errors: categoriesPush.errors + categoriesPull.errors
-    };
-
-    // Sync party purchases
-    const purchasesPush = await syncPartyPurchasesToSupabase();
-    const purchasesPull = await syncPartyPurchasesFromSupabase();
-    results.partyPurchases = {
-      push: purchasesPush.synced,
-      pull: purchasesPull.synced,
-      errors: purchasesPush.errors + purchasesPull.errors
-    };
-
+    console.log('Sync completed:', results);
     return results;
   } catch (err) {
-    console.error('Error in performFullSync:', err);
+    console.error('Sync failed:', err);
     throw err;
   }
 };

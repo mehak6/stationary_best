@@ -1,115 +1,93 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import {
-  getAllPartyPurchases,
+import { 
+  getPartyPurchases, 
   getPartyPurchaseById,
-  createPartyPurchase as createPartyPurchaseDB,
-  updatePartyPurchase as updatePartyPurchaseDB,
-  deletePartyPurchase as deletePartyPurchaseDB,
-  type PartyPurchase
-} from '../lib/offline-db';
-import { initializeDatabases } from '../lib/pouchdb-client';
+  createPartyPurchase as addPurchaseDB,
+  updatePartyPurchase as updatePurchaseDB,
+  deletePartyPurchase as removePurchaseDB
+} from 'lib/offline-adapter';
+import type { PartyPurchase, PartyPurchaseInsert } from 'supabase_client';
+import { useSyncStatus } from './useSyncStatus';
 
 export const usePartyPurchases = () => {
   const [partyPurchases, setPartyPurchases] = useState<PartyPurchase[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [syncStatus, setSyncStatus] = useState<'synced' | 'pending' | 'syncing'>('synced');
+  const [error, setError] = useState('');
+  const { syncStatus } = useSyncStatus();
 
-  // Initialize databases on mount
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      initializeDatabases();
-      loadPartyPurchases();
-    }
-  }, []);
-
-  const loadPartyPurchases = useCallback(async () => {
+  const loadPurchases = useCallback(async () => {
     try {
       setLoading(true);
-      setError(null);
-      const data = await getAllPartyPurchases();
-      setPartyPurchases(data);
+      const data = await getPartyPurchases();
+      setPartyPurchases(data || []);
+      setError('');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load party purchases');
       console.error('Error loading party purchases:', err);
+      setError('Failed to load purchases');
     } finally {
       setLoading(false);
     }
   }, []);
 
-  const createPartyPurchase = useCallback(async (partyPurchase: Omit<PartyPurchase, 'id' | 'created_at'>) => {
+  useEffect(() => {
+    loadPurchases();
+  }, [loadPurchases, syncStatus]);
+
+  const addPurchase = async (purchase: PartyPurchaseInsert) => {
     try {
-      setError(null);
-      setSyncStatus('pending');
-      const newPartyPurchase = await createPartyPurchaseDB(partyPurchase);
-      setPartyPurchases(prev => [newPartyPurchase, ...prev]);
-      setSyncStatus('synced');
-      return newPartyPurchase;
+      const newPurchase = await addPurchaseDB(purchase);
+      setPartyPurchases(prev => [newPurchase, ...prev]);
+      return newPurchase;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create party purchase');
-      setSyncStatus('synced');
+      console.error('Error adding purchase:', err);
       throw err;
     }
-  }, []);
+  };
 
-  const updatePartyPurchase = useCallback(async (id: string, updates: Partial<PartyPurchase>) => {
+  const updatePurchase = async (id: string, updates: Partial<PartyPurchaseInsert>) => {
     try {
-      setError(null);
-      setSyncStatus('pending');
-      const updated = await updatePartyPurchaseDB(id, updates);
-      if (updated) {
-        setPartyPurchases(prev => prev.map(p => p.id === id ? updated : p));
-      }
-      setSyncStatus('synced');
+      const updated = await updatePurchaseDB(id, updates);
+      setPartyPurchases(prev => prev.map(p => p.id === id ? updated : p));
       return updated;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update party purchase');
-      setSyncStatus('synced');
+      console.error('Error updating purchase:', err);
       throw err;
     }
-  }, []);
+  };
 
-  const deletePartyPurchase = useCallback(async (id: string) => {
+  const removePurchase = async (id: string) => {
     try {
-      setError(null);
-      setSyncStatus('pending');
-      const success = await deletePartyPurchaseDB(id);
+      const success = await removePurchaseDB(id);
       if (success) {
         setPartyPurchases(prev => prev.filter(p => p.id !== id));
       }
-      setSyncStatus('synced');
       return success;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete party purchase');
-      setSyncStatus('synced');
+      console.error('Error removing purchase:', err);
       throw err;
     }
-  }, []);
+  };
 
-  const getPartyPurchase = useCallback(async (id: string) => {
+  const getPurchase = async (id: string) => {
     try {
       return await getPartyPurchaseById(id);
     } catch (err) {
-      console.error('Error getting party purchase:', err);
+      console.error('Error getting purchase:', err);
       return null;
     }
-  }, []);
-
-  const refreshPartyPurchases = useCallback(() => {
-    loadPartyPurchases();
-  }, [loadPartyPurchases]);
+  };
 
   return {
     partyPurchases,
     loading,
     error,
     syncStatus,
-    createPartyPurchase,
-    updatePartyPurchase,
-    deletePartyPurchase,
-    getPartyPurchase,
-    refreshPartyPurchases
+    addPurchase,
+    updatePurchase,
+    removePurchase,
+    getPurchase,
+    refreshPurchases: loadPurchases
   };
 };

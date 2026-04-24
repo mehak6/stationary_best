@@ -59,7 +59,15 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   });
   const [allSalesPage, setAllSalesPage] = useState(1);
   const SALES_PER_PAGE = 20;
-  const [editingSale, setEditingSale] = useState<Sale | null>(null);
+
+  type ExtendedSale = Sale & { 
+    products?: { 
+      name: string; 
+      purchase_price: number; 
+    } 
+  };
+
+  const [editingSale, setEditingSale] = useState<ExtendedSale | null>(null);
   const [editSaleData, setEditSaleData] = useState({
     quantity: 0,
     unit_price: 0,

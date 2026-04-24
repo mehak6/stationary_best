@@ -303,6 +303,30 @@ export interface Database {
       }
     }
     Functions: {
+      create_sale_with_stock_check: {
+        Args: {
+          p_product_id: string
+          p_quantity: number
+          p_unit_price: number
+          p_total_amount: number
+          p_profit: number
+          p_customer_info: Json
+          p_sale_date: string
+          p_notes: string
+        }
+        Returns: {
+          id: string
+          product_id: string
+          quantity: number
+          unit_price: number
+          total_amount: number
+          profit: number
+          customer_info: Json
+          sale_date: string
+          notes: string
+          created_at: string
+        }
+      }
       get_dashboard_stats: {
         Args: Record<string, never>
         Returns: {

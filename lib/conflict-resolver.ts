@@ -85,19 +85,22 @@ export const resolveMerge = <T extends Record<string, any>>(
   remote: T,
   strategy: Record<string, 'local' | 'remote' | 'max' | 'min' | 'sum'>
 ): T => {
-  const merged = { ...remote };
+  const merged: Record<string, any> = { ...remote };
 
   Object.entries(strategy).forEach(([field, method]) => {
+    const localVal = local[field];
+    const remoteVal = remote[field];
+
     if (method === 'local') {
-      merged[field] = local[field];
+      merged[field] = localVal;
     } else if (method === 'remote') {
-      merged[field] = remote[field];
-    } else if (method === 'max' && typeof local[field] === 'number' && typeof remote[field] === 'number') {
-      merged[field] = Math.max(local[field], remote[field]);
-    } else if (method === 'min' && typeof local[field] === 'number' && typeof remote[field] === 'number') {
-      merged[field] = Math.min(local[field], remote[field]);
-    } else if (method === 'sum' && typeof local[field] === 'number' && typeof remote[field] === 'number') {
-      merged[field] = local[field] + remote[field];
+      merged[field] = remoteVal;
+    } else if (method === 'max' && typeof localVal === 'number' && typeof remoteVal === 'number') {
+      merged[field] = Math.max(localVal, remoteVal);
+    } else if (method === 'min' && typeof localVal === 'number' && typeof remoteVal === 'number') {
+      merged[field] = Math.min(localVal, remoteVal);
+    } else if (method === 'sum' && typeof localVal === 'number' && typeof remoteVal === 'number') {
+      merged[field] = localVal + remoteVal;
     }
   });
 
