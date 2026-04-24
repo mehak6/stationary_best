@@ -11,7 +11,7 @@ export interface ProductHistoryEntry {
   id: string;
   product_id: string;
   product_name: string;
-  action: 'created' | 'stock_added' | 'stock_updated' | 'stock_reset';
+  action: 'created' | 'stock_added' | 'stock_updated' | 'stock_reset' | 'stock_reduced';
   quantity_change: number;
   stock_before: number;
   stock_after: number;

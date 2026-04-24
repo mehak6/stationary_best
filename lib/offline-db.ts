@@ -317,6 +317,29 @@ export const getAllSales = async (limit?: number): Promise<Sale[]> => {
   }
 };
 
+export const getSaleById = async (id: string): Promise<Sale | null> => {
+  try {
+    const db = await getSalesDB();
+    const docId = toPouchID('sale', id);
+    const doc: any = await db.get(docId);
+    return {
+      id: fromPouchID(doc._id),
+      product_id: doc.product_id,
+      quantity: doc.quantity,
+      unit_price: doc.unit_price,
+      total_amount: doc.total_amount,
+      profit: doc.profit,
+      customer_info: doc.customer_info,
+      sale_date: doc.sale_date,
+      notes: doc.notes,
+      created_at: doc.created_at
+    };
+  } catch (error) {
+    console.error('Error getting sale by ID:', error);
+    return null;
+  }
+};
+
 export const saveSale = async (sale: Sale): Promise<Sale> => {
   try {
     const db = await getSalesDB();
@@ -568,7 +591,7 @@ export const getAllCategories = async (): Promise<Category[]> => {
     const result = await db.allDocs({
       include_docs: true,
       startkey: 'category_',
-      endkey: 'category_\ufff0'
+      endkey: 'category_\\ufff0'
     });
 
     return result.rows.map(row => {
@@ -583,6 +606,22 @@ export const getAllCategories = async (): Promise<Category[]> => {
   } catch (error) {
     console.error('Error getting categories:', error);
     return [];
+  }
+};
+
+export const getCategoryById = async (id: string): Promise<Category | null> => {
+  try {
+    const db = await getCategoriesDB();
+    const docId = toPouchID('category', id);
+    const doc: any = await db.get(docId);
+    return {
+      id: fromPouchID(doc._id),
+      name: doc.name,
+      description: doc.description,
+      created_at: doc.created_at
+    };
+  } catch (error) {
+    return null;
   }
 };
 
@@ -628,6 +667,33 @@ export const saveCategory = async (category: Category): Promise<Category> => {
   } catch (error) {
     console.error('Error saving category:', error);
     throw error;
+  }
+};
+
+export const updateCategory = async (id: string, updates: Partial<Category>): Promise<Category | null> => {
+  try {
+    const db = await getCategoriesDB();
+    const docId = toPouchID('category', id);
+    const doc = await db.get(docId);
+    const updatedDoc = { ...doc, ...updates, _id: docId, _rev: (doc as any)._rev };
+    await db.put(updatedDoc);
+    return await getCategoryById(id);
+  } catch (error) {
+    console.error('Error updating category:', error);
+    return null;
+  }
+};
+
+export const deleteCategory = async (id: string): Promise<boolean> => {
+  try {
+    const db = await getCategoriesDB();
+    const docId = toPouchID('category', id);
+    const doc = await db.get(docId);
+    await db.remove(doc);
+    return true;
+  } catch (error) {
+    console.error('Error deleting category:', error);
+    return false;
   }
 };
 
@@ -746,6 +812,31 @@ export const updatePartyPurchase = async (id: string, updates: Partial<PartyPurc
     };
   } catch (error) {
     console.error('Error updating party purchase:', error);
+    return null;
+  }
+};
+
+export const getPartyPurchaseById = async (id: string): Promise<PartyPurchase | null> => {
+  try {
+    const db = await getPartyPurchasesDB();
+    const docId = toPouchID('party', id);
+    const doc: any = await db.get(docId);
+    return {
+      id: fromPouchID(doc._id),
+      party_name: doc.party_name,
+      item_name: doc.item_name,
+      barcode: doc.barcode,
+      purchase_price: doc.purchase_price,
+      selling_price: doc.selling_price,
+      purchased_quantity: doc.purchased_quantity,
+      remaining_quantity: doc.remaining_quantity,
+      purchase_date: doc.purchase_date,
+      notes: doc.notes,
+      created_at: doc.created_at,
+      updated_at: doc.updated_at
+    };
+  } catch (error) {
+    console.error('Error getting party purchase by ID:', error);
     return null;
   }
 };

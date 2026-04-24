@@ -14,6 +14,7 @@ import { supabase } from '../supabase_client';
 import type { 
   Product, 
   Sale, 
+  Category,
   PartyPurchase,
   ProductInsert,
   SaleInsert,
@@ -66,7 +67,7 @@ export const getProducts = async (limit?: number): Promise<Product[]> => {
 
       if (!error && data && data.length > 0) {
         // Update local cache but don't wait for it
-        await Promise.all(data.map(product =>
+        await Promise.all(data.map((product: Product) =>
           OfflineDB.saveProduct(product).catch(err =>
             console.warn('Failed to cache product:', err)
           )
@@ -100,13 +101,31 @@ export const createProduct = async (product: ProductInsert): Promise<Product> =>
       return data;
     } else {
       // Save to offline DB with pending sync flag
-      const newProduct = await OfflineDB.createProduct(product);
+      const newProduct = await OfflineDB.createProduct({
+        ...product,
+        category_id: product.category_id ?? null,
+        barcode: product.barcode ?? null,
+        stock_quantity: product.stock_quantity ?? 0,
+        min_stock_level: product.min_stock_level ?? 0,
+        supplier_info: product.supplier_info ?? null,
+        image_url: product.image_url ?? null,
+        description: product.description ?? null
+      });
       return newProduct;
     }
   } catch (error) {
     console.error('Error creating product online, saving offline:', error);
     // Fallback to offline
-    return await OfflineDB.createProduct(product);
+    return await OfflineDB.createProduct({
+      ...product,
+      category_id: product.category_id ?? null,
+      barcode: product.barcode ?? null,
+      stock_quantity: product.stock_quantity ?? 0,
+      min_stock_level: product.min_stock_level ?? 0,
+      supplier_info: product.supplier_info ?? null,
+      image_url: product.image_url ?? null,
+      description: product.description ?? null
+    });
   }
 };
 
@@ -126,14 +145,14 @@ export const updateProduct = async (productId: string, updates: Partial<ProductI
       return data;
     } else {
       // Update local DB
-      const updatedProduct = await OfflineDB.updateProduct(productId, updates);
+      const updatedProduct = await OfflineDB.updateProduct(productId, updates as Partial<Product>);
       if (!updatedProduct) throw new Error('Product not found in local DB');
       return updatedProduct;
     }
   } catch (error) {
     console.error('Error updating product online, marking offline:', error);
     // Update local DB
-    const updatedProduct = await OfflineDB.updateProduct(productId, updates);
+    const updatedProduct = await OfflineDB.updateProduct(productId, updates as Partial<Product>);
     if (!updatedProduct) throw new Error('Product not found in local DB');
     return updatedProduct;
   }
@@ -253,11 +272,11 @@ export const getAnalytics = async (financialYear?: string) => {
 
       if (salesError || prodError) throw salesError || prodError;
 
-      const totalSales = salesData?.reduce((sum, sale) => sum + (sale.total_amount || 0), 0) || 0;
-      const totalProfit = salesData?.reduce((sum, sale) => sum + (sale.profit || 0), 0) || 0;
+      const totalSales = (salesData as any[])?.reduce((sum: number, sale: any) => sum + (sale.total_amount || 0), 0) || 0;
+      const totalProfit = (salesData as any[])?.reduce((sum: number, sale: any) => sum + (sale.profit || 0), 0) || 0;
 
       const today = new Date().toISOString().split('T')[0];
-      const todaySalesData = salesData?.filter(sale => sale.sale_date === today) || [];
+      const todaySalesData = (salesData as any[])?.filter((sale: any) => sale.sale_date === today) || [];
       const todaySales = todaySalesData.reduce((sum, sale) => sum + (sale.total_amount || 0), 0);
       const todayProfit = todaySalesData.reduce((sum, sale) => sum + (sale.profit || 0), 0);
 
@@ -333,9 +352,9 @@ export const getSales = async (limit?: number): Promise<Sale[]> => {
       if (error) throw error;
 
       // Map Supabase response to flat Sale objects
-      const formattedSales = (data || []).map(sale => ({
+      const formattedSales = (data || []).map((sale: any) => ({
         ...sale,
-        product_name: (sale as any).products?.name
+        product_name: sale.products?.name
       }));
 
       // Cache to local DB
@@ -375,9 +394,9 @@ export const getSalesByDateRange = async (startDate: string, endDate: string): P
 
       if (error) throw error;
 
-      return (data || []).map(sale => ({
+      return (data || []).map((sale: any) => ({
         ...sale,
-        product_name: (sale as any).products?.name
+        product_name: sale.products?.name
       }));
     } else {
       return await OfflineDB.getSalesByDateRange(startDate, endDate);
@@ -392,34 +411,40 @@ export const createSale = async (sale: SaleInsert): Promise<Sale> => {
   try {
     if (isOnline) {
       // Use RPC for atomic sale creation and stock check
-      const { data, error } = await supabase.rpc('create_sale_with_stock_check', {
+      const { data, error } = await (supabase.rpc as any)('create_sale_with_stock_check', {
         p_product_id: sale.product_id,
         p_quantity: sale.quantity,
         p_unit_price: sale.unit_price,
         p_total_amount: sale.total_amount,
         p_profit: sale.profit,
-        p_customer_info: sale.customer_info,
-        p_sale_date: sale.sale_date,
-        p_notes: sale.notes
+        p_customer_info: sale.customer_info ?? null,
+        p_sale_date: sale.sale_date ?? new Date().toISOString().split('T')[0],
+        p_notes: sale.notes ?? null
       });
 
       if (error) throw error;
 
-      // Update local product cache (stock changed)
-      const products = await getProducts();
-      
       // Cache the new sale
-      await OfflineDB.saveSale(data);
-      return data;
+      await OfflineDB.saveSale(data as Sale);
+      return data as Sale;
     } else {
       // Offline sale
-      const newSale = await OfflineDB.createSale(sale as any);
+      const newSale = await OfflineDB.createSale({
+        product_id: sale.product_id,
+        quantity: sale.quantity,
+        unit_price: sale.unit_price,
+        total_amount: sale.total_amount,
+        profit: sale.profit,
+        customer_info: sale.customer_info ?? null,
+        sale_date: sale.sale_date ?? new Date().toISOString().split('T')[0],
+        notes: sale.notes ?? null
+      });
       
       // Update local product stock
-      const product = await OfflineDB.getProductById(sale.product_id!);
+      const product = await OfflineDB.getProductById(sale.product_id);
       if (product) {
-        await OfflineDB.updateProduct(sale.product_id!, {
-          stock_quantity: product.stock_quantity - sale.quantity!
+        await OfflineDB.updateProduct(sale.product_id, {
+          stock_quantity: product.stock_quantity - sale.quantity
         });
       }
       
@@ -427,7 +452,16 @@ export const createSale = async (sale: SaleInsert): Promise<Sale> => {
     }
   } catch (error) {
     console.error('Error creating sale online, saving offline:', error);
-    return await OfflineDB.createSale(sale as any);
+    return await OfflineDB.createSale({
+      product_id: sale.product_id,
+      quantity: sale.quantity,
+      unit_price: sale.unit_price,
+      total_amount: sale.total_amount,
+      profit: sale.profit,
+      customer_info: sale.customer_info ?? {},
+      sale_date: sale.sale_date ?? new Date().toISOString().split('T')[0],
+      notes: sale.notes ?? ''
+    });
   }
 };
 
@@ -458,12 +492,15 @@ export const updateSale = async (id: string, updates: Partial<SaleInsert>): Prom
       await OfflineDB.saveSale(formattedSale);
       return formattedSale;
     } else {
-      const updated = await OfflineDB.updateSale(id, updates as any);
+      const updated = await OfflineDB.updateSale(id, updates as Partial<Sale>);
+      if (!updated) throw new Error('Sale not found locally');
       return updated;
     }
   } catch (error) {
     console.error('Error updating sale online, saving offline:', error);
-    return await OfflineDB.updateSale(id, updates as any);
+    const updated = await OfflineDB.updateSale(id, updates as Partial<Sale>);
+    if (!updated) throw new Error('Sale not found locally');
+    return updated;
   }
 };
 
@@ -519,8 +556,8 @@ export const getCategories = async (): Promise<Category[]> => {
       if (error) throw error;
 
       // Cache to local DB
-      await Promise.all((data || []).map(cat =>
-        OfflineDB.saveCategory(cat as any).catch(err =>
+      await Promise.all((data || []).map((cat: Category) =>
+        OfflineDB.saveCategory(cat).catch(err =>
           console.warn('Failed to cache category:', err)
         )
       ));
@@ -537,6 +574,10 @@ export const getCategories = async (): Promise<Category[]> => {
 
 // ==================== PARTY PURCHASES ====================
 
+export const getPartyPurchaseById = async (id: string): Promise<PartyPurchase | null> => {
+  return await OfflineDB.getPartyPurchaseById(id);
+};
+
 export const getPartyPurchases = async (): Promise<PartyPurchase[]> => {
   try {
     if (isOnline) {
@@ -548,8 +589,8 @@ export const getPartyPurchases = async (): Promise<PartyPurchase[]> => {
       if (error) throw error;
 
       // Cache to local DB
-      await Promise.all((data || []).map(pp =>
-        OfflineDB.savePartyPurchase(pp).catch(err =>
+      await Promise.all((data || []).map((pp: any) =>
+        OfflineDB.savePartyPurchase(pp as any).catch(err =>
           console.warn('Failed to cache party purchase:', err)
         )
       ));
@@ -578,11 +619,19 @@ export const createPartyPurchase = async (purchase: PartyPurchaseInsert): Promis
       await OfflineDB.savePartyPurchase(data);
       return data;
     } else {
-      return await OfflineDB.createPartyPurchase(purchase);
+      return await OfflineDB.createPartyPurchase({
+        ...purchase,
+        barcode: purchase.barcode ?? null,
+        notes: purchase.notes ?? null
+      });
     }
   } catch (error) {
     console.error('Error creating party purchase online, saving offline:', error);
-    return await OfflineDB.createPartyPurchase(purchase);
+    return await OfflineDB.createPartyPurchase({
+      ...purchase,
+      barcode: purchase.barcode ?? null,
+      notes: purchase.notes ?? null
+    });
   }
 };
 
@@ -601,13 +650,13 @@ export const updatePartyPurchase = async (id: string, updates: Partial<PartyPurc
       await OfflineDB.savePartyPurchase(data);
       return data;
     } else {
-      const updated = await OfflineDB.updatePartyPurchase(id, updates);
+      const updated = await OfflineDB.updatePartyPurchase(id, updates as Partial<PartyPurchase>);
       if (!updated) throw new Error('Party purchase not found locally');
       return updated;
     }
   } catch (error) {
     console.error('Error updating party purchase online, marking offline:', error);
-    const updated = await OfflineDB.updatePartyPurchase(id, updates);
+    const updated = await OfflineDB.updatePartyPurchase(id, updates as Partial<PartyPurchase>);
     if (!updated) throw new Error('Party purchase not found locally');
     return updated;
   }
