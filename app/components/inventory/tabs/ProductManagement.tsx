@@ -12,7 +12,9 @@ import {
   Check,
   History,
   Calendar,
-  AlertCircle
+  AlertCircle,
+  TrendingUp,
+  ShoppingCart
 } from 'lucide-react';
 import {
   getProducts,
@@ -20,9 +22,10 @@ import {
   deleteProduct,
   createProduct,
   resetAllProductsStock,
-  getClosingStockForYear
+  getClosingStockForYear,
+  getSalesByProduct
 } from 'lib/offline-adapter';
-import { addProductHistory } from 'lib/product-history';
+import { addProductHistory, getProductHistory } from 'lib/product-history';
 import type { Product, ProductInsert } from 'supabase_client';
 import { useToast } from 'app/context/ToastContext';
 
@@ -382,7 +385,7 @@ export default function ProductManagement({ onNavigate }: ProductManagementProps
 
       {showResetConfirm && (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-[10000] backdrop-blur-sm">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-red-100">
+          <div className="bg-white rounded-2xl max-md w-full p-6 shadow-2xl border border-red-100">
             <div className="flex items-center gap-3 text-red-600 mb-4">
               <div className="bg-red-100 p-2 rounded-full">
                 <Trash2 className="h-6 w-6" />
@@ -783,34 +786,42 @@ function ProductHistoryModal({ product, onClose }: { product: Product; onClose: 
   useEffect(() => {
     const fetchHistory = async () => {
       try {
-        const { getProductHistory } = await import('lib/product-history');
-        const { getSalesByProduct } = await import('lib/offline-adapter');
+        setLoading(true);
+        console.log(`🔍 Fetching unified history for: ${product.name} (${product.id})`);
         
         const [historyData, salesData] = await Promise.all([
-          getProductHistory(product.id),
-          getSalesByProduct(product.id)
+          getProductHistory(product.id).catch(err => {
+            console.error('History fetch failed:', err);
+            return [];
+          }),
+          getSalesByProduct(product.id).catch(err => {
+            console.error('Sales fetch failed:', err);
+            return [];
+          })
         ]);
 
         // Map sales to history entry format
         const mappedSales = (salesData || []).map(sale => ({
-          id: sale.id,
+          id: sale.id || `sale_${Math.random()}`,
           product_id: sale.product_id,
           product_name: product.name,
-          action: 'sale' as any,
-          quantity_change: -sale.quantity,
-          stock_before: 0, // Not tracked for sales in history entries usually
+          action: 'sale',
+          quantity_change: -(Number(sale.quantity) || 0),
+          stock_before: 0,
           stock_after: 0,
           date: sale.created_at || sale.sale_date,
-          notes: `Sold ${sale.quantity} units for ₹${sale.total_amount}${sale.customer_info ? ` to ${sale.customer_info}` : ''}`
+          notes: `Sold ${sale.quantity} units for ₹${Number(sale.total_amount).toFixed(2)}${sale.customer_info ? ` to ${sale.customer_info}` : ''}`
         }));
 
-        const unifiedHistory = [...historyData, ...mappedSales].sort((a, b) => 
-          new Date(b.date).getTime() - new Date(a.date).getTime()
-        );
+        const unifiedHistory = [...(historyData || []), ...mappedSales].sort((a, b) => {
+          const dateA = new Date(a.date || 0).getTime();
+          const dateB = new Date(b.date || 0).getTime();
+          return dateB - dateA;
+        });
 
         setHistory(unifiedHistory);
       } catch (error) {
-        console.error('Error fetching product history:', error);
+        console.error('Error in fetchHistory:', error);
       } finally {
         setLoading(false);
       }
@@ -819,69 +830,84 @@ function ProductHistoryModal({ product, onClose }: { product: Product; onClose: 
   }, [product.id, product.name]);
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999]">
-      <div className="bg-white rounded-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999] backdrop-blur-sm">
+      <div className="bg-white rounded-[32px] max-w-2xl w-full max-h-[85vh] overflow-hidden flex flex-col shadow-2xl animate-in fade-in zoom-in duration-200">
+        <div className="p-8 border-b border-gray-100">
+          <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-bold text-gray-900">Product History & Sales</h2>
-              <p className="text-sm text-gray-600 mt-1">{product.name}</p>
+              <h2 className="text-2xl font-black text-gray-900">History & Transactions</h2>
+              <p className="text-sm font-bold text-primary-600 mt-1 uppercase tracking-wider">{product.name}</p>
             </div>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-              <X className="h-6 w-6" />
+            <button 
+              onClick={onClose} 
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            >
+              <X className="h-6 w-6 text-gray-400" />
             </button>
           </div>
+        </div>
 
+        <div className="flex-1 overflow-y-auto p-8 bg-gray-50/50">
           {loading ? (
-            <p className="text-center py-8 text-gray-500">Loading history...</p>
+            <div className="text-center py-12">
+              <div className="animate-spin h-10 w-10 border-4 border-primary-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+              <p className="text-gray-500 font-bold">Assembling timeline...</p>
+            </div>
           ) : history.length === 0 ? (
-            <div className="text-center py-8">
-              <Package className="h-12 w-12 mx-auto text-gray-300 mb-3" />
-              <p className="text-gray-500">No history recorded yet</p>
+            <div className="text-center py-16 bg-white rounded-[24px] border-2 border-dashed border-gray-200">
+              <Package className="h-16 w-16 mx-auto text-gray-200 mb-4" />
+              <p className="text-gray-400 font-bold italic text-lg">No activity recorded for this product.</p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {history.map((entry) => {
-                const isSale = entry.action === 'sale';
-                const actionLabel = entry.action.replace('_', ' ');
+                const actionStr = String(entry.action || 'update');
+                const isSale = actionStr === 'sale';
+                const actionLabel = actionStr.replace(/_/g, ' ');
                 
                 return (
                   <div 
                     key={entry.id} 
-                    className={`border-l-4 ${isSale ? 'border-secondary-500 bg-secondary-50' : 'border-primary-500 bg-gray-50'} p-4 rounded-r-lg shadow-sm`}
+                    className={`border-l-8 ${isSale ? 'border-secondary-500 bg-white' : 'border-primary-500 bg-white'} p-5 rounded-2xl shadow-sm hover:shadow-md transition-all border border-gray-100`}
                   >
                     <div className="flex justify-between items-start">
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className={`text-xs font-black uppercase ${isSale ? 'text-secondary-600' : 'text-primary-600'}`}>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-md tracking-widest ${isSale ? 'bg-secondary-100 text-secondary-700' : 'bg-primary-100 text-primary-700'}`}>
                             {actionLabel}
                           </span>
-                          <span className="text-[10px] font-bold text-gray-400">
-                            {new Date(entry.date).toLocaleString('en-IN', {
+                          <span className="text-xs font-bold text-gray-400">
+                            {new Date(entry.date || Date.now()).toLocaleString('en-IN', {
                               day: '2-digit', month: 'short', year: 'numeric',
                               hour: '2-digit', minute: '2-digit'
                             })}
                           </span>
                         </div>
-                        <div className="text-sm text-gray-700 font-medium">
+                        <div className="text-base text-gray-800 font-black">
                           {isSale ? (
-                            <span className="text-gray-900 font-bold">
-                              {Math.abs(entry.quantity_change)} Units Sold
+                            <span className="text-gray-900">
+                              {Math.abs(entry.quantity_change)} Items Sold
                             </span>
                           ) : (
-                            <>
-                              Stock: {entry.stock_before} → {entry.stock_after} 
-                              <span className={`ml-2 font-bold ${entry.quantity_change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                ({entry.quantity_change >= 0 ? '+' : ''}{entry.quantity_change})
+                            <div className="flex items-center gap-2">
+                              <span>Stock: {entry.stock_before}</span>
+                              <TrendingUp className="h-3 w-3 text-gray-400" />
+                              <span>{entry.stock_after}</span>
+                              <span className={`ml-2 px-2 py-0.5 rounded-lg text-xs ${Number(entry.quantity_change) >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                {Number(entry.quantity_change) >= 0 ? '+' : ''}{entry.quantity_change}
                               </span>
-                            </>
+                            </div>
                           )}
                         </div>
-                        {entry.notes && <p className={`text-xs mt-1 ${isSale ? 'text-secondary-700 font-bold' : 'text-gray-500'}`}>{entry.notes}</p>}
+                        {entry.notes && (
+                          <p className={`text-sm mt-2 p-2 rounded-xl ${isSale ? 'bg-secondary-50 text-secondary-800 font-medium' : 'bg-gray-50 text-gray-500 italic'}`}>
+                            {entry.notes}
+                          </p>
+                        )}
                       </div>
                       {isSale && (
-                        <div className="bg-secondary-100 p-2 rounded-lg">
-                          <ShoppingCart className="h-4 w-4 text-secondary-600" />
+                        <div className="bg-secondary-50 p-3 rounded-2xl border border-secondary-100">
+                          <ShoppingCart className="h-6 w-6 text-secondary-600" />
                         </div>
                       )}
                     </div>
@@ -890,6 +916,15 @@ function ProductHistoryModal({ product, onClose }: { product: Product; onClose: 
               })}
             </div>
           )}
+        </div>
+        
+        <div className="p-8 border-t border-gray-100 bg-white text-center">
+          <button 
+            onClick={onClose}
+            className="w-full bg-gray-900 text-white py-4 rounded-2xl font-black hover:bg-gray-800 transition-all shadow-lg"
+          >
+            Close History
+          </button>
         </div>
       </div>
     </div>
