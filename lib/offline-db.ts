@@ -288,10 +288,11 @@ export const deleteProduct = async (id: string): Promise<boolean> => {
 export const getAllSales = async (limit?: number): Promise<Sale[]> => {
   try {
     const db = await getSalesDB();
+    // For descending: true, startkey must be the HIGHER key and endkey the LOWER key
     const result = await db.allDocs({
       include_docs: true,
-      startkey: 'sale_',
-      endkey: 'sale_\ufff0',
+      startkey: 'sale_\ufff0',
+      endkey: 'sale_',
       limit: limit,
       descending: true
     });

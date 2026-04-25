@@ -235,41 +235,27 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
     try {
       setAllSalesLoading(true);
 
-      const { supabase } = await import('supabase_client');
-      let query = supabase
-        .from('sales')
-        .select(`
-          *,
-          products (
-            id,
-            name
-          )
-        `, { count: 'exact' });
-
-      // Apply date filtering
       // Default to current FY if no filters applied
       const range = getFYRange(getFinancialYear());
       
       const effectiveStart = startDate || range.start;
       const effectiveEnd = endDate || range.end;
 
-      query = query.gte('sale_date', effectiveStart);
-      query = query.lte('sale_date', effectiveEnd);
+      // Use the offline adapter to fetch sales - this handles both online and local data
+      const data = await getSalesByDateRange(effectiveStart, effectiveEnd);
+      
+      // Sort by date (descending) and created_at
+      const sortedData = (data || []).sort((a, b) => {
+        const dateCompare = b.sale_date.localeCompare(a.sale_date);
+        if (dateCompare !== 0) return dateCompare;
+        return (b.created_at || '').localeCompare(a.created_at || '');
+      });
 
-      // Apply pagination
+      // Handle client-side pagination since PouchDB filter results don't support simple range offsets easily
       const from = (page - 1) * SALES_PER_PAGE;
-      const to = from + SALES_PER_PAGE - 1;
+      const paginatedData = sortedData.slice(from, from + SALES_PER_PAGE);
 
-      query = query
-        .order('sale_date', { ascending: false })
-        .order('created_at', { ascending: false })
-        .range(from, to);
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-
-      setAllSales((data as Sale[]) || []);
+      setAllSales(paginatedData);
 
     } catch (error) {
       console.error('Error fetching sales:', error);
