@@ -111,6 +111,59 @@ export default function Reports({ onNavigate }: ReportsProps) {
     fetchReportsData(financialYear);
   };
 
+  const downloadReport = () => {
+    // Calculate monthly breakdown
+    const monthlyData: Record<string, { revenue: number, profit: number, count: number }> = {};
+    sales.forEach(sale => {
+      const month = new Date(sale.sale_date).toLocaleString('default', { month: 'long', year: 'numeric' });
+      if (!monthlyData[month]) monthlyData[month] = { revenue: 0, profit: 0, count: 0 };
+      monthlyData[month].revenue += Number(sale.total_amount);
+      monthlyData[month].profit += Number(sale.profit);
+      monthlyData[month].count += 1;
+    });
+
+    const reportData = {
+      financial_year: financialYear,
+      generated_at: new Date().toISOString(),
+      business_summary: {
+        total_sales_revenue: totalSalesRevenue,
+        total_net_profit: totalProfit,
+        profit_margin_percent: profitMargin.toFixed(2),
+        total_inventory_investment: totalInvestment,
+        current_inventory_value: currentInventoryValue,
+        total_items_sold: totalQuantitySold,
+        average_sale_value: avgSaleValue,
+        total_transactions: sales.length
+      },
+      monthly_performance: Object.entries(monthlyData).map(([month, data]) => ({
+        month,
+        ...data
+      })),
+      top_performing_products: topProducts.map(p => ({
+        name: p.name,
+        quantity_sold: p.salesData.quantity,
+        revenue: p.salesData.revenue,
+        profit: p.salesData.profit
+      })),
+      period_covered: {
+        start: startDateDisplay,
+        end: endDateDisplay
+      }
+    };
+
+    const dataStr = JSON.stringify(reportData, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `business_performance_backup_${financialYear}_${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   // Calculate investment based on either current stock or historical closing stock
   const getStockForProduct = (p: Product) => isCurrentYear ? p.stock_quantity : (historicalStock[p.id] ?? 0);
 
@@ -165,6 +218,14 @@ export default function Reports({ onNavigate }: ReportsProps) {
               </select>
             </div>
           </div>
+          <button
+            onClick={downloadReport}
+            className="btn-primary flex items-center gap-2"
+            title="Download Performance Data"
+          >
+            <Download className="h-5 w-5" />
+            <span>Download Report</span>
+          </button>
         </div>
         {!isCurrentYear && (
           <div className="mt-4 sm:mt-0 px-4 py-2 bg-orange-100 border border-orange-200 rounded-lg flex items-center gap-2 text-orange-800 text-sm font-medium">
