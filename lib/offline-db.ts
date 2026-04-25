@@ -527,6 +527,38 @@ export const getSalesByDate = async (date: string): Promise<Sale[]> => {
   }
 };
 
+export const getSalesByProduct = async (productId: string): Promise<Sale[]> => {
+  try {
+    const db = await getSalesDB();
+    const result = await db.find({
+      selector: {
+        product_id: productId
+      }
+    });
+
+    return result.docs.map((doc: any) => ({
+      ...doc,
+      id: fromPouchID(doc._id)
+    }));
+  } catch (error) {
+    console.warn('PouchDB find failed for getSalesByProduct, falling back to allDocs:', error);
+    const db = await getSalesDB();
+    const allDocs = await db.allDocs({
+      include_docs: true,
+      startkey: 'sale_',
+      endkey: 'sale_\ufff0'
+    });
+
+    return allDocs.rows
+      .map(row => row.doc as any)
+      .filter(doc => doc && doc.product_id === productId)
+      .map(doc => ({
+        ...doc,
+        id: fromPouchID(doc._id)
+      }));
+  }
+};
+
 export const getSalesByDateRange = async (startDate: string, endDate: string): Promise<Sale[]> => {
   try {
     const db = await getSalesDB();
