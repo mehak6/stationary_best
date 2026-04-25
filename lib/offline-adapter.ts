@@ -257,6 +257,8 @@ export const getAnalytics = async (financialYear?: string) => {
     const targetFY = financialYear || getFinancialYear();
     const { start: fyStart, end: fyEnd } = getFYRange(targetFY);
 
+    console.log(`📊 Analytics Range: ${fyStart} to ${fyEnd}`);
+
     // CRITICAL: Always use local data for analytics to ensure immediate visibility 
     // of new sales and products, even before they sync to Supabase.
     const products = await OfflineDB.getAllProducts();
@@ -268,15 +270,20 @@ export const getAnalytics = async (financialYear?: string) => {
     );
     
     const totalProducts = products.length;
-    const totalSales = sales.reduce((sum, sale) => sum + (sale.total_amount || 0), 0);
-    const totalProfit = sales.reduce((sum, sale) => sum + (sale.profit || 0), 0);
+    const totalSales = sales.reduce((sum, sale) => sum + (Number(sale.total_amount) || 0), 0);
+    const totalProfit = sales.reduce((sum, sale) => sum + (Number(sale.profit) || 0), 0);
     
-    const today = new Date().toISOString().split('T')[0];
+    // Use local date for "Today" to avoid UTC mismatch
+    const now = new Date();
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    
     const todaySalesData = sales.filter(sale => sale.sale_date === today);
-    const todaySales = todaySalesData.reduce((sum, sale) => sum + (sale.total_amount || 0), 0);
-    const todayProfit = todaySalesData.reduce((sum, sale) => sum + (sale.profit || 0), 0);
+    const todaySales = todaySalesData.reduce((sum, sale) => sum + (Number(sale.total_amount) || 0), 0);
+    const todayProfit = todaySalesData.reduce((sum, sale) => sum + (Number(sale.profit) || 0), 0);
     
     const lowStockProducts = products.filter(p => p.stock_quantity <= p.min_stock_level).length;
+
+    console.log(`✅ Analytics calculated locally: ${sales.length} sales found.`);
 
     // In background, if online, we could fetch from Supabase to verify, 
     // but the local data is what the user sees for immediate feedback.
@@ -314,6 +321,9 @@ export const getAnalytics = async (financialYear?: string) => {
 
 export const getSales = async (limit?: number): Promise<Sale[]> => {
   try {
+    const products = await OfflineDB.getAllProducts();
+    const productMap = new Map(products.map(p => [p.id, p.name]));
+
     if (isOnline) {
       const { data, error } = await (supabase.from('sales') as any)
         .select(`
@@ -333,20 +343,31 @@ export const getSales = async (limit?: number): Promise<Sale[]> => {
         await Promise.all((data || []).map((sale: any) =>
           OfflineDB.saveSale({
             ...sale,
-            product_name: sale.products?.name
+            product_name: sale.products?.name || productMap.get(sale.product_id)
           } as any).catch(() => {})
         ));
       }
     }
-    return await OfflineDB.getAllSales(limit);
+    
+    const localSales = await OfflineDB.getAllSales(limit);
+    return localSales.map(s => ({
+      ...s,
+      product_name: (s as any).product_name || productMap.get(s.product_id) || 'Unknown Product'
+    }));
   } catch (error) {
     console.error('Error fetching sales, using offline cache:', error);
-    return await OfflineDB.getAllSales(limit);
+    const localSales = await OfflineDB.getAllSales(limit);
+    return localSales;
   }
 };
 
 export const getSalesByDateRange = async (startDate: string, endDate: string): Promise<Sale[]> => {
   try {
+    const products = await OfflineDB.getAllProducts();
+    const productMap = new Map(products.map(p => [p.id, p.name]));
+
+    console.log(`🔍 Fetching sales between ${startDate} and ${endDate}`);
+
     if (isOnline) {
       const { data, error } = await supabase
         .from('sales')
@@ -368,14 +389,20 @@ export const getSalesByDateRange = async (startDate: string, endDate: string): P
         await Promise.all((data || []).map((sale: any) => 
           OfflineDB.saveSale({
             ...sale,
-            product_name: sale.products?.name
+            product_name: sale.products?.name || productMap.get(sale.product_id)
           } as any).catch(() => {})
         ));
       }
     }
     
     // Always return from Local DB to include unsynced sales
-    return await OfflineDB.getSalesByDateRange(startDate, endDate);
+    const localSales = await OfflineDB.getSalesByDateRange(startDate, endDate);
+    console.log(`📍 Found ${localSales.length} local sales in range.`);
+
+    return localSales.map(s => ({
+      ...s,
+      product_name: (s as any).product_name || productMap.get(s.product_id) || 'Unknown Product'
+    }));
   } catch (error) {
     console.error('Error fetching sales by date range:', error);
     return await OfflineDB.getSalesByDateRange(startDate, endDate);

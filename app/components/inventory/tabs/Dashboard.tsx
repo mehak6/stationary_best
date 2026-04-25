@@ -10,14 +10,17 @@ import {
   DollarSign,
   Edit,
   Trash2,
-  X
+  X,
+  RefreshCw
 } from 'lucide-react';
 import {
   getProducts,
   getSales,
   updateSale,
   deleteSale,
-  getAnalytics
+  getAnalytics,
+  getSalesByDateRange,
+  syncAllData
 } from 'lib/offline-adapter';
 import { 
   getFinancialYear, 
@@ -33,6 +36,7 @@ interface DashboardProps {
 
 export default function Dashboard({ onNavigate }: DashboardProps) {
   const { showToast } = useToast();
+  const [syncing, setSyncing] = useState(false);
   const [analytics, setAnalytics] = useState({
     totalProducts: 0,
     totalSales: 0,
@@ -76,49 +80,75 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   const [editSaleDateDisplay, setEditSaleDateDisplay] = useState('');
 
   // Fetch dashboard data on component mount
+  const fetchDashboardData = async (silent = false) => {
+    try {
+      if (!silent) setLoading(true);
+      console.log('🏁 Dashboard: Fetching analytics and products');
+
+      const [analyticsData, productsData] = await Promise.all([
+        getAnalytics(),
+        getProducts()
+      ]);
+      
+      console.log('📊 Dashboard Received:', analyticsData);
+
+      setAnalytics(analyticsData || {
+        totalProducts: 0,
+        totalSales: 0,
+        totalProfit: 0,
+        todaySales: 0,
+        todayProfit: 0,
+        lowStockProducts: 0
+      });
+
+      // Filter low stock items
+      const lowStock = (productsData || []).filter(p => p.stock_quantity <= p.min_stock_level);
+      setLowStockItems(lowStock);
+
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      setLowStockItems([]);
+    } finally {
+      if (!silent) setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        setLoading(true);
-
-        const [analyticsData, productsData] = await Promise.all([
-          getAnalytics(),
-          getProducts()
-        ]);
-        setAnalytics(analyticsData || {
-          totalProducts: 0,
-          totalSales: 0,
-          totalProfit: 0,
-          todaySales: 0,
-          todayProfit: 0,
-          lowStockProducts: 0
-        });
-
-        // Filter low stock items
-        const lowStock = (productsData || []).filter(p => p.stock_quantity <= p.min_stock_level);
-        setLowStockItems(lowStock);
-
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
-        // Set empty states on error
-        setLowStockItems([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchDashboardData();
   }, []);
 
+  const handleSyncAndRefresh = async () => {
+    try {
+      setSyncing(true);
+      showToast('Syncing & Refreshing...', 'info');
+      
+      // Perform sync if possible
+      await syncAllData().catch(e => console.warn('Sync failed during refresh:', e));
+      
+      // Re-fetch all data
+      await fetchDashboardData(true);
+      
+      if (showAllSales) {
+        await fetchAllSales(allSalesPage);
+      }
+      
+      showToast('Dashboard updated', 'success');
+    } catch (error) {
+      console.error('Refresh failed:', error);
+      showToast('Refresh failed, showing local data', 'warning');
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   const handleEditSale = (sale: Sale) => {
-    setEditingSale(sale);
+    setEditingSale(sale as ExtendedSale);
     const isoDate = sale.sale_date.split('T')[0];
     setEditSaleData({
       quantity: sale.quantity,
       unit_price: sale.unit_price,
       sale_date: isoDate
     });
-    // Set display date in dd/mm/yyyy format
     setEditSaleDateDisplay(formatDateToDDMMYYYY(isoDate));
   };
 
@@ -126,28 +156,24 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
     if (!editingSale) return;
 
     try {
-      // Check if quantity is being increased
       const quantityDifference = editSaleData.quantity - editingSale.quantity;
 
       if (quantityDifference > 0) {
-        // Get current product stock
         const products = await getProducts();
         const product = products.find(p => p.id === editingSale.product_id);
 
         if (!product) {
-          showToast('Error: Product not found. Cannot update sale.', 'error');
+          showToast('Error: Product not found.', 'error');
           return;
         }
 
-        // Check if sufficient stock is available
         if (product.stock_quantity < quantityDifference) {
-          showToast(`Insufficient stock! Available: ${product.stock_quantity}, Required: ${quantityDifference}`, 'error', 5000);
+          showToast(`Insufficient stock!`, 'error');
           return;
         }
       }
 
-      // Calculate new total and profit
-      const totalAmount = editSaleData.quantity * editSaleData.unit_price;
+      const totalAmount = Number(editSaleData.quantity) * Number(editSaleData.unit_price);
       const purchasePrice = (editingSale as any).products?.purchase_price || 0;
       const profit = totalAmount - (editSaleData.quantity * purchasePrice);
 
@@ -160,103 +186,66 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
       };
 
       await updateSale(editingSale.id, updates);
+      await fetchDashboardData(true);
 
-      // Refresh dashboard data to update analytics
-      const [analyticsData] = await Promise.all([
-        getAnalytics()
-      ]);
-
-      setAnalytics(analyticsData || {
-        totalProducts: 0,
-        totalSales: 0,
-        totalProfit: 0,
-        todaySales: 0,
-        todayProfit: 0,
-        lowStockProducts: 0
-      });
-
-      // Refresh All Sales if open
       if (showAllSales) {
         await fetchAllSales(allSalesPage);
       }
 
-      // Show success message
-      showToast(`Sale updated successfully for ${(editingSale as any).products?.name}`, 'success');
-
-      // Close edit modal
+      showToast(`Sale updated successfully`, 'success');
       setEditingSale(null);
 
     } catch (error) {
       console.error('Error updating sale:', error);
-      showToast('Error updating sale. Please try again.', 'error');
+      showToast('Error updating sale.', 'error');
     }
   };
 
   const handleDeleteSale = async (saleId: string, saleData: any) => {
-    if (!confirm(`Are you sure you want to delete this sale of ${(saleData as any).products?.name || 'Unknown Product'}? This action cannot be undone.`)) {
+    if (!confirm(`Are you sure you want to delete this sale?`)) {
       return;
     }
 
     try {
       const success = await deleteSale(saleId);
-      
       if (!success) {
-        showToast('Failed to delete sale from database', 'error');
+        showToast('Failed to delete sale', 'error');
         return;
       }
 
-      // Refresh dashboard data to update analytics
-      const analyticsData = await getAnalytics();
-
-      setAnalytics(analyticsData || {
-        totalProducts: 0,
-        totalSales: 0,
-        totalProfit: 0,
-        todaySales: 0,
-        todayProfit: 0,
-        lowStockProducts: 0
-      });
-
-      // Refresh All Sales if open
+      await fetchDashboardData(true);
       if (showAllSales) {
         await fetchAllSales(allSalesPage);
       }
-
       showToast('Sale deleted successfully', 'success');
-
     } catch (error) {
       console.error('Error deleting sale:', error);
-      showToast('Error deleting sale. Please try again.', 'error');
+      showToast('Error deleting sale.', 'error');
     }
   };
 
-  // Fetch All Sales with filtering and pagination
   const fetchAllSales = async (page: number = 1) => {
     try {
       setAllSalesLoading(true);
-
-      // Default to current FY if no filters applied
       const range = getFYRange(getFinancialYear());
-      
       const effectiveStart = startDate || range.start;
       const effectiveEnd = endDate || range.end;
 
-      // Use the offline adapter to fetch sales - this handles both online and local data
+      console.log(`🔍 fetchAllSales: ${effectiveStart} to ${effectiveEnd}`);
+
       const data = await getSalesByDateRange(effectiveStart, effectiveEnd);
+      console.log(`📍 fetchAllSales: Found ${data?.length || 0} items`);
       
-      // Sort by date (descending) and created_at
       const sortedData = (data || []).sort((a, b) => {
         const dateCompare = b.sale_date.localeCompare(a.sale_date);
         if (dateCompare !== 0) return dateCompare;
         return (b.created_at || '').localeCompare(a.created_at || '');
       });
 
-      // Handle client-side pagination since PouchDB filter results don't support simple range offsets easily
       const from = (page - 1) * SALES_PER_PAGE;
       const paginatedData = sortedData.slice(from, from + SALES_PER_PAGE);
 
       setAllSales(paginatedData);
-
     } catch (error) {
       console.error('Error fetching sales:', error);
       setAllSales([]);
@@ -265,7 +254,6 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
     }
   };
 
-  // Handle showing all sales section
   const handleShowAllSales = async () => {
     if (!showAllSales) {
       setShowAllSales(true);
@@ -275,13 +263,11 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
     }
   };
 
-  // Handle filter changes
   const handleFilterChange = async () => {
     setAllSalesPage(1);
     await fetchAllSales(1);
   };
 
-  // Handle pagination
   const handlePageChange = async (newPage: number) => {
     setAllSalesPage(newPage);
     await fetchAllSales(newPage);
@@ -290,17 +276,32 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   if (loading && !showAllSales) {
     return (
       <div className="p-6 text-center">
-        <p className="text-gray-500">Loading dashboard...</p>
+        <div className="animate-spin h-10 w-10 border-4 border-primary-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+        <p className="text-gray-500 font-medium">Loading Dashboard...</p>
       </div>
     );
   }
 
   return (
-    <div className="p-6 bg-primary-50 min-h-screen">
+    <div className="p-6 bg-primary-50 min-h-screen pb-24">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-600 mt-2">Welcome! Here's your business overview.</p>
+      <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+          <p className="text-gray-600 mt-2">Welcome! Here's your business overview.</p>
+        </div>
+        <button
+          onClick={handleSyncAndRefresh}
+          disabled={syncing}
+          className={`flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold transition-all shadow-lg ${
+            syncing 
+              ? 'bg-gray-200 text-gray-500 cursor-not-allowed' 
+              : 'bg-white text-primary-600 hover:bg-primary-50 border-2 border-primary-200'
+          }`}
+        >
+          <RefreshCw className={`h-5 w-5 ${syncing ? 'animate-spin' : ''}`} />
+          {syncing ? 'Refreshing...' : 'Sync & Refresh'}
+        </button>
       </div>
 
       {/* Analytics Cards */}
@@ -311,17 +312,21 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
               <p className="stat-label">Total Products</p>
               <p className="stat-value">{analytics.totalProducts}</p>
             </div>
-            <Package className="h-8 w-8 text-primary-600" />
+            <div className="bg-primary-100 p-3 rounded-2xl">
+              <Package className="h-8 w-8 text-primary-600" />
+            </div>
           </div>
         </div>
 
         <div className="stat-card">
           <div className="flex items-center justify-between">
             <div>
-              <p className="stat-label">Total Sales</p>
-              <p className="stat-value">₹{analytics.totalSales.toLocaleString()}</p>
+              <p className="stat-label">Total Sales (FY)</p>
+              <p className="stat-value">₹{Number(analytics.totalSales).toLocaleString()}</p>
             </div>
-            <DollarSign className="h-8 w-8 text-secondary-600" />
+            <div className="bg-secondary-100 p-3 rounded-2xl">
+              <DollarSign className="h-8 w-8 text-secondary-600" />
+            </div>
           </div>
         </div>
 
@@ -329,25 +334,27 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
           <div className="flex items-center justify-between">
             <div>
               <p className="stat-label">Today's Sales</p>
-              <p className="stat-value">₹{analytics.todaySales}</p>
+              <p className="stat-value text-accent-600">₹{Number(analytics.todaySales).toLocaleString()}</p>
             </div>
-            <TrendingUp className="h-8 w-8 text-accent-600" />
+            <div className="bg-accent-100 p-3 rounded-2xl">
+              <TrendingUp className="h-8 w-8 text-accent-600" />
+            </div>
           </div>
         </div>
       </div>
 
       {/* Low Stock Alerts */}
       {lowStockItems.length > 0 && (
-        <div className="card bg-gradient-to-br from-orange-50 to-red-50 border-2 border-orange-200">
+        <div className="card bg-gradient-to-br from-orange-50 to-red-50 border-2 border-orange-200 mb-8">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <AlertTriangle className="h-6 w-6 text-orange-600" />
               <h3 className="text-lg font-semibold text-gray-900">Low Stock Alerts</h3>
-              <span className="badge-danger">{lowStockItems.length}</span>
+              <span className="bg-orange-600 text-white text-xs px-2 py-1 rounded-full font-bold">{lowStockItems.length}</span>
             </div>
             <button
               onClick={() => onNavigate('products')}
-              className="btn-outline text-sm bg-white hover:bg-orange-100"
+              className="text-sm font-bold text-orange-700 bg-white px-4 py-2 rounded-lg border border-orange-200 hover:bg-orange-100 transition-colors"
             >
               Manage Stock
             </button>
@@ -356,23 +363,23 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
             {lowStockItems.map(product => (
               <div
                 key={product.id}
-                className="bg-white rounded-lg p-3 border-2 border-orange-300 hover:border-orange-400 transition-colors cursor-pointer"
+                className="bg-white rounded-xl p-3 border-2 border-orange-200 shadow-sm hover:shadow-md transition-all cursor-pointer"
                 onClick={() => onNavigate('products')}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <p className="font-semibold text-gray-900 text-sm truncate">{product.name}</p>
-                    <p className="text-xs text-gray-500">Min: {product.min_stock_level}</p>
+                    <p className="font-bold text-gray-900 text-sm truncate">{product.name}</p>
+                    <p className="text-xs text-gray-500 font-medium">Min: {product.min_stock_level}</p>
                   </div>
                   <div className="text-right ml-2">
-                    <p className="font-bold text-red-600 text-lg">{product.stock_quantity}</p>
-                    <p className="text-xs text-gray-500">units left</p>
+                    <p className="font-black text-red-600 text-lg leading-none">{product.stock_quantity}</p>
+                    <p className="text-[10px] uppercase font-bold text-gray-400">units</p>
                   </div>
                 </div>
                 <div className="mt-2 bg-orange-100 rounded-full h-2 overflow-hidden">
                   <div
                     className="bg-red-500 h-full transition-all"
-                    style={{ width: `${Math.min(100, (product.stock_quantity / product.min_stock_level) * 100)}%` }}
+                    style={{ width: `${Math.max(5, Math.min(100, (product.stock_quantity / product.min_stock_level) * 100))}%` }}
                   />
                 </div>
               </div>
@@ -382,24 +389,30 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
       )}
 
       {/* All Sales Section */}
-      <div className="card mt-8">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">All Sales</h3>
+      <div className="card shadow-xl border-t-4 border-t-primary-500">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2">
+              <ShoppingCart className="h-6 w-6 text-primary-600" />
+              <h3 className="text-xl font-bold text-gray-900">Recent Sales</h3>
+            </div>
             <button
               onClick={handleShowAllSales}
-              className="btn-outline text-sm"
-              title={showAllSales ? "Hide All Sales" : "Show All Sales"}
+              className={`px-6 py-2 rounded-xl font-bold transition-all ${
+                showAllSales 
+                  ? 'bg-gray-100 text-gray-600 hover:bg-gray-200' 
+                  : 'bg-primary-600 text-white hover:bg-primary-700 shadow-md'
+              }`}
             >
-              {showAllSales ? 'Hide' : 'Show'} All Sales
+              {showAllSales ? 'Hide History' : 'Show All Sales'}
             </button>
           </div>
 
           {showAllSales && (
-            <div className="space-y-4">
+            <div className="space-y-6">
               {/* Date Filters */}
-              <div className="flex flex-wrap gap-4">
-                <div className="flex items-center gap-2">
-                  <label className="text-sm font-medium text-gray-700">From:</label>
+              <div className="bg-gray-50 p-4 rounded-2xl flex flex-wrap items-end gap-4 border border-gray-100">
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-gray-500 uppercase ml-1">From Date</label>
                   <input
                     type="text"
                     value={startDateDisplay}
@@ -409,24 +422,22 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                         setStartDateDisplay(value);
                         if (/^\d{2}\/\d{2}\/\d{4}$/.test(value)) {
                           const isoDate = parseDDMMYYYYToISO(value);
-                          if (isoDate) {
-                            setStartDate(isoDate);
-                          }
+                          if (isoDate) setStartDate(isoDate);
                         }
                       }
                     }}
-                    onBlur={(e) => {
-                      if (e.target.value && !/^\d{2}\/\d{2}\/\d{4}$/.test(e.target.value)) {
+                    onBlur={() => {
+                      if (startDateDisplay && !/^\d{2}\/\d{2}\/\d{4}$/.test(startDateDisplay)) {
                         setStartDateDisplay(startDate ? formatDateToDDMMYYYY(startDate) : '');
                       }
                     }}
                     placeholder="dd/mm/yyyy"
-                    className="input-field text-sm w-36 text-gray-900"
+                    className="input-field text-sm w-40 text-gray-900 bg-white"
                     maxLength={10}
                   />
                 </div>
-                <div className="flex items-center gap-2">
-                  <label className="text-sm font-medium text-gray-700">To:</label>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-gray-500 uppercase ml-1">To Date</label>
                   <input
                     type="text"
                     value={endDateDisplay}
@@ -436,25 +447,23 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                         setEndDateDisplay(value);
                         if (/^\d{2}\/\d{2}\/\d{4}$/.test(value)) {
                           const isoDate = parseDDMMYYYYToISO(value);
-                          if (isoDate) {
-                            setEndDate(isoDate);
-                          }
+                          if (isoDate) setEndDate(isoDate);
                         }
                       }
                     }}
-                    onBlur={(e) => {
-                      if (e.target.value && !/^\d{2}\/\d{2}\/\d{4}$/.test(e.target.value)) {
+                    onBlur={() => {
+                      if (endDateDisplay && !/^\d{2}\/\d{2}\/\d{4}$/.test(endDateDisplay)) {
                         setEndDateDisplay(formatDateToDDMMYYYY(endDate));
                       }
                     }}
                     placeholder="dd/mm/yyyy"
-                    className="input-field text-sm w-36 text-gray-900"
+                    className="input-field text-sm w-40 text-gray-900 bg-white"
                     maxLength={10}
                   />
                 </div>
                 <button
                   onClick={handleFilterChange}
-                  className="btn-primary text-sm"
+                  className="bg-primary-600 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-primary-700 transition-all shadow-md active:scale-95"
                 >
                   Apply Filter
                 </button>
@@ -463,79 +472,83 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
               {/* Sales List - Grouped by Date */}
               <div className="space-y-4">
                 {allSalesLoading ? (
-                  <div className="text-center py-8">
-                    <p className="text-gray-500">Loading sales...</p>
+                  <div className="text-center py-12">
+                    <div className="animate-spin h-8 w-8 border-4 border-primary-500 border-t-transparent rounded-full mx-auto mb-2"></div>
+                    <p className="text-gray-500 font-medium">Fetching sales records...</p>
                   </div>
                 ) : allSales.length === 0 ? (
-                  <div className="text-center py-8">
-                    <p className="text-gray-500">No sales found for the selected date range</p>
+                  <div className="text-center py-12 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200">
+                    <p className="text-gray-400 font-medium italic">No sales found for this period.</p>
+                    <p className="text-xs text-gray-400 mt-1">Try changing the dates or clicking "Sync & Refresh".</p>
                   </div>
                 ) : (
                   <>
-                    <div className="max-h-96 overflow-y-auto space-y-4">
+                    <div className="max-h-[500px] overflow-y-auto pr-2 space-y-6 custom-scrollbar">
                       {(() => {
                         const salesByDate: Record<string, Sale[]> = allSales.reduce((groups: Record<string, Sale[]>, sale) => {
-                          const date = new Date(sale.sale_date).toLocaleDateString('en-GB', {
-                            day: '2-digit',
-                            month: 'short',
-                            year: 'numeric'
-                          });
-                          if (!groups[date]) {
-                            groups[date] = [];
-                          }
+                          // Safe date parsing
+                          const d = new Date(sale.sale_date);
+                          const date = isNaN(d.getTime()) 
+                            ? sale.sale_date 
+                            : d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+                          
+                          if (!groups[date]) groups[date] = [];
                           groups[date].push(sale);
                           return groups;
                         }, {});
 
                         const sortedDates = Object.keys(salesByDate).sort((a, b) => {
-                          const dateA = new Date(salesByDate[a][0].sale_date);
-                          const dateB = new Date(salesByDate[b][0].sale_date);
-                          return dateB.getTime() - dateA.getTime();
+                          const dateA = new Date(salesByDate[a][0].sale_date).getTime();
+                          const dateB = new Date(salesByDate[b][0].sale_date).getTime();
+                          return dateB - dateA;
                         });
 
                         return sortedDates.map(date => {
                           const dateSales = salesByDate[date];
-                          const dateTotal = dateSales.reduce((sum, sale) => sum + sale.total_amount, 0);
-                          const dateProfit = dateSales.reduce((sum, sale) => sum + sale.profit, 0);
+                          const dateTotal = dateSales.reduce((sum, sale) => sum + Number(sale.total_amount || 0), 0);
+                          const dateProfit = dateSales.reduce((sum, sale) => sum + Number(sale.profit || 0), 0);
 
                           return (
-                            <div key={date} className="border-2 border-gray-200 rounded-lg overflow-hidden">
-                              <div className="bg-primary-100 border-b-2 border-primary-200 px-4 py-3">
+                            <div key={date} className="border-2 border-gray-100 rounded-3xl overflow-hidden shadow-sm bg-white">
+                              <div className="bg-primary-50 border-b border-primary-100 px-5 py-4">
                                 <div className="flex items-center justify-between">
                                   <div>
-                                    <p className="font-bold text-gray-900 text-lg">{date}</p>
-                                    <p className="text-sm text-gray-600">{dateSales.length} {dateSales.length === 1 ? 'sale' : 'sales'}</p>
+                                    <p className="font-black text-gray-900 text-lg">{date}</p>
+                                    <p className="text-xs text-primary-600 font-bold uppercase tracking-wider">{dateSales.length} Transactions</p>
                                   </div>
                                   <div className="text-right">
-                                    <p className="font-bold text-secondary-600 text-lg">₹{dateTotal.toFixed(2)}</p>
-                                    <p className="text-sm text-accent-600">Profit: ₹{dateProfit.toFixed(2)}</p>
+                                    <p className="font-black text-secondary-600 text-xl leading-none">₹{dateTotal.toFixed(2)}</p>
+                                    <p className="text-[10px] font-bold text-accent-600 uppercase mt-1">Profit: ₹{dateProfit.toFixed(2)}</p>
                                   </div>
                                 </div>
                               </div>
 
-                              <div className="bg-white">
+                              <div className="divide-y divide-gray-50">
                                 {dateSales.map(sale => (
-                                  <div key={sale.id} className="flex items-center justify-between p-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50">
+                                  <div key={sale.id} className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors group">
                                     <div className="flex-1">
-                                      <p className="font-medium text-gray-900">{(sale as any).products?.name || 'Unknown Product'}</p>
-                                      <p className="text-sm text-gray-500">Qty: {sale.quantity} • Unit: ₹{sale.unit_price}</p>
+                                      <p className="font-bold text-gray-900">{(sale as any).product_name || (sale as any).products?.name || 'Unknown Product'}</p>
+                                      <p className="text-xs text-gray-500 font-medium">
+                                        Qty: <span className="text-gray-900 font-bold">{sale.quantity}</span> • 
+                                        Rate: <span className="text-gray-900 font-bold">₹{sale.unit_price}</span>
+                                      </p>
                                     </div>
-                                    <div className="text-right mr-3">
-                                      <p className="font-medium text-gray-900">₹{sale.total_amount}</p>
-                                      <p className="text-sm text-secondary-600">+₹{sale.profit}</p>
+                                    <div className="text-right mr-4">
+                                      <p className="font-black text-gray-900">₹{Number(sale.total_amount).toFixed(2)}</p>
+                                      <p className="text-[10px] font-black text-secondary-600 uppercase">+₹{Number(sale.profit).toFixed(2)}</p>
                                     </div>
-                                    <div className="flex gap-2">
+                                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                       <button
                                         onClick={() => handleEditSale(sale)}
-                                        className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
-                                        title="Edit Sale"
+                                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
+                                        title="Edit"
                                       >
                                         <Edit className="h-4 w-4" />
                                       </button>
                                       <button
                                         onClick={() => handleDeleteSale(sale.id, sale)}
-                                        className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
-                                        title="Delete Sale"
+                                        className="p-2 text-red-600 hover:bg-red-50 rounded-xl transition-all"
+                                        title="Delete"
                                       >
                                         <Trash2 className="h-4 w-4" />
                                       </button>
@@ -550,19 +563,21 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                     </div>
 
                     {allSales.length >= SALES_PER_PAGE && (
-                      <div className="flex justify-center gap-2 mt-4">
+                      <div className="flex justify-center gap-3 mt-8">
                         <button
                           onClick={() => handlePageChange(Math.max(1, allSalesPage - 1))}
                           disabled={allSalesPage === 1}
-                          className="btn-outline px-3 py-2 disabled:opacity-50"
+                          className="bg-white border-2 border-gray-200 text-gray-600 px-6 py-2 rounded-xl font-bold hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                         >
                           Previous
                         </button>
-                        <span className="px-3 py-2 text-sm text-gray-700">Page {allSalesPage}</span>
+                        <div className="flex items-center bg-primary-100 px-4 py-2 rounded-xl font-black text-primary-700">
+                          Page {allSalesPage}
+                        </div>
                         <button
                           onClick={() => handlePageChange(allSalesPage + 1)}
                           disabled={allSales.length < SALES_PER_PAGE}
-                          className="btn-outline px-3 py-2 disabled:opacity-50"
+                          className="bg-white border-2 border-gray-200 text-gray-600 px-6 py-2 rounded-xl font-bold hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                         >
                           Next
                         </button>
@@ -576,80 +591,84 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
         </div>
 
       {/* Quick Actions */}
-      <div className="fixed bottom-8 right-8 flex flex-col gap-4 z-50">
+      <div className="fixed bottom-24 right-8 flex flex-col gap-4 z-40">
         <button
           onClick={() => onNavigate('quick-sale')}
-          className="group bg-primary-600 hover:bg-primary-700 text-white rounded-full p-5 shadow-2xl hover:shadow-primary-500/50 transition-all duration-300 hover:scale-110 active:scale-95"
+          className="group bg-primary-600 hover:bg-primary-700 text-white rounded-2xl p-5 shadow-2xl hover:shadow-primary-500/50 transition-all duration-300 hover:scale-110 active:scale-95"
           title="Quick Sale"
         >
-          <ShoppingCart className="h-7 w-7 group-hover:scale-110 transition-transform" />
+          <ShoppingCart className="h-7 w-7" />
         </button>
         <button
           onClick={() => onNavigate('products')}
-          className="group bg-secondary-600 hover:bg-secondary-700 text-white rounded-full p-5 shadow-2xl hover:shadow-secondary-500/50 transition-all duration-300 hover:scale-110 active:scale-95"
+          className="group bg-secondary-600 hover:bg-secondary-700 text-white rounded-2xl p-5 shadow-2xl hover:shadow-secondary-500/50 transition-all duration-300 hover:scale-110 active:scale-95"
           title="Go to Products"
         >
-          <Plus className="h-7 w-7 group-hover:rotate-90 transition-transform duration-300" />
+          <Plus className="h-7 w-7" />
         </button>
       </div>
 
       {/* Edit Sale Modal */}
       {editingSale && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Edit Sale</h3>
+        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-[60]">
+          <div className="bg-white rounded-[32px] p-8 max-w-md w-full shadow-2xl border border-gray-100 animate-in fade-in zoom-in duration-200">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl font-black text-gray-900">Edit Transaction</h3>
               <button
                 onClick={() => setEditingSale(null)}
-                className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
               >
-                <X className="h-5 w-5 text-gray-500" />
+                <X className="h-6 w-6 text-gray-400" />
               </button>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-5">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Product
+                <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">
+                  Product Item
                 </label>
-                <p className="text-base font-semibold text-gray-900">
-                  {(editingSale as any).products?.name || 'Unknown Product'}
-                </p>
+                <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                  <p className="text-lg font-black text-gray-900">
+                    {(editingSale as any).product_name || (editingSale as any).products?.name || 'Unknown Product'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">
+                    Quantity
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={editSaleData.quantity}
+                    onChange={(e) => setEditSaleData({ ...editSaleData, quantity: parseInt(e.target.value) || 0 })}
+                    className="input-field w-full font-bold text-lg"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">
+                    Rate (₹)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={editSaleData.unit_price}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setEditSaleData({ ...editSaleData, unit_price: value === '' ? 0 : parseFloat(value) });
+                    }}
+                    className="input-field w-full font-bold text-lg"
+                  />
+                </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Quantity
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  value={editSaleData.quantity}
-                  onChange={(e) => setEditSaleData({ ...editSaleData, quantity: parseInt(e.target.value) || 0 })}
-                  className="input-field w-full"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Unit Price (₹)
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={editSaleData.unit_price}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setEditSaleData({ ...editSaleData, unit_price: value === '' ? 0 : parseFloat(value) });
-                  }}
-                  className="input-field w-full"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Sale Date (dd/mm/yyyy)
+                <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">
+                  Sale Date
                 </label>
                 <input
                   type="text"
@@ -660,50 +679,44 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                       setEditSaleDateDisplay(value);
                       if (/^\d{2}\/\d{2}\/\d{4}$/.test(value)) {
                         const isoDate = parseDDMMYYYYToISO(value);
-                        if (isoDate) {
-                          setEditSaleData({ ...editSaleData, sale_date: isoDate });
-                        }
+                        if (isoDate) setEditSaleData({ ...editSaleData, sale_date: isoDate });
                       }
                     }
                   }}
-                  onBlur={(e) => {
-                    if (e.target.value && !/^\d{2}\/\d{2}\/\d{4}$/.test(e.target.value)) {
-                      setEditSaleDateDisplay(formatDateToDDMMYYYY(editSaleData.sale_date));
-                    }
-                  }}
+                  onBlur={() => setEditSaleDateDisplay(formatDateToDDMMYYYY(editSaleData.sale_date))}
                   placeholder="dd/mm/yyyy"
-                  className="input-field w-full text-gray-900"
+                  className="input-field w-full font-bold"
                   maxLength={10}
                 />
               </div>
 
-              <div className="bg-primary-50 p-3 rounded-lg">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">New Total:</span>
-                  <span className="font-semibold text-gray-900">
+              <div className="bg-primary-50 p-5 rounded-[24px] border border-primary-100 flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] font-black text-primary-500 uppercase tracking-widest mb-1">New Total Amount</p>
+                  <p className="text-3xl font-black text-gray-900">
                     ₹{(editSaleData.quantity * editSaleData.unit_price).toFixed(2)}
-                  </span>
+                  </p>
                 </div>
-                <div className="flex justify-between text-sm mt-1">
-                  <span className="text-gray-600">Estimated Profit:</span>
-                  <span className="font-semibold text-secondary-600">
-                    ₹{((editSaleData.quantity * editSaleData.unit_price) - (editSaleData.quantity * (editingSale.products?.purchase_price || 0))).toFixed(2)}
-                  </span>
+                <div className="text-right">
+                  <p className="text-[10px] font-black text-secondary-500 uppercase tracking-widest mb-1">Profit</p>
+                  <p className="text-lg font-black text-secondary-600">
+                    +₹{((editSaleData.quantity * editSaleData.unit_price) - (editSaleData.quantity * (editingSale.products?.purchase_price || 0))).toFixed(2)}
+                  </p>
                 </div>
               </div>
 
-              <div className="flex gap-3 pt-2">
+              <div className="flex gap-4 pt-2">
                 <button
                   onClick={() => setEditingSale(null)}
-                  className="btn-outline flex-1"
+                  className="flex-1 bg-gray-50 text-gray-600 py-4 rounded-[20px] font-black hover:bg-gray-100 transition-all border border-gray-100"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleUpdateSale}
-                  className="btn-primary flex-1"
+                  className="flex-1 bg-primary-600 text-white py-4 rounded-[20px] font-black hover:bg-primary-700 transition-all shadow-lg active:scale-95"
                 >
-                  Update Sale
+                  Save Changes
                 </button>
               </div>
             </div>
