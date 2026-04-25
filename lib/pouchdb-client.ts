@@ -101,7 +101,7 @@ export const initializeDatabases = async () => {
       });
     }
 
-    // Create indexes for better query performance
+    // Create indexes for better query performance and wait for them!
     await createIndexes();
 
     isInitialized = true;

@@ -538,25 +538,55 @@ export const getSalesByDate = async (date: string): Promise<Sale[]> => {
 export const getSalesByDateRange = async (startDate: string, endDate: string): Promise<Sale[]> => {
   try {
     const db = await getSalesDB();
-    const result = await db.find({
-      selector: {
-        _id: { $gte: 'sale_', $lt: 'sale_\ufff0' },
-        sale_date: { $gte: startDate, $lte: endDate }
+    
+    // First try efficient find
+    try {
+      const result = await db.find({
+        selector: {
+          sale_date: { $gte: startDate, $lte: endDate }
+        }
+      });
+      
+      if (result.docs.length > 0) {
+        return result.docs.map((doc: any) => ({
+          id: fromPouchID(doc._id),
+          product_id: doc.product_id,
+          quantity: doc.quantity,
+          unit_price: doc.unit_price,
+          total_amount: doc.total_amount,
+          profit: doc.profit,
+          customer_info: doc.customer_info,
+          sale_date: doc.sale_date,
+          notes: doc.notes,
+          created_at: doc.created_at
+        }));
       }
+    } catch (e) {
+      console.warn('PouchDB find failed, falling back to allDocs:', e);
+    }
+
+    // Fallback: allDocs is slower but 100% reliable even without indexes
+    const allDocs = await db.allDocs({
+      include_docs: true,
+      startkey: 'sale_',
+      endkey: 'sale_\ufff0'
     });
 
-    return result.docs.map((doc: any) => ({
-      id: fromPouchID(doc._id),
-      product_id: doc.product_id,
-      quantity: doc.quantity,
-      unit_price: doc.unit_price,
-      total_amount: doc.total_amount,
-      profit: doc.profit,
-      customer_info: doc.customer_info,
-      sale_date: doc.sale_date,
-      notes: doc.notes,
-      created_at: doc.created_at
-    }));
+    return allDocs.rows
+      .map(row => row.doc as any)
+      .filter(doc => doc.sale_date >= startDate && doc.sale_date <= endDate)
+      .map(doc => ({
+        id: fromPouchID(doc._id),
+        product_id: doc.product_id,
+        quantity: doc.quantity,
+        unit_price: doc.unit_price,
+        total_amount: doc.total_amount,
+        profit: doc.profit,
+        customer_info: doc.customer_info,
+        sale_date: doc.sale_date,
+        notes: doc.notes,
+        created_at: doc.created_at
+      }));
   } catch (error) {
     console.error('Error getting sales by date range:', error);
     return [];
