@@ -241,6 +241,10 @@ export const getSalesByDate = async (date: string): Promise<Sale[]> => {
   return await OfflineDB.getSalesByDate(date);
 };
 
+export const getSalesByProduct = async (productId: string): Promise<Sale[]> => {
+  return await OfflineDB.getSalesByProduct(productId);
+};
+
 export const deletePartyPurchase = async (id: string): Promise<boolean> => {
   return await OfflineDB.deletePartyPurchase(id);
 };

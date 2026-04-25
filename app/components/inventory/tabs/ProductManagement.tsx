@@ -784,8 +784,31 @@ function ProductHistoryModal({ product, onClose }: { product: Product; onClose: 
     const fetchHistory = async () => {
       try {
         const { getProductHistory } = await import('lib/product-history');
-        const historyData = await getProductHistory(product.id);
-        setHistory(historyData);
+        const { getSalesByProduct } = await import('lib/offline-adapter');
+        
+        const [historyData, salesData] = await Promise.all([
+          getProductHistory(product.id),
+          getSalesByProduct(product.id)
+        ]);
+
+        // Map sales to history entry format
+        const mappedSales = (salesData || []).map(sale => ({
+          id: sale.id,
+          product_id: sale.product_id,
+          product_name: product.name,
+          action: 'sale' as any,
+          quantity_change: -sale.quantity,
+          stock_before: 0, // Not tracked for sales in history entries usually
+          stock_after: 0,
+          date: sale.created_at || sale.sale_date,
+          notes: `Sold ${sale.quantity} units for ₹${sale.total_amount}${sale.customer_info ? ` to ${sale.customer_info}` : ''}`
+        }));
+
+        const unifiedHistory = [...historyData, ...mappedSales].sort((a, b) => 
+          new Date(b.date).getTime() - new Date(a.date).getTime()
+        );
+
+        setHistory(unifiedHistory);
       } catch (error) {
         console.error('Error fetching product history:', error);
       } finally {
@@ -793,7 +816,7 @@ function ProductHistoryModal({ product, onClose }: { product: Product; onClose: 
       }
     };
     fetchHistory();
-  }, [product.id]);
+  }, [product.id, product.name]);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999]">
@@ -801,7 +824,7 @@ function ProductHistoryModal({ product, onClose }: { product: Product; onClose: 
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 className="text-xl font-bold text-gray-900">Product History</h2>
+              <h2 className="text-xl font-bold text-gray-900">Product History & Sales</h2>
               <p className="text-sm text-gray-600 mt-1">{product.name}</p>
             </div>
             <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
@@ -818,25 +841,53 @@ function ProductHistoryModal({ product, onClose }: { product: Product; onClose: 
             </div>
           ) : (
             <div className="space-y-3">
-              {history.map((entry) => (
-                <div key={entry.id} className="border-l-4 border-primary-500 bg-gray-50 p-4 rounded-r-lg">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs font-bold uppercase text-primary-600">{entry.action.replace('_', ' ')}</span>
-                        <span className="text-xs text-gray-500">{new Date(entry.date).toLocaleString()}</span>
+              {history.map((entry) => {
+                const isSale = entry.action === 'sale';
+                const actionLabel = entry.action.replace('_', ' ');
+                
+                return (
+                  <div 
+                    key={entry.id} 
+                    className={`border-l-4 ${isSale ? 'border-secondary-500 bg-secondary-50' : 'border-primary-500 bg-gray-50'} p-4 rounded-r-lg shadow-sm`}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className={`text-xs font-black uppercase ${isSale ? 'text-secondary-600' : 'text-primary-600'}`}>
+                            {actionLabel}
+                          </span>
+                          <span className="text-[10px] font-bold text-gray-400">
+                            {new Date(entry.date).toLocaleString('en-IN', {
+                              day: '2-digit', month: 'short', year: 'numeric',
+                              hour: '2-digit', minute: '2-digit'
+                            })}
+                          </span>
+                        </div>
+                        <div className="text-sm text-gray-700 font-medium">
+                          {isSale ? (
+                            <span className="text-gray-900 font-bold">
+                              {Math.abs(entry.quantity_change)} Units Sold
+                            </span>
+                          ) : (
+                            <>
+                              Stock: {entry.stock_before} → {entry.stock_after} 
+                              <span className={`ml-2 font-bold ${entry.quantity_change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                ({entry.quantity_change >= 0 ? '+' : ''}{entry.quantity_change})
+                              </span>
+                            </>
+                          )}
+                        </div>
+                        {entry.notes && <p className={`text-xs mt-1 ${isSale ? 'text-secondary-700 font-bold' : 'text-gray-500'}`}>{entry.notes}</p>}
                       </div>
-                      <div className="text-sm text-gray-700">
-                        Stock: {entry.stock_before} → {entry.stock_after} 
-                        <span className={`ml-2 font-bold ${entry.quantity_change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          ({entry.quantity_change >= 0 ? '+' : ''}{entry.quantity_change})
-                        </span>
-                      </div>
-                      {entry.notes && <p className="text-xs text-gray-500 mt-1">{entry.notes}</p>}
+                      {isSale && (
+                        <div className="bg-secondary-100 p-2 rounded-lg">
+                          <ShoppingCart className="h-4 w-4 text-secondary-600" />
+                        </div>
+                      )}
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
