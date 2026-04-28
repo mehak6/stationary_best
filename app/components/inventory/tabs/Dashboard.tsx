@@ -54,13 +54,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState(getCurrentDateISO());
   const [startDateDisplay, setStartDateDisplay] = useState('');
-  const [endDateDisplay, setEndDateDisplay] = useState(() => {
-    const today = new Date();
-    const day = String(today.getDate()).padStart(2, '0');
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const year = String(today.getFullYear());
-    return `${day}/${month}/${year}`;
-  });
+  const [endDateDisplay, setEndDateDisplay] = useState(getCurrentDateDisplay());
   const [allSalesPage, setAllSalesPage] = useState(1);
   const [allSalesTotal, setAllSalesTotal] = useState(0);
   const SALES_PER_PAGE = 20;

@@ -625,6 +625,7 @@ export const getSalesByDateRange = async (startDate: string, endDate: string): P
     return allDocs.rows
       .map(row => row.doc as any)
       .filter(doc => {
+        if (!doc.sale_date) return false;
         const saleDatePart = doc.sale_date.split('T')[0];
         return saleDatePart >= startDate && saleDatePart <= endDate;
       })

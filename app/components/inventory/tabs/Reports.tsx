@@ -14,7 +14,7 @@ import {
   getFYList,
   formatFYLabel
 } from 'lib/date-utils';
-import { formatDateToDDMMYYYY, parseDDMMYYYYToISO } from '../utils/dateHelpers';
+import { formatDateToDDMMYYYY, parseDDMMYYYYToISO, getCurrentDateISO, getCurrentDateDisplay } from '../utils/dateHelpers';
 import type { Product, Sale, PartyPurchase } from 'supabase_client';
 import {
   DollarSign,
@@ -36,48 +36,40 @@ export default function Reports({ onNavigate }: ReportsProps) {
   const [products, setProducts] = useState<Product[]>([]);
   const [sales, setSales] = useState<Sale[]>([]);
   const [partyPurchases, setPartyPurchases] = useState<PartyPurchase[]>([]);
-  const [financialYear, setFinancialYear] = useState('2026-27');
+  const [financialYear, setFinancialYear] = useState(getFinancialYear());
   const [historicalStock, setHistoricalStock] = useState<Record<string, number>>({});
   const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
+  const [endDate, setEndDate] = useState(getCurrentDateISO());
   const [startDateDisplay, setStartDateDisplay] = useState('');
-  const [endDateDisplay, setEndDateDisplay] = useState('');
+  const [endDateDisplay, setEndDateDisplay] = useState(getCurrentDateDisplay());
   const [filterApplied, setFilterApplied] = useState(false);
 
-  const isCurrentYear = financialYear === '2026-27';
+  const isCurrentYear = financialYear === getFinancialYear();
 
   useEffect(() => {
     // Set default date range based on financial year
-    if (financialYear === '2025-26') {
-      setStartDate('2025-04-01');
-      setEndDate('2026-03-19');
-      setStartDateDisplay('01/04/2025');
-      setEndDateDisplay('19/03/2026');
-    } else {
-      setStartDate('2026-03-20');
-      const today = new Date().toISOString().split('T')[0];
-      // End date for 2026-27 is 2027-03-20
-      setEndDate(today > '2027-03-20' ? '2027-03-20' : today);
-      setStartDateDisplay('20/03/2026');
-      
-      const d = new Date();
-      const displayDate = today > '2027-03-20' ? '20/03/2027' : `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
-      setEndDateDisplay(displayDate);
-    }
+    const range = getFYRange(financialYear);
+    setStartDate(range.start);
+    setStartDateDisplay(formatDateToDDMMYYYY(range.start));
+    
+    // For end date, use either the end of FY or today if today is earlier
+    const today = getCurrentDateISO();
+    const effectiveEnd = today < range.end ? today : range.end.split('T')[0];
+    setEndDate(effectiveEnd);
+    setEndDateDisplay(formatDateToDDMMYYYY(effectiveEnd));
+
     fetchReportsData(financialYear);
   }, [financialYear]);
 
   const fetchReportsData = async (year: string) => {
     try {
       setLoading(true);
-      const start = year === '2025-26' ? '2025-04-01' : '2026-03-20';
-      const end = year === '2025-26' ? '2026-03-19' : '2027-03-20';
-
+      const range = getFYRange(year);
       const [productsData, salesData, partyData, closingData] = await Promise.all([
         getProducts(),
-        getSalesByDateRange(start, end),
+        getSalesByDateRange(range.start, range.end),
         getPartyPurchases(),
-        year === '2025-26' ? getClosingStockForYear(year) : Promise.resolve({})
+        year !== getFinancialYear() ? getClosingStockForYear(year) : Promise.resolve({})
       ]);
 
       setProducts(productsData || []);

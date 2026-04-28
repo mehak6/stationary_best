@@ -45,7 +45,7 @@ export function getFYRange(fyLabel: string): FYRange {
 
   return {
     start: `${startYear}-03-20`,
-    end: `${startYear + 1}-03-20`,
+    end: `${startYear + 1}-03-21`, // March 20th inclusive
     label: fyLabel
   };
 }

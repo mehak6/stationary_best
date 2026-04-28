@@ -270,6 +270,7 @@ export const getAnalytics = async (financialYear?: string) => {
     
     // Filter sales by financial year
     const sales = allSales.filter(sale => {
+      if (!sale.sale_date) return false;
       const saleDatePart = sale.sale_date.split('T')[0];
       return saleDatePart >= fyStart && saleDatePart <= fyEnd;
     });
@@ -281,7 +282,10 @@ export const getAnalytics = async (financialYear?: string) => {
     // Use local date for "Today" to avoid UTC mismatch
     const today = getCurrentDateISO();
     
-    const todaySalesData = sales.filter(sale => sale.sale_date.split('T')[0] === today);
+    const todaySalesData = sales.filter(sale => {
+      if (!sale.sale_date) return false;
+      return sale.sale_date.split('T')[0] === today;
+    });
     const todaySales = todaySalesData.reduce((sum, sale) => sum + (Number(sale.total_amount) || 0), 0);
     const todayProfit = todaySalesData.reduce((sum, sale) => sum + (Number(sale.profit) || 0), 0);
     
