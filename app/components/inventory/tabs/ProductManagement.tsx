@@ -809,11 +809,7 @@ function ProductHistoryModal({ product, onClose }: { product: Product; onClose: 
           quantity_change: -(Number(sale.quantity) || 0),
           stock_before: 0,
           stock_after: 0,
-<<<<<<< HEAD
           date: sale.sale_date || sale.created_at,
-=======
-          date: sale.created_at || sale.sale_date,
->>>>>>> stationery_business/main
           notes: `Sold ${sale.quantity} units for ₹${Number(sale.total_amount).toFixed(2)}${sale.customer_info ? ` to ${sale.customer_info}` : ''}`
         }));
 
