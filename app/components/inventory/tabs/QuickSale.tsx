@@ -25,7 +25,7 @@ import {
   getFYList,
   formatFYLabel
 } from 'lib/date-utils';
-import { formatDateToDDMMYYYY } from '../utils/dateHelpers';
+import { formatDateToDDMMYYYY, getCurrentDateISO } from '../utils/dateHelpers';
 import type { Product, Sale, SaleInsert, ProductInsert } from 'supabase_client';
 import { useToast } from 'app/context/ToastContext';
 
@@ -55,7 +55,7 @@ export default function QuickSale({ onNavigate }: QuickSaleProps) {
   const [historicalStock, setHistoricalStock] = useState<Record<string, number>>({});
 
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [saleDate, setSaleDate] = useState(new Date().toISOString().split('T')[0]);
+  const [saleDate, setSaleDate] = useState(getCurrentDateISO());
   const [saleDateDisplay, setSaleDateDisplay] = useState(() => {
     const today = new Date();
     const day = String(today.getDate()).padStart(2, '0');
