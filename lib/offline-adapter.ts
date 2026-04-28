@@ -280,7 +280,8 @@ export const getAnalytics = async (financialYear?: string) => {
     const totalProfit = sales.reduce((sum, sale) => sum + (Number(sale.profit) || 0), 0);
     
     // Use local date for "Today" to avoid UTC mismatch
-    const today = getCurrentDateISO();
+    const now = new Date();
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     
     const todaySalesData = sales.filter(sale => {
       if (!sale.sale_date) return false;

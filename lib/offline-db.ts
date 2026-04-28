@@ -589,33 +589,7 @@ export const getSalesByDateRange = async (startDate: string, endDate: string): P
   try {
     const db = await getSalesDB();
     
-    // First try efficient find
-    try {
-      const result = await db.find({
-        selector: {
-          sale_date: { $gte: startDate, $lte: endDate }
-        }
-      });
-      
-      if (result.docs.length > 0) {
-        return result.docs.map((doc: any) => ({
-          id: fromPouchID(doc._id),
-          product_id: doc.product_id,
-          quantity: doc.quantity,
-          unit_price: doc.unit_price,
-          total_amount: doc.total_amount,
-          profit: doc.profit,
-          customer_info: doc.customer_info,
-          sale_date: doc.sale_date,
-          notes: doc.notes,
-          created_at: doc.created_at
-        }));
-      }
-    } catch (e) {
-      console.warn('PouchDB find failed, falling back to allDocs:', e);
-    }
-
-    // Fallback: allDocs is slower but 100% reliable even without indexes
+    // Always use allDocs to guarantee 100% reliability and avoid stale Mango indexes
     const allDocs = await db.allDocs({
       include_docs: true,
       startkey: 'sale_',
