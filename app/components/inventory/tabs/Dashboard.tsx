@@ -62,6 +62,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
     return `${day}/${month}/${year}`;
   });
   const [allSalesPage, setAllSalesPage] = useState(1);
+  const [allSalesTotal, setAllSalesTotal] = useState(0);
   const SALES_PER_PAGE = 20;
 
   type ExtendedSale = Sale & { 
@@ -242,6 +243,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
         return (b.created_at || '').localeCompare(a.created_at || '');
       });
 
+      setAllSalesTotal(sortedData.length);
       const from = (page - 1) * SALES_PER_PAGE;
       const paginatedData = sortedData.slice(from, from + SALES_PER_PAGE);
 
@@ -257,6 +259,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   const handleShowAllSales = async () => {
     if (!showAllSales) {
       setShowAllSales(true);
+      setAllSalesPage(1);
       await fetchAllSales(1);
     } else {
       setShowAllSales(false);
@@ -562,7 +565,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                       })()}
                     </div>
 
-                    {allSales.length >= SALES_PER_PAGE && (
+                    {allSalesTotal > SALES_PER_PAGE && (
                       <div className="flex justify-center gap-3 mt-8">
                         <button
                           onClick={() => handlePageChange(Math.max(1, allSalesPage - 1))}
@@ -572,11 +575,11 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                           Previous
                         </button>
                         <div className="flex items-center bg-primary-100 px-4 py-2 rounded-xl font-black text-primary-700">
-                          Page {allSalesPage}
+                          Page {allSalesPage} / {Math.ceil(allSalesTotal / SALES_PER_PAGE)}
                         </div>
                         <button
                           onClick={() => handlePageChange(allSalesPage + 1)}
-                          disabled={allSales.length < SALES_PER_PAGE}
+                          disabled={allSalesPage * SALES_PER_PAGE >= allSalesTotal}
                           className="bg-white border-2 border-gray-200 text-gray-600 px-6 py-2 rounded-xl font-bold hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                         >
                           Next

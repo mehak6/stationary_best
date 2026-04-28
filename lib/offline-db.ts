@@ -446,7 +446,33 @@ export const updateSale = async (id: string, updates: Partial<Sale>): Promise<Sa
       });
     }
 
-    const updatedSaleDoc = { ...saleDoc, ...updates };
+    const updatedSaleDoc = { 
+      ...saleDoc, 
+      ...updates,
+      // Recalculate if values changed
+      total_amount: updates.quantity !== undefined || updates.unit_price !== undefined
+        ? (updates.quantity ?? saleDoc.quantity) * (updates.unit_price ?? saleDoc.unit_price)
+        : saleDoc.total_amount,
+      updated_at: getCurrentTimestamp()
+    };
+    
+    // Recalculate profit if quantity, unit_price or total_amount changed
+    if (updates.quantity !== undefined || updates.unit_price !== undefined || updates.profit !== undefined) {
+      if (updates.profit === undefined) {
+        // We need the product's purchase price to calculate profit accurately
+        try {
+          const productDocId = toPouchID('product', saleDoc.product_id);
+          const productDoc: any = await productsDB.get(productDocId);
+          const purchasePrice = productDoc.purchase_price || 0;
+          const currentQty = updates.quantity ?? saleDoc.quantity;
+          const currentUnitPrice = updates.unit_price ?? saleDoc.unit_price;
+          updatedSaleDoc.profit = (currentUnitPrice - purchasePrice) * currentQty;
+        } catch (e) {
+          console.warn('Could not fetch product for profit recalculation during sale update');
+        }
+      }
+    }
+
     await salesDB.put(updatedSaleDoc);
 
     return {
