@@ -26,7 +26,7 @@ import {
   getFinancialYear, 
   getFYRange 
 } from 'lib/date-utils';
-import { formatDateToDDMMYYYY, parseDDMMYYYYToISO, getCurrentDateISO } from '../utils/dateHelpers';
+import { formatDateToDDMMYYYY, parseDDMMYYYYToISO, getCurrentDateISO, getCurrentDateDisplay } from '../utils/dateHelpers';
 import type { Product, Sale } from 'supabase_client';
 import { useToast } from 'app/context/ToastContext';
 
