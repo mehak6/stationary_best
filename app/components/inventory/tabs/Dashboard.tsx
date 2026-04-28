@@ -26,7 +26,7 @@ import {
   getFinancialYear, 
   getFYRange 
 } from 'lib/date-utils';
-import { formatDateToDDMMYYYY, parseDDMMYYYYToISO } from '../utils/dateHelpers';
+import { formatDateToDDMMYYYY, parseDDMMYYYYToISO, getCurrentDateISO } from '../utils/dateHelpers';
 import type { Product, Sale } from 'supabase_client';
 import { useToast } from 'app/context/ToastContext';
 
@@ -52,7 +52,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   const [showAllSales, setShowAllSales] = useState(false);
   const [allSalesLoading, setAllSalesLoading] = useState(false);
   const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
+  const [endDate, setEndDate] = useState(getCurrentDateISO());
   const [startDateDisplay, setStartDateDisplay] = useState('');
   const [endDateDisplay, setEndDateDisplay] = useState(() => {
     const today = new Date();

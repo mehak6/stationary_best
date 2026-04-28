@@ -269,19 +269,19 @@ export const getAnalytics = async (financialYear?: string) => {
     const allSales = await OfflineDB.getAllSales();
     
     // Filter sales by financial year
-    const sales = allSales.filter(sale => 
-      sale.sale_date >= fyStart && sale.sale_date <= fyEnd
-    );
+    const sales = allSales.filter(sale => {
+      const saleDatePart = sale.sale_date.split('T')[0];
+      return saleDatePart >= fyStart && saleDatePart <= fyEnd;
+    });
     
     const totalProducts = products.length;
     const totalSales = sales.reduce((sum, sale) => sum + (Number(sale.total_amount) || 0), 0);
     const totalProfit = sales.reduce((sum, sale) => sum + (Number(sale.profit) || 0), 0);
     
     // Use local date for "Today" to avoid UTC mismatch
-    const now = new Date();
-    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const today = getCurrentDateISO();
     
-    const todaySalesData = sales.filter(sale => sale.sale_date === today);
+    const todaySalesData = sales.filter(sale => sale.sale_date.split('T')[0] === today);
     const todaySales = todaySalesData.reduce((sum, sale) => sum + (Number(sale.total_amount) || 0), 0);
     const todayProfit = todaySalesData.reduce((sum, sale) => sum + (Number(sale.profit) || 0), 0);
     
