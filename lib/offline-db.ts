@@ -532,7 +532,8 @@ export const getSalesByDate = async (date: string): Promise<Sale[]> => {
       selector: {
         _id: { $gte: 'sale_', $lt: 'sale_\ufff0' },
         sale_date: date
-      }
+      },
+      limit: 10000
     });
 
     return result.docs.map((doc: any) => ({
@@ -559,7 +560,8 @@ export const getSalesByProduct = async (productId: string): Promise<Sale[]> => {
     const result = await db.find({
       selector: {
         product_id: productId
-      }
+      },
+      limit: 10000
     });
 
     return result.docs.map((doc: any) => ({
@@ -945,7 +947,8 @@ export const getClosingStockForYear = async (financialYear: string): Promise<Rec
     const result = await db.find({
       selector: {
         financial_year: financialYear
-      }
+      },
+      limit: 10000
     });
 
     const stockMap: Record<string, number> = {};
