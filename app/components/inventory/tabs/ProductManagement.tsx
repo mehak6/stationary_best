@@ -43,7 +43,9 @@ export default function ProductManagement({ onNavigate }: ProductManagementProps
   const [showBulkEntry, setShowBulkEntry] = useState(false);
   const [viewMode, setViewMode] = useState<'card' | 'list'>('card');
   const [showHistory, setShowHistory] = useState(false);
+  const [showAddStock, setShowAddStock] = useState(false);
   const [selectedProductForHistory, setSelectedProductForHistory] = useState<Product | null>(null);
+  const [selectedProductForAddStock, setSelectedProductForAddStock] = useState<Product | null>(null);
   const [editingProduct, setEditingProduct] = useState<string | null>(null);
   const [editingField, setEditingField] = useState<string | null>(null);
   const [tempValue, setTempValue] = useState('');
@@ -573,6 +575,18 @@ export default function ProductManagement({ onNavigate }: ProductManagementProps
                     </button>
                     {isCurrentYear && (
                       <button
+                        onClick={() => {
+                          setSelectedProductForAddStock(product);
+                          setShowAddStock(true);
+                        }}
+                        className="p-1 text-gray-400 hover:text-green-600"
+                        title="Add Stock"
+                      >
+                        <Plus className="h-5 w-5" />
+                      </button>
+                    )}
+                    {isCurrentYear && (
+                      <button
                         onClick={() => handleDeleteProduct(product.id)}
                         className="p-1 text-gray-400 hover:text-red-600"
                         title="Delete Product"
@@ -621,13 +635,27 @@ export default function ProductManagement({ onNavigate }: ProductManagementProps
                         setShowHistory(true);
                       }}
                       className="p-1 text-gray-400 hover:text-primary-600"
+                      title="View History"
                     >
                       <History className="h-4 w-4" />
                     </button>
                     {isCurrentYear && (
                       <button
+                        onClick={() => {
+                          setSelectedProductForAddStock(product);
+                          setShowAddStock(true);
+                        }}
+                        className="p-1 text-gray-400 hover:text-green-600"
+                        title="Add Stock"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </button>
+                    )}
+                    {isCurrentYear && (
+                      <button
                         onClick={() => handleDeleteProduct(product.id)}
                         className="p-1 text-gray-400 hover:text-red-600"
+                        title="Delete Product"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -751,12 +779,17 @@ export default function ProductManagement({ onNavigate }: ProductManagementProps
         />
       )}
 
-      {showHistory && selectedProductForHistory && (
-        <ProductHistoryModal
-          product={selectedProductForHistory}
+      {showAddStock && selectedProductForAddStock && (
+        <AddStockModal
+          product={selectedProductForAddStock}
           onClose={() => {
-            setShowHistory(false);
-            setSelectedProductForHistory(null);
+            setShowAddStock(false);
+            setSelectedProductForAddStock(null);
+          }}
+          onStockUpdated={(updatedProduct) => {
+            setProducts(products.map(p => p.id === updatedProduct.id ? updatedProduct : p));
+            setShowAddStock(false);
+            setSelectedProductForAddStock(null);
           }}
         />
       )}
