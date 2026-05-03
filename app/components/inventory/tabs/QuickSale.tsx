@@ -23,8 +23,11 @@ import {
   getFinancialYear, 
   getFYRange, 
   getFYList,
-  formatFYLabel
+  formatFYLabel,
+  formatDateToDisplay,
+  parseDisplayDate
 } from 'lib/date-utils';
+import { addProductHistory } from 'lib/product-history';
 import { formatDateToDDMMYYYY, getCurrentDateISO } from '../utils/dateHelpers';
 import type { Product, Sale, SaleInsert, ProductInsert } from 'supabase_client';
 import { useToast } from 'app/context/ToastContext';
@@ -273,13 +276,27 @@ export default function QuickSale({ onNavigate }: QuickSaleProps) {
     }
   };
 
-  const handleAddStock = async () => {
+  const handleAddStock = async (customDate: string = saleDate) => {
     if (!addStockProduct || addStockQuantity <= 0) return;
     try {
-      const newStockQuantity = addStockProduct.stock_quantity + addStockQuantity;
-      await updateProduct(addStockProduct.id, { stock_quantity: newStockQuantity });
-      setProducts(prev => prev.map(p => p.id === addStockProduct.id ? { ...p, stock_quantity: newStockQuantity } : p));
-      setCart(prev => prev.map(item => item.product.id === addStockProduct.id ? { ...item, product: { ...item.product, stock_quantity: newStockQuantity } } : item));
+      const stockBefore = addStockProduct.stock_quantity;
+      const stockAfter = stockBefore + addStockQuantity;
+      
+      await updateProduct(addStockProduct.id, { stock_quantity: stockAfter });
+      
+      await addProductHistory({
+        product_id: addStockProduct.id,
+        product_name: addStockProduct.name,
+        action: 'stock_added',
+        quantity_change: addStockQuantity,
+        stock_before: stockBefore,
+        stock_after: stockAfter,
+        date: customDate,
+        notes: `Stock added via Quick Sale manual adjustment`
+      });
+
+      setProducts(prev => prev.map(p => p.id === addStockProduct.id ? { ...p, stock_quantity: stockAfter } : p));
+      setCart(prev => prev.map(item => item.product.id === addStockProduct.id ? { ...item, product: { ...item.product, stock_quantity: stockAfter } } : item));
       setShowAddStockModal(false);
       showToast('Stock added successfully', 'success');
     } catch (error) {
@@ -467,13 +484,34 @@ export default function QuickSale({ onNavigate }: QuickSaleProps) {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999]">
           <div className="bg-white rounded-lg p-6 max-w-sm w-full">
             <h3 className="text-lg font-bold mb-4">Add Stock: {addStockProduct.name}</h3>
+            
+            <div className="mb-4">
+              <label className="block text-xs font-medium text-gray-500 mb-1">Entry Date (dd/mm/yyyy)</label>
+              <input
+                type="text"
+                defaultValue={saleDateDisplay}
+                onChange={(e) => {
+                  const parts = e.target.value.split('/');
+                  if (parts.length === 3 && parts[2].length === 4) {
+                    const day = parts[0].padStart(2, '0');
+                    const month = parts[1].padStart(2, '0');
+                    const year = parts[2];
+                    const iso = `${year}-${month}-${day}`;
+                    (window as any)._tempAddStockDate = iso;
+                  }
+                }}
+                className="input-field text-sm"
+                placeholder="DD/MM/YYYY"
+              />
+            </div>
+
             <div className="flex items-center gap-4 mb-6">
               <button onClick={() => setAddStockQuantity(Math.max(1, addStockQuantity - 1))} className="btn-outline px-3">-</button>
               <input type="number" value={addStockQuantity} onChange={(e) => setAddStockQuantity(parseInt(e.target.value) || 1)} className="input-field text-center" />
               <button onClick={() => setAddStockQuantity(addStockQuantity + 1)} className="btn-outline px-3">+</button>
             </div>
             <div className="flex gap-3">
-              <button onClick={handleAddStock} className="btn-primary flex-1">Add Stock</button>
+              <button onClick={() => handleAddStock((window as any)._tempAddStockDate || saleDate)} className="btn-primary flex-1">Add Stock</button>
               <button onClick={() => setShowAddStockModal(false)} className="btn-outline flex-1">Cancel</button>
             </div>
           </div>
@@ -499,7 +537,9 @@ function QuickAddProductModal({ onClose, onProductAdded, prefillName }: { onClos
     purchase_price: '',
     selling_price: '',
     stock_quantity: '',
+    date: new Date().toISOString().split('T')[0]
   });
+  const [displayDate, setDisplayDate] = useState(formatDateToDisplay(formData.date));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -517,6 +557,18 @@ function QuickAddProductModal({ onClose, onProductAdded, prefillName }: { onClos
         category_id: null
       };
       const newProduct = await createProduct(data);
+      
+      await addProductHistory({
+        product_id: newProduct.id,
+        product_name: newProduct.name,
+        action: 'created',
+        quantity_change: newProduct.stock_quantity,
+        stock_before: 0,
+        stock_after: newProduct.stock_quantity,
+        date: formData.date,
+        notes: `Product created via Quick Add during sale`
+      });
+
       onProductAdded(newProduct as any);
     } catch (error) {
       console.error('Failed to quick-add product:', error);
@@ -531,7 +583,26 @@ function QuickAddProductModal({ onClose, onProductAdded, prefillName }: { onClos
       <div className="bg-white rounded-lg p-6 max-w-md w-full">
         <h2 className="text-xl font-bold mb-4">Quick Add Product</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <input type="text" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value.toUpperCase()})} className="input-field" placeholder="Name" required disabled={loading} />
+          <div className="grid grid-cols-2 gap-4">
+            <input type="text" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value.toUpperCase()})} className="input-field" placeholder="Name" required disabled={loading} />
+            <div className="relative">
+              <input
+                type="text"
+                required
+                value={displayDate}
+                onChange={(e) => {
+                  setDisplayDate(e.target.value);
+                  if (/^\d{2}\/\d{2}\/\d{4}$/.test(e.target.value)) {
+                    setFormData({...formData, date: parseDisplayDate(e.target.value)});
+                  }
+                }}
+                className="input-field"
+                placeholder="DD/MM/YYYY"
+                disabled={loading}
+              />
+              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-400 font-bold uppercase pointer-events-none">Date</span>
+            </div>
+          </div>
           <input type="text" value={formData.barcode} onChange={(e) => setFormData({...formData, barcode: e.target.value})} className="input-field" placeholder="Barcode" disabled={loading} />
           <div className="grid grid-cols-2 gap-4">
             <input type="number" value={formData.purchase_price} onChange={(e) => setFormData({...formData, purchase_price: e.target.value})} className="input-field" placeholder="Purchase Price" required disabled={loading} />

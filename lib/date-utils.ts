@@ -84,3 +84,34 @@ export function getFYList(startYear: number = 2024): string[] {
   }
   return list;
 }
+
+/**
+ * Formats a YYYY-MM-DD date to dd/mm/yyyy
+ */
+export function formatDateToDisplay(dateStr: string): string {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return dateStr;
+  
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = String(date.getFullYear());
+  return `${day}/${month}/${year}`;
+}
+
+/**
+ * Parses a dd/mm/yyyy date to YYYY-MM-DD
+ */
+export function parseDisplayDate(displayDate: string): string {
+  const parts = displayDate.split('/');
+  if (parts.length === 3) {
+    const day = parts[0].padStart(2, '0');
+    const month = parts[1].padStart(2, '0');
+    const year = parts[2];
+    // Basic validation
+    if (day.length === 2 && month.length === 2 && year.length === 4) {
+      return `${year}-${month}-${day}`;
+    }
+  }
+  return new Date().toISOString().split('T')[0];
+}

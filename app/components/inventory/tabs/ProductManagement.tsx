@@ -26,6 +26,7 @@ import {
   getSalesByProduct
 } from 'lib/offline-adapter';
 import { addProductHistory, getProductHistory } from 'lib/product-history';
+import { formatDateToDisplay, parseDisplayDate } from 'lib/date-utils';
 import type { Product, ProductInsert } from 'supabase_client';
 import { useToast } from 'app/context/ToastContext';
 
@@ -939,8 +940,10 @@ function AddProductModal({ onClose, onProductAdded }: { onClose: () => void; onP
     selling_price: '',
     stock_quantity: '',
     min_stock_level: '5',
-    description: ''
+    description: '',
+    date: new Date().toISOString().split('T')[0]
   });
+  const [displayDate, setDisplayDate] = useState(formatDateToDisplay(formData.date));
   const [isSubmitting, setIsSubmitting] = useState(false);
   const nameInputRef = useRef<HTMLInputElement>(null);
 
@@ -972,6 +975,7 @@ function AddProductModal({ onClose, onProductAdded }: { onClose: () => void; onP
         quantity_change: newProduct.stock_quantity,
         stock_before: 0,
         stock_after: newProduct.stock_quantity,
+        date: formData.date,
         notes: `Product created with initial stock of ${newProduct.stock_quantity}`
       });
 
@@ -992,17 +996,34 @@ function AddProductModal({ onClose, onProductAdded }: { onClose: () => void; onP
             <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X className="h-6 w-6" /></button>
           </div>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Product Name *</label>
-              <input
-                ref={nameInputRef}
-                type="text"
-                required
-                value={formData.name}
-                onChange={(e) => setFormData({...formData, name: e.target.value.toUpperCase()})}
-                className="input-field uppercase"
-                placeholder="Enter product name"
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="col-span-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Product Name *</label>
+                <input
+                  ref={nameInputRef}
+                  type="text"
+                  required
+                  value={formData.name}
+                  onChange={(e) => setFormData({...formData, name: e.target.value.toUpperCase()})}
+                  className="input-field uppercase"
+                  placeholder="Enter product name"
+                />
+              </div>
+              <div className="col-span-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Date (dd/mm/yyyy) *</label>
+                <input
+                  type="text"
+                  required
+                  value={displayDate}
+                  onChange={(e) => {
+                    setDisplayDate(e.target.value);
+                    if (/^\d{2}\/\d{2}\/\d{4}$/.test(e.target.value)) {
+                      setFormData({...formData, date: parseDisplayDate(e.target.value)});
+                    }
+                  }}
+                  className="input-field"
+                />
+              </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Barcode</label>
@@ -1076,6 +1097,8 @@ function BulkProductEntryModal({ onClose, onProductsAdded }: { onClose: () => vo
   const [entries, setEntries] = useState([
     { id: 1, name: '', barcode: '', purchase_price: '', selling_price: '', stock_quantity: '', min_stock_level: '5' }
   ]);
+  const [entryDate, setEntryDate] = useState(new Date().toISOString().split('T')[0]);
+  const [displayDate, setDisplayDate] = useState(formatDateToDisplay(entryDate));
   const [saving, setSaving] = useState(false);
 
   const addNewRow = () => {
@@ -1103,6 +1126,7 @@ function BulkProductEntryModal({ onClose, onProductsAdded }: { onClose: () => vo
     setSaving(true);
     try {
       const createdProducts = [];
+      const historyEntries = [];
       for (const entry of validEntries) {
         const productData: ProductInsert = {
           name: entry.name.trim().toUpperCase(),
@@ -1117,16 +1141,21 @@ function BulkProductEntryModal({ onClose, onProductsAdded }: { onClose: () => vo
         const newProduct = await createProduct(productData);
         createdProducts.push(newProduct);
 
-        await addProductHistory({
+        historyEntries.push({
           product_id: newProduct.id,
           product_name: newProduct.name,
-          action: 'created',
+          action: 'created' as any,
           quantity_change: newProduct.stock_quantity,
           stock_before: 0,
           stock_after: newProduct.stock_quantity,
+          date: entryDate,
           notes: `Product created via bulk entry`
         });
       }
+
+      const { addProductHistoryBulk } = await import('lib/product-history');
+      await addProductHistoryBulk(historyEntries);
+
       onProductsAdded(createdProducts);
     } catch (error) {
       console.error('Error in bulk entry:', error);
@@ -1139,11 +1168,30 @@ function BulkProductEntryModal({ onClose, onProductsAdded }: { onClose: () => vo
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999]">
       <div className="bg-white rounded-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
             <h2 className="text-xl font-bold text-gray-900">Bulk Product Entry</h2>
+            <div className="flex items-center gap-3 bg-gray-50 px-4 py-2 rounded-xl border border-gray-200">
+              <Calendar className="h-5 w-5 text-gray-400" />
+              <div className="flex flex-col">
+                <span className="text-[10px] uppercase font-bold text-gray-400 leading-none mb-1">Entry Date</span>
+                <input
+                  type="text"
+                  required
+                  value={displayDate}
+                  onChange={(e) => {
+                    setDisplayDate(e.target.value);
+                    if (/^\d{2}\/\d{2}\/\d{4}$/.test(e.target.value)) {
+                      setEntryDate(parseDisplayDate(e.target.value));
+                    }
+                  }}
+                  className="bg-transparent text-sm font-bold text-gray-900 focus:outline-none w-28"
+                />
+              </div>
+            </div>
             <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X className="h-6 w-6" /></button>
           </div>
           <form onSubmit={handleSubmit}>
+
             <div className="overflow-x-auto">
               <table className="w-full min-w-[800px]">
                 <thead>

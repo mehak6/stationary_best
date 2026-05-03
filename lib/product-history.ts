@@ -19,12 +19,12 @@ export interface ProductHistoryEntry {
   notes?: string;
 }
 
-export const addProductHistory = async (historyEntry: Omit<ProductHistoryEntry, 'id' | 'date'>): Promise<void> => {
+export const addProductHistory = async (historyEntry: Omit<ProductHistoryEntry, 'id'>): Promise<void> => {
   try {
     const entry: ProductHistoryEntry = {
       id: `history_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      ...historyEntry,
-      date: new Date().toISOString()
+      date: new Date().toISOString(),
+      ...historyEntry
     };
 
     await OfflineDB.saveProductHistory(entry);
@@ -34,13 +34,13 @@ export const addProductHistory = async (historyEntry: Omit<ProductHistoryEntry, 
   }
 };
 
-export const addProductHistoryBulk = async (historyEntries: Omit<ProductHistoryEntry, 'id' | 'date'>[]): Promise<void> => {
+export const addProductHistoryBulk = async (historyEntries: Omit<ProductHistoryEntry, 'id'>[]): Promise<void> => {
   try {
     const now = new Date().toISOString();
     const entries: ProductHistoryEntry[] = historyEntries.map((he, index) => ({
       id: `history_${Date.now()}_${index}_${Math.random().toString(36).substr(2, 5)}`,
-      ...he,
-      date: now
+      date: now,
+      ...he
     }));
 
     await OfflineDB.saveProductHistoryBulk(entries);
