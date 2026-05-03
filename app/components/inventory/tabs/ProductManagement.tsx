@@ -1313,3 +1313,110 @@ function BulkProductEntryModal({ onClose, onProductsAdded }: { onClose: () => vo
     </div>
   );
 }
+
+function AddStockModal({ product, onClose, onStockUpdated }: { product: Product; onClose: () => void; onStockUpdated: (p: Product) => void }) {
+  const [quantity, setQuantity] = useState(1);
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [displayDate, setDisplayDate] = useState(formatDateToDisplay(date));
+  const [loading, setLoading] = useState(false);
+  const { showToast } = useToast();
+
+  const handleAddStock = async () => {
+    if (quantity <= 0) return;
+    setLoading(true);
+    try {
+      const stockBefore = product.stock_quantity;
+      const stockAfter = stockBefore + quantity;
+
+      await updateProduct(product.id, { stock_quantity: stockAfter });
+
+      await addProductHistory({
+        product_id: product.id,
+        product_name: product.name,
+        action: 'stock_added',
+        quantity_change: quantity,
+        stock_before: stockBefore,
+        stock_after: stockAfter,
+        date: date,
+        notes: `Added ${quantity} units manually`
+      });
+
+      onStockUpdated({ ...product, stock_quantity: stockAfter });
+      showToast(`Added ${quantity} units to ${product.name}`, 'success');
+    } catch (error) {
+      console.error('Error adding stock:', error);
+      showToast('Error adding stock', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999] backdrop-blur-sm">
+      <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl">
+        <h3 className="text-xl font-black text-gray-900 mb-2">Add Stock</h3>
+        <p className="text-sm font-bold text-primary-600 uppercase tracking-widest mb-6">{product.name}</p>
+        
+        <div className="space-y-4">
+          <div>
+            <label className="block text-[10px] uppercase font-black text-gray-400 mb-1 ml-1">Quantity</label>
+            <div className="flex items-center gap-3">
+              <button 
+                onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                className="w-12 h-12 flex items-center justify-center rounded-xl bg-gray-100 hover:bg-gray-200 font-black text-xl transition-colors"
+              >
+                -
+              </button>
+              <input 
+                type="number" 
+                value={quantity} 
+                onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 0))}
+                className="flex-1 h-12 bg-gray-50 border-2 border-gray-100 rounded-xl text-center font-black text-xl focus:outline-none focus:border-primary-500"
+              />
+              <button 
+                onClick={() => setQuantity(quantity + 1)}
+                className="w-12 h-12 flex items-center justify-center rounded-xl bg-gray-100 hover:bg-gray-200 font-black text-xl transition-colors"
+              >
+                +
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-[10px] uppercase font-black text-gray-400 mb-1 ml-1">Date (dd/mm/yyyy)</label>
+            <div className="relative">
+              <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <input
+                type="text"
+                value={displayDate}
+                onChange={(e) => {
+                  setDisplayDate(e.target.value);
+                  if (/^\d{2}\/\d{2}\/\d{4}$/.test(e.target.value)) {
+                    setDate(parseDisplayDate(e.target.value));
+                  }
+                }}
+                className="w-full h-12 bg-gray-50 border-2 border-gray-100 rounded-xl pl-12 pr-4 font-bold text-gray-900 focus:outline-none focus:border-primary-500"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="flex gap-3 mt-8">
+          <button 
+            onClick={onClose}
+            className="flex-1 py-3 px-4 rounded-xl font-bold text-gray-500 hover:bg-gray-50 transition-colors"
+          >
+            Cancel
+          </button>
+          <button 
+            onClick={handleAddStock}
+            disabled={loading}
+            className="flex-1 py-3 px-4 rounded-xl bg-gray-900 text-white font-black hover:bg-gray-800 disabled:opacity-50 shadow-lg shadow-gray-200 transition-all transform active:scale-95"
+          >
+            {loading ? 'Adding...' : 'Add Now'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
