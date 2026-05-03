@@ -59,3 +59,12 @@ export const getProductHistory = async (productId: string): Promise<ProductHisto
     return [];
   }
 };
+
+export const removeHistoryEntry = async (historyId: string): Promise<void> => {
+  try {
+    await OfflineDB.deleteProductHistory(historyId);
+  } catch (error) {
+    console.error('Error removing history entry:', error);
+    throw error;
+  }
+};

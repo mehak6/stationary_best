@@ -25,7 +25,7 @@ import {
   getClosingStockForYear,
   getSalesByProduct
 } from 'lib/offline-adapter';
-import { addProductHistory, getProductHistory } from 'lib/product-history';
+import { addProductHistory, getProductHistory, removeHistoryEntry } from 'lib/product-history';
 import { formatDateToDisplay, parseDisplayDate } from 'lib/date-utils';
 import type { Product, ProductInsert } from 'supabase_client';
 import { useToast } from 'app/context/ToastContext';
@@ -783,52 +783,74 @@ export default function ProductManagement({ onNavigate }: ProductManagementProps
 function ProductHistoryModal({ product, onClose }: { product: Product; onClose: () => void }) {
   const [history, setHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const { showToast } = useToast();
+
+  const fetchHistory = async () => {
+    try {
+      setLoading(true);
+      console.log(`🔍 Fetching unified history for: ${product.name} (${product.id})`);
+      
+      const [historyData, salesData] = await Promise.all([
+        getProductHistory(product.id).catch(err => {
+          console.error('History fetch failed:', err);
+          return [];
+        }),
+        getSalesByProduct(product.id).catch(err => {
+          console.error('Sales fetch failed:', err);
+          return [];
+        })
+      ]);
+
+      // Map sales to history entry format
+      const mappedSales = (salesData || []).map(sale => ({
+        id: sale.id || `sale_${Math.random()}`,
+        product_id: sale.product_id,
+        product_name: product.name,
+        action: 'sale',
+        quantity_change: -(Number(sale.quantity) || 0),
+        stock_before: 0,
+        stock_after: 0,
+        date: sale.sale_date || sale.created_at,
+        notes: `Sold ${sale.quantity} units for ₹${Number(sale.total_amount).toFixed(2)}${sale.customer_info ? ` to ${sale.customer_info}` : ''}`,
+        is_sale_record: true
+      }));
+
+      const unifiedHistory = [...(historyData || []), ...mappedSales].sort((a, b) => {
+        const dateA = new Date(a.date || 0).getTime();
+        const dateB = new Date(b.date || 0).getTime();
+        return dateB - dateA;
+      });
+
+      setHistory(unifiedHistory);
+    } catch (error) {
+      console.error('Error in fetchHistory:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchHistory = async () => {
-      try {
-        setLoading(true);
-        console.log(`🔍 Fetching unified history for: ${product.name} (${product.id})`);
-        
-        const [historyData, salesData] = await Promise.all([
-          getProductHistory(product.id).catch(err => {
-            console.error('History fetch failed:', err);
-            return [];
-          }),
-          getSalesByProduct(product.id).catch(err => {
-            console.error('Sales fetch failed:', err);
-            return [];
-          })
-        ]);
-
-        // Map sales to history entry format
-        const mappedSales = (salesData || []).map(sale => ({
-          id: sale.id || `sale_${Math.random()}`,
-          product_id: sale.product_id,
-          product_name: product.name,
-          action: 'sale',
-          quantity_change: -(Number(sale.quantity) || 0),
-          stock_before: 0,
-          stock_after: 0,
-          date: sale.sale_date || sale.created_at,
-          notes: `Sold ${sale.quantity} units for ₹${Number(sale.total_amount).toFixed(2)}${sale.customer_info ? ` to ${sale.customer_info}` : ''}`
-        }));
-
-        const unifiedHistory = [...(historyData || []), ...mappedSales].sort((a, b) => {
-          const dateA = new Date(a.date || 0).getTime();
-          const dateB = new Date(b.date || 0).getTime();
-          return dateB - dateA;
-        });
-
-        setHistory(unifiedHistory);
-      } catch (error) {
-        console.error('Error in fetchHistory:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchHistory();
   }, [product.id, product.name]);
+
+  const handleDeleteEntry = async (entryId: string, isSale: boolean) => {
+    if (isSale) {
+      showToast('Sale records must be deleted from the Reports/Sales tab.', 'warning');
+      return;
+    }
+
+    if (!confirm('Are you sure you want to delete this history entry? This will not affect current stock.')) {
+      return;
+    }
+
+    try {
+      await removeHistoryEntry(entryId);
+      showToast('History entry deleted', 'success');
+      fetchHistory(); // Refresh
+    } catch (error) {
+      showToast('Error deleting entry', 'error');
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999] backdrop-blur-sm">
@@ -863,14 +885,23 @@ function ProductHistoryModal({ product, onClose }: { product: Product; onClose: 
             <div className="space-y-4">
               {history.map((entry) => {
                 const actionStr = String(entry.action || 'update');
-                const isSale = actionStr === 'sale';
+                const isSale = !!entry.is_sale_record;
                 const actionLabel = actionStr.replace(/_/g, ' ');
                 
                 return (
                   <div 
                     key={entry.id} 
-                    className={`border-l-8 ${isSale ? 'border-secondary-500 bg-white' : 'border-primary-500 bg-white'} p-5 rounded-2xl shadow-sm hover:shadow-md transition-all border border-gray-100`}
+                    className={`border-l-8 ${isSale ? 'border-secondary-500 bg-white' : 'border-primary-500 bg-white'} p-5 rounded-2xl shadow-sm hover:shadow-md transition-all border border-gray-100 group relative`}
                   >
+                    {!isSale && (
+                      <button 
+                        onClick={() => handleDeleteEntry(entry.id, false)}
+                        className="absolute right-4 top-4 p-2 text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all bg-red-50 rounded-lg"
+                        title="Delete this entry"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    )}
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">

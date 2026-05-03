@@ -1046,6 +1046,18 @@ export const getProductHistory = async (productId: string): Promise<any[]> => {
     return [];
   }
 };
+
+export const deleteProductHistory = async (historyId: string): Promise<void> => {
+  try {
+    const db = getProductHistoryDB();
+    const docId = `history_${historyId}`;
+    const doc = await db.get(docId);
+    await db.remove(doc);
+  } catch (error) {
+    console.error('Error deleting product history entry:', error);
+    throw error;
+  }
+};
 // ==================== DELETION LOG ====================
 
 /**
