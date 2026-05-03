@@ -565,6 +565,7 @@ export default function ProductManagement({ onNavigate }: ProductManagementProps
                     )}
                     <button
                       onClick={() => {
+                        console.log('📜 Opening history for:', product.name);
                         setSelectedProductForHistory(product);
                         setShowHistory(true);
                       }}
@@ -631,13 +632,14 @@ export default function ProductManagement({ onNavigate }: ProductManagementProps
                     )}
                     <button
                       onClick={() => {
+                        console.log('📜 [Card View] Opening history for:', product.name);
                         setSelectedProductForHistory(product);
                         setShowHistory(true);
                       }}
-                      className="p-1 text-gray-400 hover:text-primary-600"
+                      className="p-2 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-full transition-all"
                       title="View History"
                     >
-                      <History className="h-4 w-4" />
+                      <History className="h-5 w-5" />
                     </button>
                     {isCurrentYear && (
                       <button
@@ -759,6 +761,16 @@ export default function ProductManagement({ onNavigate }: ProductManagementProps
       )}
 
       {/* Modals */}
+      {showHistory && selectedProductForHistory && (
+        <ProductHistoryModal
+          product={selectedProductForHistory}
+          onClose={() => {
+            setShowHistory(false);
+            setSelectedProductForHistory(null);
+          }}
+        />
+      )}
+
       {showAddForm && (
         <AddProductModal
           onClose={() => setShowAddForm(false)}
@@ -942,10 +954,17 @@ function ProductHistoryModal({ product, onClose }: { product: Product; onClose: 
                             {actionLabel}
                           </span>
                           <span className="text-xs font-bold text-gray-400">
-                            {new Date(entry.date || Date.now()).toLocaleString('en-IN', {
-                              day: '2-digit', month: 'short', year: 'numeric',
-                              hour: '2-digit', minute: '2-digit'
-                            })}
+                            {(() => {
+                              try {
+                                const d = new Date(entry.date || Date.now());
+                                return isNaN(d.getTime()) ? 'Invalid Date' : d.toLocaleString('en-IN', {
+                                  day: '2-digit', month: 'short', year: 'numeric',
+                                  hour: '2-digit', minute: '2-digit'
+                                });
+                              } catch (e) {
+                                return 'Invalid Date';
+                              }
+                            })()}
                           </span>
                         </div>
                         <div className="text-base text-gray-800 font-black">
