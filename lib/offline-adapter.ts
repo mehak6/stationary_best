@@ -86,6 +86,36 @@ export const getProducts = async (limit?: number): Promise<Product[]> => {
     };
 
 
+export const getPopularProducts = async (limit: number = 10): Promise<Product[]> => {
+  try {
+    const allSales = await OfflineDB.getAllSales();
+    const products = await OfflineDB.getAllProducts();
+    
+    // Count occurrences of each product_id in sales (frequency)
+    const saleCounts: Record<string, number> = {};
+    allSales.forEach(sale => {
+      saleCounts[sale.product_id] = (saleCounts[sale.product_id] || 0) + 1;
+    });
+
+    // Sort products by sale count
+    const sortedProducts = [...products].sort((a, b) => {
+      const countA = saleCounts[a.id] || 0;
+      const countB = saleCounts[b.id] || 0;
+      
+      // If sale counts are equal, sort by name
+      if (countB === countA) {
+        return a.name.localeCompare(b.name);
+      }
+      return countB - countA;
+    });
+
+    return sortedProducts.slice(0, limit);
+  } catch (error) {
+    console.error('Error getting popular products:', error);
+    return [];
+  }
+};
+
 export const createProduct = async (product: ProductInsert): Promise<Product> => {
   try {
     if (isOnline) {

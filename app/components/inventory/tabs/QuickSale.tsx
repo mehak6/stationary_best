@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import {
   getProducts,
+  getPopularProducts,
   getSalesByDate,
   createSale,
   updateProduct,
@@ -90,7 +91,20 @@ export default function QuickSale({ onNavigate }: QuickSaleProps) {
       try {
         setLoading(true);
         const productsData = await getProducts();
-        setProducts(productsData || []);
+        
+        // Fetch popular products to influence sort order
+        const popularData = await getPopularProducts(50);
+        const popularityMap = new Map(popularData.map((p, i) => [p.id, i]));
+        
+        // Sort products by popularity, then by name
+        const sortedProducts = [...(productsData || [])].sort((a, b) => {
+          const indexA = popularityMap.has(a.id) ? popularityMap.get(a.id)! : 1000;
+          const indexB = popularityMap.has(b.id) ? popularityMap.get(b.id)! : 1000;
+          if (indexA !== indexB) return indexA - indexB;
+          return a.name.localeCompare(b.name);
+        });
+
+        setProducts(sortedProducts);
 
         if (!isCurrentYear) {
           const closingData = await getClosingStockForYear(financialYear);
